@@ -1,131 +1,187 @@
 # GentleCorp-Ecosystem
 
-Welcome to GentleCorp-Ecosystem! This project is a robust suite of microservices designed to cater to various needs in a modern digital environment. The ecosystem includes a range of services from online shopping and travel booking to financial services, social networking, and more.
+Welcome to the GentleCorp-Ecosystem! This project is a comprehensive suite of microservices designed to meet various needs in a modern digital environment. The ecosystem encompasses a wide range of services, from online shopping and travel booking to financial services, social networking, and more.
 
-## Services
-
-1. **GentleShop** - Online store for shopping.
-2. **GentleTravel** - Flight and hotel booking service.
-3. **GentleBank** - Comprehensive banking service including loans, account management, and transactions.
-4. **GentleChat** - Chat service for communication with support and others.
-5. **GentleFood** - Food ordering service.
-6. **GentleMaps** - Routing service using Google Maps API.
-7. **GentleDating** - Online dating and matchmaking service.
-8. **GentleMarket** - Marketplace for auctions and sales.
-9. **GentleEstate** - Real estate platform for buying, selling, and renting properties.
-10. **GentleNetwork** - Professional networking service similar to LinkedIn.
-11. **GentleAnalytics** - User analytics and reporting service.
-
-## Technologies Used
-
-- **Frontend:** Next.js (TypeScript), Bootstrap
-- **Backend:** Java (Spring Boot) and TypeScript (NestJS)
-- **Databases:** MySQL and PostgreSQL
-- **Messaging:** Kafka
-- **Authentication:** Keycloak
-- **Distributed Tracing:** Zipkin
-- **Containerization:** Docker
-
-## Getting Started
-
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/your-username/GentleCorp-Ecosystem.git
-    ```
-
-2. Navigate to the project directory:
-    ```bash
-    cd GentleCorp-Ecosystem
-    ```
-
-3. Install dependencies for frontend:
-    ```bash
-    cd frontend
-    npm install
-    ```
-
-4. Install dependencies for backend services:
-    ```bash
-    cd backend
-    npm install
-    ```
-
-5. Start the project using Docker:
-    ```bash
-    docker-compose up
-    ```
-
-## Contributing
-
-Feel free to contribute to the project by creating issues or submitting pull requests.
-
-## License
-
-This project is licensed under the MIT License.
+## Table of Contents
+1. [Overview](#overview)
+2. [Tech Stack](#tech-stack)
+   - [Frontend](#frontend)
+   - [Backend](#backend)
+3. [Repository Structure](#repository-structure)
+4. [Getting Started](#getting-started)
+   - [Using Docker](#using-docker)
+   - [Starting Individually](#starting-individually)
+5. [Contributing](#contributing)
+6. [License](#license)
 
 ---
 
-# GentleCorp-Ecosystem
+## Overview
 
-Willkommen bei GentleCorp-Ecosystem! Dieses Projekt ist eine umfassende Suite von Microservices, die für verschiedene Bedürfnisse in einer modernen digitalen Umgebung entwickelt wurde. Das Ökosystem umfasst eine Reihe von Diensten von Online-Shopping und Reisebuchungen bis hin zu Finanzdienstleistungen, sozialem Networking und mehr.
+**GentleCorp-Ecosystem** is a modular, scalable, and flexible microservices-based platform. It offers a variety of services including online shopping, travel booking, banking, real estate management, food delivery, and more. The platform leverages modern web technologies to deliver a seamless user experience.
 
-## Dienste
+## Tech Stack
 
-1. **GentleShop** - Online-Shop für Einkäufe.
-2. **GentleTravel** - Flug- und Hotelbuchungsdienst.
-3. **GentleBank** - Umfassender Bankdienst einschließlich Kredite, Kontoverwaltung und Transaktionen.
-4. **GentleChat** - Chat-Dienst für die Kommunikation mit Support und anderen.
-5. **GentleFood** - Essensbestellservice.
-6. **GentleMaps** - Routenplanungsdienst mit Google Maps API.
-7. **GentleDating** - Online-Dating- und Partnersuche-Dienst.
-8. **GentleMarket** - Marktplatz für Auktionen und Verkäufe.
-9. **GentleEstate** - Immobilienplattform zum Kaufen, Verkaufen und Mieten von Immobilien.
-10. **GentleNetwork** - Professioneller Netzwerkdienst ähnlich wie LinkedIn.
-11. **GentleAnalytics** - Benutzeranalyse- und Berichtsdienst.
+### Frontend
+- **Framework**: [Next.js](https://nextjs.org/) (using the App Router)
+- **Language**: TypeScript
+- **Styling**: [Bootstrap](https://getbootstrap.com/)
 
-## Verwendete Technologien
+### Backend
+- **Java (Spring Boot)**
+  - **Gradle**:
+    - GentleBank
+    - GentleAnalytics
+    - GentleTravel
+  - **Maven**:
+    - GentleEstate
+    - GentleMaps
 
-- **Frontend:** Next.js (TypeScript), Bootstrap
-- **Backend:** Java (Spring Boot) und TypeScript (NestJS)
-- **Datenbanken:** MySQL und PostgreSQL
-- **Messaging:** Kafka
-- **Authentifizierung:** Keycloak
-- **Verteiltes Tracing:** Zipkin
-- **Containerisierung:** Docker
+- **TypeScript (NestJS)**
+  - GentleShop
+  - GentleChat
+  - GentleFood
+  - GentleDating
+  - GentleMarket
+  - GentleNetwork
 
-## Erste Schritte
+### Technologies Used
+- **Databases**: MySQL and PostgreSQL
+- **Messaging**: Kafka
+- **Authentication**: Keycloak
+- **Distributed Tracing**: Zipkin
+- **Containerization**: Docker
 
-1. Klonen Sie das Repository:
-    ```bash
-    git clone https://github.com/your-username/GentleCorp-Ecosystem.git
-    ```
+## Repository Structure
+```plaintext
+GentleCorp-Ecosystem/
+│
+├── frontend/                # Frontend application (Next.js with TypeScript)
+│   ├── public/              # Static assets
+│   ├── src/                 # Source files
+│   │   ├── components/      # React components
+│   │   ├── pages/           # Next.js pages
+│   │   ├── styles/          # CSS/Bootstrap styles
+│   │   └── ...              # Other TypeScript files
+│   └── package.json         # Frontend dependencies and scripts
+│
+├── backend/                 # Backend services
+│   ├── gentle-shop/         # GentleShop service (TypeScript/NestJS)
+│   ├── gentle-travel/       # GentleTravel service (Java/Spring Boot with Maven)
+│   ├── gentle-chat/         # GentleChat service (TypeScript/NestJS)
+│   ├── gentle-food/         # GentleFood service (TypeScript/NestJS)
+│   ├── gentle-maps/         # GentleMaps service (Java/Spring Boot with Maven)
+│   ├── gentle-dating/       # GentleDating service (TypeScript/NestJS)
+│   ├── gentle-market/       # GentleMarket service (TypeScript/NestJS)
+│   ├── gentle-network/      # GentleNetwork service (TypeScript/NestJS)
+│   ├── gentle-analytics/    # GentleAnalytics service (Java/Spring Boot with Gradle)
+│   ├── gentle-estate/       # GentleEstate service (Java/Spring Boot with Maven)
+│   └── gentle-bank/         # GentleBank service (Java/Spring Boot with Gradle)
+│
+├── docker-compose.yml       # Docker Compose file for container orchestration
+└── README.md                # Project documentation
+```
 
-2. Wechseln Sie in das Projektverzeichnis:
-    ```bash
-    cd GentleCorp-Ecosystem
-    ```
+  ## Getting Started
 
-3. Abhängigkeiten für das Frontend installieren:
-    ```bash
-    cd frontend
-    npm install
-    ```
+  ### Starting with Docker
+  1. Ensure Docker and Docker Compose are installed.
 
-4. Abhängigkeiten für die Backend-Services installieren:
-    ```bash
-    cd backend
-    npm install
-    ```
+  2. Clone the repository:
+      ```bash
+      git clone https://github.com/Caleb-Script/GentleCorp-Ecosystem.git
+      ```
 
-5. Projekt mit Docker starten:
-    ```bash
-    docker-compose up
-    ```
+  3. Navigate to the project directory:
+      ```bash
+      cd GentleCorp-Ecosystem
+      ```
 
-## Mitwirken
+  4. Start the project using Docker:
+      ```bash
+      docker compose up
+      ```
 
-Fühlen Sie sich frei, zum Projekt beizutragen, indem Sie Issues erstellen oder Pull Requests einreichen.
 
-## Lizenz
+  ### Starting Individual Services
 
-Dieses Projekt ist unter der MIT-Lizenz lizenziert.
+  **Frontend:**
+
+  1. Navigate to the frontend directory:
+      ```bash
+      cd frontend
+      ```
+
+  2. Install dependencies:
+      ```bash
+      npm install
+      ```
+
+  3. Start the frontend service:
+      ```bash
+      npm run dev
+      ```
+
+  **Backend Services:**
+
+  For Java-based services, you can start them individually. The commands depend on whether the service uses Maven or Gradle:
+
+  **Gradle:**
+
+  1. Navigate to the specific backend service directory:
+      ```bash
+      cd backend/gentle-bank
+      cd backend/gentle-travel
+      cd backend/gentle-analytics
+      ```
+
+  2. Build and run the service:
+      ```bash
+      ./gradlew bootRun
+      ```
+
+  **Maven:**
+
+  1. Navigate to the specific backend service directory:
+      ```bash
+      cd backend/gentle-maps
+      cd backend/gentle-estate
+      ```
+
+  2. Build and run the service:
+      ```bash
+      ./mvnw spring-boot:run
+      ```
+
+  **TypeScript (NestJS):**
+
+  1. Navigate to the specific backend service directory:
+  ```bash
+  cd backend/gentle-shop
+  cd backend/gentle-chat
+  cd backend/gentle-food
+  cd backend/gentle-dating
+  cd backend/gentle-market
+  cd backend/gentle-network
+  ```
+
+  2. Install dependencies:
+      ```bash
+      npm install
+      ```
+
+  3. Start the frontend service:
+      ```bash
+      npm run dev
+      ```
+
+  ## Contributing
+
+  Feel free to contribute to the project by creating issues or submitting pull requests.
+
+  ## License
+
+  This project is licensed under the MIT License.
+
+
+---
