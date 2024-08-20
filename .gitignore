@@ -1,7 +1,7 @@
 # Volumes
 /volumes
 
-/backend/gentle-shop
+#/backend/gentle-shop
 
 # Compiled output
 /backend/**/dist
