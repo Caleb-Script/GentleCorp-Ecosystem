@@ -57,6 +57,7 @@ Welcome to the GentleCorp-Ecosystem! This project is a comprehensive suite of mi
 - **Authentication**: Keycloak
 - **Distributed Tracing**: Zipkin
 - **Containerization**: Docker
+- **Orchestration**: Kubernetes
 
 ## Repository Structure
 
@@ -86,6 +87,7 @@ GentleCorp-Ecosystem/
 │   └── gentle-bank/         # GentleBank service (Java/Spring Boot with Gradle)
 │
 ├── docker-compose.yml       # Docker Compose file for container orchestration
+├── k8s/                     # Kubernetes manifests
 └── README.md                # Project documentation
 ```
 
@@ -111,6 +113,12 @@ GentleCorp-Ecosystem/
 
    ```bash
    docker compose up
+   ```
+
+5. For Kubernetes deployment, apply the Kubernetes manifests:
+
+   ```bash
+   kubectl apply -f k8s/
    ```
 
 ### Starting Individual Services
