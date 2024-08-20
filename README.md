@@ -7,6 +7,7 @@ Welcome to the GentleCorp-Ecosystem! This project is a comprehensive suite of mi
 2. [Tech Stack](#tech-stack)
    - [Frontend](#frontend)
    - [Backend](#backend)
+   - [Technologies Used](#technologies-used)
 3. [Repository Structure](#repository-structure)
 4. [Getting Started](#getting-started)
    - [Using Docker](#using-docker)
