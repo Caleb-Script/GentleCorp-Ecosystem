@@ -3,6 +3,7 @@
 Welcome to the GentleCorp-Ecosystem! This project is a comprehensive suite of microservices designed to meet various needs in a modern digital environment. The ecosystem encompasses a wide range of services, from online shopping and travel booking to financial services, social networking, and more.
 
 ## Table of Contents
+
 1. [Overview](#overview)
 2. [Tech Stack](#tech-stack)
    - [Frontend](#frontend)
@@ -10,8 +11,8 @@ Welcome to the GentleCorp-Ecosystem! This project is a comprehensive suite of mi
    - [Technologies Used](#technologies-used)
 3. [Repository Structure](#repository-structure)
 4. [Getting Started](#getting-started)
-   - [Using Docker](#using-docker)
-   - [Starting Individually](#starting-individually)
+   - [Using Docker](#Starting with Docker)
+   - [Starting Individually](#Starting Individual Services)
 5. [Contributing](#contributing)
 6. [License](#license)
 
@@ -24,12 +25,15 @@ Welcome to the GentleCorp-Ecosystem! This project is a comprehensive suite of mi
 ## Tech Stack
 
 ### Frontend
+
 - **Framework**: [Next.js](https://nextjs.org/) (using the App Router)
 - **Language**: TypeScript
 - **Styling**: [Bootstrap](https://getbootstrap.com/)
 
 ### Backend
+
 - **Java (Spring Boot)**
+
   - **Gradle**:
     - GentleBank
     - GentleAnalytics
@@ -47,6 +51,7 @@ Welcome to the GentleCorp-Ecosystem! This project is a comprehensive suite of mi
   - GentleNetwork
 
 ### Technologies Used
+
 - **Databases**: MySQL and PostgreSQL
 - **Messaging**: Kafka
 - **Authentication**: Keycloak
@@ -54,6 +59,7 @@ Welcome to the GentleCorp-Ecosystem! This project is a comprehensive suite of mi
 - **Containerization**: Docker
 
 ## Repository Structure
+
 ```plaintext
 GentleCorp-Ecosystem/
 │
@@ -83,106 +89,118 @@ GentleCorp-Ecosystem/
 └── README.md                # Project documentation
 ```
 
-  ## Getting Started
+## Getting Started
 
-  ### Starting with Docker
-  1. Ensure Docker and Docker Compose are installed.
+### Starting with Docker
 
-  2. Clone the repository:
-      ```bash
-      git clone https://github.com/Caleb-Script/GentleCorp-Ecosystem.git
-      ```
+1. Ensure Docker and Docker Compose are installed.
 
-  3. Navigate to the project directory:
-      ```bash
-      cd GentleCorp-Ecosystem
-      ```
+2. Clone the repository:
 
-  4. Start the project using Docker:
-      ```bash
-      docker compose up
-      ```
+   ```bash
+   git clone https://github.com/Caleb-Script/GentleCorp-Ecosystem.git
+   ```
 
+3. Navigate to the project directory:
 
-  ### Starting Individual Services
+   ```bash
+   cd GentleCorp-Ecosystem
+   ```
 
-  **Frontend:**
+4. Start the project using Docker:
 
-  1. Navigate to the frontend directory:
-      ```bash
-      cd frontend
-      ```
+   ```bash
+   docker compose up
+   ```
 
-  2. Install dependencies:
-      ```bash
-      npm install
-      ```
+### Starting Individual Services
 
-  3. Start the frontend service:
-      ```bash
-      npm run dev
-      ```
+**Frontend:**
 
-  **Backend Services:**
+1. Navigate to the frontend directory:
 
-  For Java-based services, you can start them individually. The commands depend on whether the service uses Maven or Gradle:
+   ```bash
+   cd frontend
+   ```
 
-  **Gradle:**
+2. Install dependencies:
 
-  1. Navigate to the specific backend service directory:
-      ```bash
-      cd backend/gentle-bank
-      cd backend/gentle-travel
-      cd backend/gentle-analytics
-      ```
+   ```bash
+   npm install
+   ```
 
-  2. Build and run the service:
-      ```bash
-      ./gradlew bootRun
-      ```
+3. Start the frontend service:
 
-  **Maven:**
+   ```bash
+   npm run dev
+   ```
 
-  1. Navigate to the specific backend service directory:
-      ```bash
-      cd backend/gentle-maps
-      cd backend/gentle-estate
-      ```
+**Backend Services:**
 
-  2. Build and run the service:
-      ```bash
-      ./mvnw spring-boot:run
-      ```
+For Java-based services, you can start them individually. The commands depend on whether the service uses Maven or Gradle:
 
-  **TypeScript (NestJS):**
+**Gradle:**
 
-  1. Navigate to the specific backend service directory:
-  ```bash
-  cd backend/gentle-shop
-  cd backend/gentle-chat
-  cd backend/gentle-food
-  cd backend/gentle-dating
-  cd backend/gentle-market
-  cd backend/gentle-network
-  ```
+1. Navigate to the specific backend service directory:
 
-  2. Install dependencies:
-      ```bash
-      npm install
-      ```
+   ```bash
+   cd backend/gentle-bank
+   cd backend/gentle-travel
+   cd backend/gentle-analytics
+   ```
 
-  3. Start the frontend service:
-      ```bash
-      npm run dev
-      ```
+2. Build and run the service:
 
-  ## Contributing
+   ```bash
+   ./gradlew bootRun
+   ```
 
-  Feel free to contribute to the project by creating issues or submitting pull requests.
+**Maven:**
 
-  ## License
+1. Navigate to the specific backend service directory:
 
-  This project is licensed under the MIT License.
+   ```bash
+   cd backend/gentle-maps
+   cd backend/gentle-estate
+   ```
 
+2. Build and run the service:
+
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+
+**TypeScript (NestJS):**
+
+1. Navigate to the specific backend service directory:
+
+   ```bash
+   cd backend/gentle-shop
+   cd backend/gentle-chat
+   cd backend/gentle-food
+   cd backend/gentle-dating
+   cd backend/gentle-market
+   cd backend/gentle-network
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Start the frontend service:
+
+   ```bash
+   npm run dev
+   ```
+
+## Contributing
+
+Feel free to contribute to the project by creating issues or submitting pull requests.
+
+## License
+
+This project is licensed under the MIT License.
 
 ---
