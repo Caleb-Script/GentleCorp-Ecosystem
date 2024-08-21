@@ -1,0 +1,93 @@
+#Database
+DATABASE_USERNAME: customer-db-user
+DATABASE_PASSWORD: GentleCorp21.08.2024
+DATABASE_HOST: localhost
+DATABASE_DB: customer-db
+
+#Postgres
+POSTGRESSQL_URL: postgresql
+POSTGRESSQL_PORT: 5432
+
+#MySQL
+MYSQL_URL: mysql
+MYSQL_PORT: 3306
+
+#Server
+SERVER_PORT: 8081
+ACTIVE_PROFILE: dev
+
+spring:
+  config.activate.on-profile: dev
+  flyway:
+    clean-disabled: false
+    #clean-on-validation-error: true # Tabellen werden beim Validierungsfehler gelöscht
+    create-schemas: false
+    #tablespace: customer_tablespace
+
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+      properties:
+        hibernate:
+          jdbc:
+            time_zone: UTC
+          globally_quoted_identifiers: true
+          format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  mail:
+    host: localhost
+    port: 5025
+  mvc.log-request-details: true
+  output.ansi.enabled: ALWAYS
+
+app:
+  mail:
+    from: Support <support@gentleBank.org>
+    to: hmm Musterfrau <maxi.musterfrau@testd.de>
+
+  logfile: ./build/log/application.log
+  password: p
+  password-falsch: FALSCH
+
+logging:
+  file.name: ./logs/application.log
+  logback.rollingpolicy:
+    file-name-pattern: ${logging.file.name}.%d{yyyy-MM-dd}.%i.gz
+    max-file-size: 100KB
+    max-history: 3
+  pattern:
+    console: "%clr(%date{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}){faint} %clr(%5level) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15thread]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %msg%n%wEx"
+    file: "%date{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5level ${PID:- } --- [%thread] %-40.40logger{39} : %m%n%wEx"
+  threshold:
+    console: trace
+    file: trace
+  level:
+    com.gentlebank.customerservice: trace
+    org.apache.catalina.loader.WebappClassLoaderBase: info
+    org.springframework.boot.availability.ApplicationAvailabilityBean: debug
+    org.springframework.boot.devtools.autoconfigure.ConditionEvaluationDeltaLoggingListener: warn
+    #org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean: debug
+    org.springframework.web.reactive.function.client.ExchangeFunctions: trace
+    org.springframework.web.service.invoker.PathVariableArgumentResolver: trace
+    org.springframework.web.service.invoker.RequestHeaderArgumentResolver: trace
+    org.springframework.web.servlet.DispatcherServlet: debug
+    org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor: debug
+    org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: debug
+    org.springframework.security.core.userdetails.User: error
+    org.springframework.security.web.server.authorization.AuthorizationWebFilter: trace
+    io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor: error
+
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
+
+    org.hibernate.SQL_SLOW: warn
+    org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor: debug
+
+    io.qameta.allure.AllureLifecycle: fatal
+    org.junit.jupiter.engine.descriptor.TestInstanceLifecycleUtils: warn
+    org.springframework.boot.test.context.SpringBootTestContextBootstrapper: warn
+    org.springframework.test.context.support.AbstractContextLoader: warn
+    org.springframework.test.context.support.AnnotationConfigContextLoaderUtils: warn
+    org.springframework.test.context.support.DefaultTestContextBootstrapper: warn

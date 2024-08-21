@@ -1,0 +1,14 @@
+
+spring:
+  profiles:
+    active: ${ACTIVE_PROFILE:dev}
+
+  datasource:
+    url: jdbc:${MYSQL_URL:}://${DATABASE_HOST:}:${MYSQL_PORT}/${DATABASE_DB}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+server:
+  port: ${SERVER_PORT:8080}
+
