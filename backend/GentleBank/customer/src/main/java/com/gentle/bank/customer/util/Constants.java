@@ -6,7 +6,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 public class Constants {
     public static final String PROBLEM_PATH = "/problem";
-    public static final String REST_PATH = "/rest";
+    public static final String CUSTOMER_PATH = "/customer";
 
     /**
      * Muster für eine UUID.

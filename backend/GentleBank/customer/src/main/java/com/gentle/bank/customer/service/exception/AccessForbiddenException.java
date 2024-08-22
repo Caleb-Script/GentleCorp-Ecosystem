@@ -1,0 +1,26 @@
+
+package com.gentle.bank.customer.service.exception;
+
+import com.gentle.bank.customer.security.Rolle;
+import lombok.Getter;
+
+import java.util.Collection;
+
+/**
+ * Exception, falls der Zugriff wegen fehlender Rollen nicht erlaubt ist.
+ *
+ * @author <a href="mailto:Caleb_G@outlook.de">Caleb Gyamfi</a>
+ */
+@Getter
+public class AccessForbiddenException extends RuntimeException {
+    /**
+     * Vorhandene Rollen.
+     */
+    private final Collection<Rolle> rollen;
+
+    @SuppressWarnings("ParameterHidesMemberVariable")
+    public AccessForbiddenException(final Collection<Rolle> rollen) {
+        super("Unzureichende Rollen: " + rollen);
+        this.rollen = rollen;
+    }
+}

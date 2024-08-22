@@ -1,0 +1,97 @@
+services:
+  db:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    command:
+      - 'postgres'
+      - '-c'
+      - 'ssl=on'
+      - '-c'
+      - 'ssl_cert_file=/var/lib/postgresql/certificate.crt'
+      - '-c'
+      - 'ssl_key_file=/var/lib/postgresql/key.pem'
+      - '-c'
+      - 'unix_socket_directories='  # Disable Unix-domain sockets
+    volumes:
+      - type: bind
+        source: /Users/gentlebookpro/GentleCorp/postgres/data
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: /Users/gentlebookpro/GentleCorp/postgres/postgresql.conf
+        target: /etc/postgresql/postgresql.conf
+        read_only: true
+      - type: bind
+        source: /Users/gentlebookpro/GentleCorp/postgres/tablespace
+        target: /var/lib/postgresql/tablespace
+      - type: bind
+        source: /Users/gentlebookpro/GentleCorp/postgres/tls/key.pem
+        target: /var/lib/postgresql/key.pem
+        read_only: true
+      - type: bind
+        source: /Users/gentlebookpro/GentleCorp/postgres/tls/certificate.crt
+        target: /var/lib/postgresql/certificate.crt
+        read_only: true
+      - type: bind
+        source: /Users/gentlebookpro/GentleCorp/postgres/csv
+        target: /csv
+        read_only: true
+      - type: bind
+        source: /Users/gentlebookpro/GentleCorp/postgres/sql
+        target: /sql
+        read_only: true
+    env_file: .env
+    environment:
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+    secrets: [db-password]
+    user: 'postgres:postgres'
+    security_opt:
+      - label:user:postgres
+      - no-new-privileges:true
+    hostname: postgres
+    container_name: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "--dbname=postgres", "--username=postgres"]
+      interval: 5s
+      timeout: 2s
+      start_period: 5s
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 512M
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - "8888:80"
+    volumes:
+      - type: bind
+        source: /Users/gentlebookpro/GentleCorp/postgres/pgadmin
+        target: /var/lib/pgadmin
+      - type: bind
+        source: /Users/gentlebookpro/GentleCorp/postgres/pgadmin4
+        target: /var/lib/pgadmin4
+    env_file: pgadmin.env
+    user: 'pgadmin:5050'
+    hostname: pgadmin
+    container_name: pgadmin
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETGID, SETUID, DAC_OVERRIDE, NET_BIND_SERVICE]
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+secrets:
+  db-password:
+    file: db_password.txt

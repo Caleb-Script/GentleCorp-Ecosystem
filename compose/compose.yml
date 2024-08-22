@@ -1,0 +1,24 @@
+include:
+  - path: ./customer/compose.yml
+    
+services:
+  app:
+    image: gentlecorp/server:2024.06.0
+    ports:
+      - "3000:3000"
+    depends_on:
+      customer:
+        condition: service_started
+    
+    volumes:
+      - type: bind
+        source: app.yml
+        target: /app/src/config/resources/app.yml
+        read_only: true
+      - type: bind
+        source: ./tls/key.pem
+        target: /app/src/config/resources/tls/key.pem
+        read_only: true
+
+    hostname: app
+    container_name: app

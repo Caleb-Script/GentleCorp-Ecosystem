@@ -32,6 +32,9 @@ dependencies {
    * SECURITY
    * --------------------------------------------------------------------------------------------------------------------*/
   runtimeOnly("org.bouncycastle:bcpkix-jdk18on:${libs.versions.bouncycastle.get()}") // Argon2
+  implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+  implementation("com.c4-soft.springaddons:spring-addons-starter-oidc:${libs.versions.springAddonsStarterOidc.get()}")
+
 
   /**------------------------------------------------------------------------------------------------------------------------
    * SWAGGER

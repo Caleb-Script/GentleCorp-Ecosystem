@@ -13,11 +13,20 @@ MYSQL_URL: mysql
 MYSQL_PORT: 3306
 
 #Server
-SERVER_PORT: 8081
+SERVER_PORT: 8080
 ACTIVE_PROFILE: dev
 
 spring:
-  config.activate.on-profile: dev
+  config:
+    activate:
+      on-profile: dev
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8880/realms/GentleCorp-Ecosystem
+
   flyway:
     clean-disabled: false
     #clean-on-validation-error: true # Tabellen werden beim Validierungsfehler gelöscht
@@ -36,16 +45,40 @@ spring:
           format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
+
   mail:
     host: localhost
     port: 5025
   mvc.log-request-details: true
   output.ansi.enabled: ALWAYS
 
+com.c4-soft.springaddons.oidc.ops:
+  - iss: http://localhost:8880/realms/GentleCorp-Ecosystem
+    authorities:
+      # Pfad zu den Rollen innerhalb vom "JWT Claim" und zusaetzlicher Praefix "ROLE_" fuer Spring Security
+      - path: $.realm_access.roles
+        prefix: ROLE_
+
+
+
+# --------------------------------------------------------
+# E i g e n e   P r o p e r t i e s
+# --------------------------------------------------------
 app:
-  mail:
-    from: Support <support@gentleBank.org>
-    to: hmm Musterfrau <maxi.musterfrau@testd.de>
+  keycloak:
+    #client-secret: ${keycloak.client-secret}
+    #schema: http
+    host: localhost
+    port: 8880
+    client-secret: 6J3uzo8E8jbCUbiraQIAOKuPRA4xKO7S
+  #mail:
+  #  from: Theo Test <theo@test.de>
+  #  sales: Maxi Musterfrau <maxi.musterfrau@test.de>
+
+#app:
+#  mail:
+#    from: Support <support@gentleBank.org>
+#    to: hmm Musterfrau <maxi.musterfrau@testd.de>
 
   logfile: ./build/log/application.log
   password: p
@@ -76,8 +109,14 @@ logging:
     org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor: debug
     org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: debug
     org.springframework.security.core.userdetails.User: error
+    org.springframework.security: debug
+    org.springframework.security.oauth2: debug
     org.springframework.security.web.server.authorization.AuthorizationWebFilter: trace
     io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor: error
+
+    org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider: debug
+    org.springframework.security.web.access.intercept.RequestMatcherDelegatingAuthorizationManager: debug
+    org.springframework.security.web.FilterChainProxy: debug
 
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace

@@ -1,0 +1,43 @@
+services:
+  keycloak:
+    image: keycloak/keycloak:latest
+    #depends_on: [postgres]
+    ports:
+      - published: 8880
+        target: 8080
+      - published: 8443
+        target: 8443
+    volumes:
+      - type: bind
+        source: /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/volumes/keycloak
+        # mit Unterverzeichnis h2
+        target: /opt/keycloak/data
+      - type: bind
+        source: key.pem
+        target: /opt/keycloak/conf/key.pem
+        read_only: true
+      - type: bind
+        source: certificate.crt
+        target: /opt/keycloak/conf/certificate.crt
+        read_only: true
+      # ggf. /opt/keycloak/conf/keycloak.conf
+    env_file: .env
+    hostname: keycloak
+    container_name: keycloak
+    user: keycloak:1000
+    # --features=token-exchange
+    entrypoint: ['/opt/keycloak/bin/kc.sh', 'start-dev']
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+
+
+
+
+eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIyMGVkYTljNS01NTk1LTQyZGEtYmZjZS1jNjgwOTRlZGU3ZTkifQ.eyJleHAiOjE3MjQ0MDU2NjIsImlhdCI6MTcyNDMxOTI2MiwianRpIjoiODM5NTlmMmUtZTE5Yy00ODA0LThlOWUtMWM5ZWY3ZDVjMjYzIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4ODgwL3JlYWxtcy9HZW50bGVDb3JwLUVjb3N5c3RlbSIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODg4MC9yZWFsbXMvR2VudGxlQ29ycC1FY29zeXN0ZW0iLCJ0eXAiOiJJbml0aWFsQWNjZXNzVG9rZW4ifQ.94m_SA9loHoVVR4hPdmsk9zzJoB8yi9aBeJgh0hrCdFXzQTsBuLHNB4b3bSD9V-naOBTQO74HsfaNtvJ2Wt3_A

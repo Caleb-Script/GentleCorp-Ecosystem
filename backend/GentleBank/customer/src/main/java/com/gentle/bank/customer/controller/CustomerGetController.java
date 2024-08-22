@@ -2,10 +2,12 @@ package com.gentle.bank.customer.controller;
 
 import com.gentle.bank.customer.entity.Customer;
 import com.gentle.bank.customer.controller.model.CustomerModel;
+import com.gentle.bank.customer.security.JwtService;
 import com.gentle.bank.customer.service.CustomerReadService;
 import com.gentle.bank.customer.util.UriHelper;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.annotation.Observed;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -18,6 +20,8 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.LinkRelation;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,11 +29,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.gentle.bank.customer.util.Constants.CUSTOMER_PATH;
 import static com.gentle.bank.customer.util.Constants.ID_PATTERN;
-import static com.gentle.bank.customer.util.Constants.REST_PATH;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_MODIFIED;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
@@ -42,13 +47,14 @@ import static org.springframework.http.ResponseEntity.status;
  * @author <a href="mailto:Juergen.Zimmermann@h-ka.de">Jürgen Zimmermann</a>
  */
 @RestController
-@RequestMapping(REST_PATH)
+@RequestMapping(CUSTOMER_PATH)
 @OpenAPIDefinition(info = @Info(title = "Customer API", version = "v2"))
 @RequiredArgsConstructor
 @Slf4j
 public class CustomerGetController {
-    private final CustomerReadService customerReadService;
-    private final UriHelper uriHelper;
+  private final CustomerReadService customerReadService;
+  private final JwtService jwtService;
+  private final UriHelper uriHelper;
 
     /**
      * Suche anhand der Customer-ID als Pfad-Parameter.
@@ -56,21 +62,33 @@ public class CustomerGetController {
      * @param id ID des zu suchenden Kunden
      * @param version Versionsnummer aus dem Header If-None-Match
      * @param request Das Request-Objekt, um Links für HATEOAS zu erstellen.
+     * @param jwt JWT für Security
      * @return Ein Response mit dem Statuscode 200 und dem gefundenen Kunden mit Atom-Links oder Statuscode 404.
      */
     @GetMapping(path = "{id:" + ID_PATTERN + "}", produces = HAL_JSON_VALUE)
+    @Observed(name = "get-by-id")
     @Operation(summary = "Suche mit der Customer-ID", tags = "Suchen")
     @ApiResponse(responseCode = "200", description = "Customer gefunden")
     @ApiResponse(responseCode = "404", description = "Customer nicht gefunden")
     ResponseEntity<CustomerModel> getById(
         @PathVariable final UUID id,
         @RequestHeader("If-None-Match") final Optional<String> version,
-        final HttpServletRequest request
+        final HttpServletRequest request,
+        @AuthenticationPrincipal final Jwt jwt
     ) {
-        log.debug("getById: id={}, version={}", id, version);
+      final var username = jwtService.getUsername(jwt);
+        log.debug("getById: id={}, version={}, username{}", id, version, username);
+
+      if (username == null) {
+        log.error("Trotz Spring Security wurde getById() ohne Benutzername im JWT aufgerufen");
+        return status(UNAUTHORIZED).build();
+      }
+
+      final var rollen = jwtService.getRollen(jwt);
+      log.trace("getById: rollen={}", rollen);
 
         // "Distributed Tracing" durch https://micrometer.io bei Aufruf eines anderen Microservice
-        final var customer = customerReadService.findById(id);
+        final var customer = customerReadService.findById(id, username, rollen);
         log.debug("getById: {}", customer);
 
         final var currentVersion = STR."\"\{customer.getVersion()}\"";

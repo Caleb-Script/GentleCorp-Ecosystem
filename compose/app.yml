@@ -1,0 +1,27 @@
+# ==============================================================================
+# N o d e
+# ==============================================================================
+node:
+  port: 3000
+
+# ==============================================================================
+# S U B G R A P H 
+# ==============================================================================
+subgraph:
+  customer: http://customer:3001/graphql
+  account: http://account:3002/graphql
+  invoice: http://invoice:3003/graphql
+  activity: http://activity:3004/graphql
+
+# ==============================================================================
+# P A T H
+# cd /Users/gentlebookpro/Projekte/GentleCorp/backend/compose/postgres
+# cd /Users/gentlebookpro/Projekte/GentleCorp/backend/compose/kafka
+# cd /Users/gentlebookpro/Projekte/GentleCorp/backend/compose/keycloak
+# cd /Users/gentlebookpro/Projekte/GentleCorp/backend/gateway
+# cd /Users/gentlebookpro/Projekte/GentleCorp/backend/customer
+# cd /Users/gentlebookpro/Projekte/GentleCorp/backend/account
+# cd /Users/gentlebookpro/Projekte/GentleCorp/backend/invoice
+# cd /Users/gentlebookpro/Projekte/GentleCorp/backend/activity
+# cd /Users/gentlebookpro/Projekte/GentleCorp/frontend
+# ==============================================================================

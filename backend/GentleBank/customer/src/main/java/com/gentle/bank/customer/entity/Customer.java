@@ -57,6 +57,9 @@ public class Customer {
     /** E-Mail-Adresse des Kunden */
     private String email;
 
+  private String username;
+  private String password;
+
     /** Geburtsdatum des Kunden */
     private LocalDate birthDate;
 

@@ -7,7 +7,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
-import static com.gentle.bank.customer.util.Constants.REST_PATH;
+import static com.gentle.bank.customer.util.Constants.CUSTOMER_PATH;
 
 @Component
 @Slf4j
@@ -34,7 +34,7 @@ public class UriHelper {
         // URI aus Schema, Host, Port und Pfad
         final var uriComponents = ServletUriComponentsBuilder.fromRequestUri(request).build();
         final var baseUri =
-            STR."\{uriComponents.getScheme()}://\{uriComponents.getHost()}:\{uriComponents.getPort()}\{REST_PATH}";
+            STR."\{uriComponents.getScheme()}://\{uriComponents.getHost()}:\{uriComponents.getPort()}\{CUSTOMER_PATH}";
         log.debug("getBaseUri (ohne Forwarding): baseUri={}", baseUri);
         return URI.create(baseUri);
     }
@@ -54,7 +54,7 @@ public class UriHelper {
             log.trace("getBaseUriForwarded: Kein \"{}\" im Header", X_FORWARDED_PREFIX);
             forwardedPrefix = CUSTOMER_PREFIX;
         }
-        final var baseUri = STR."\{forwardedProto}://\{forwardedHost}\{forwardedPrefix}\{REST_PATH}";
+        final var baseUri = STR."\{forwardedProto}://\{forwardedHost}\{forwardedPrefix}\{CUSTOMER_PATH}";
         log.debug("getBaseUriForwarded: baseUri={}", baseUri);
         return URI.create(baseUri);
     }

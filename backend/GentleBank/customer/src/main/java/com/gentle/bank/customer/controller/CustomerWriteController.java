@@ -43,7 +43,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.*;
 
 @Controller
-@RequestMapping(REST_PATH)
+@RequestMapping(CUSTOMER_PATH)
 @RequiredArgsConstructor
 @Slf4j
 public class CustomerWriteController {
