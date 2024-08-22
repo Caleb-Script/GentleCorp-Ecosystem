@@ -1,6 +1,6 @@
-
 package com.gentle.bank.customer.security;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.RequiredArgsConstructor;
 
 import java.util.stream.Stream;
@@ -12,30 +12,37 @@ import java.util.stream.Stream;
  */
 @RequiredArgsConstructor
 public enum Rolle {
-    /**
-     * Die Rolle ADMIN.
-     */
-    ADMIN,
-  CUSTOMER,
+  /**
+   * Die Rolle ADMIN.
+   */
+  GENTLECORP_ADMIN("gentlecorp-admin"),
+  GENTLEBANK_ADMIN("gentlebank-admin"),
+  ESSENTIAL("gentlecorp-essential"),
+  ELITE("gentlecorp-elite"),
 
-    /**
-     * Die Rolle USER.
-     */
-    USER;
-
-
-    /**
-     * Zu einem String die Rolle als Enum ermitteln.
-     *
-     * @param str String einer Rolle
-     * @return Rolle als Enum oder null
-     */
-    public static Rolle of(final String str) {
-        return Stream.of(values())
-            .filter(rolle -> rolle.name().equalsIgnoreCase(str))
-            .findFirst()
-            .orElse(null);
-    }
-
+  /**
+   * Die Rolle USER.
+   */
+  GENTLECORP_USER("gentlecorp-user"),
+  GENTLEBANK_USER("gentlebank-user");
   public static final String ROLE_PREFIX = "ROLE_";
+  private final String role;
+
+  /**
+   * Zu einem String die Rolle als Enum ermitteln.
+   *
+   * @param str String einer Rolle
+   * @return Rolle als Enum oder null
+   */
+  public static Rolle of(final String str) {
+    return Stream.of(values())
+      .filter(rolle -> rolle.role.equalsIgnoreCase(str))
+      .findFirst()
+      .orElse(null);
+  }
+
+  @JsonValue
+  public String getRole() {
+    return role;
+  }
 }

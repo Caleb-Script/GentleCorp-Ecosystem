@@ -16,18 +16,14 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  */
 @ConfigurationProperties(prefix = "app.keycloak")
 public record KeycloakProps(
-    @DefaultValue("http")
     String schema,
 
-    @DefaultValue("localhost")
     String host,
 
-    @DefaultValue("8880")
     int port,
 
-    @DefaultValue("GentleBank")
     String clientId,
 
-    @DefaultValue("6J3uzo8E8jbCUbiraQIAOKuPRA4xKO7S")
-    String clientSecret) {
+    String clientSecret
+) {
 }

@@ -17,11 +17,16 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
 
 import static com.gentle.bank.customer.security.AuthController.AUTH_PATH;
-import static com.gentle.bank.customer.security.Rolle.ADMIN;
+import static com.gentle.bank.customer.security.Rolle.ELITE;
+import static com.gentle.bank.customer.security.Rolle.GENTLEBANK_ADMIN;
+import static com.gentle.bank.customer.security.Rolle.GENTLECORP_ADMIN;
+import static com.gentle.bank.customer.security.Rolle.GENTLECORP_USER;
 import static com.gentle.bank.customer.util.Constants.CUSTOMER_PATH;
+import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.OPTIONS;
 import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.PUT;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 import static org.springframework.security.crypto.factory.PasswordEncoderFactories.createDelegatingPasswordEncoder;
 
@@ -65,20 +70,21 @@ sealed interface SecurityConfig permits ApplicationConfig {
   ) throws Exception {
     return httpSecurity
       .authorizeHttpRequests(authorize -> {
-        final var restPathBestellungId = CUSTOMER_PATH + "/*";
         authorize
           .requestMatchers(POST,  "/login").permitAll()
           .requestMatchers(GET,  "/login").permitAll()
-          .requestMatchers(OPTIONS, CUSTOMER_PATH + "/**").permitAll()
-          .requestMatchers(GET, AUTH_PATH + "/me").hasRole(ADMIN.name())
 
-          // https://spring.io/blog/2020/06/30/url-matching-with-pathpattern-in-spring-mvc
-          // https://docs.spring.io/spring-security/reference/current/servlet/integrations/mvc.html
-          .requestMatchers(GET, CUSTOMER_PATH, restPathBestellungId).permitAll()
-          .requestMatchers(POST, restPathBestellungId, "/graphql").hasRole(ADMIN.name())
+          .requestMatchers(GET, CUSTOMER_PATH).hasAnyRole(GENTLECORP_USER.getRole(), GENTLECORP_ADMIN.getRole())
+          .requestMatchers(GET, CUSTOMER_PATH + "/**").permitAll()
+          .requestMatchers(POST, CUSTOMER_PATH).permitAll()
+          .requestMatchers(PUT, CUSTOMER_PATH + "**").permitAll()
+          .requestMatchers(DELETE, CUSTOMER_PATH + "/**").hasAnyRole(GENTLECORP_ADMIN.getRole())
+
+          .requestMatchers(GET, AUTH_PATH + "/me").hasRole(GENTLECORP_ADMIN.name())
 
 
-          .requestMatchers(POST, "/graphql", AUTH_PATH + "/login").permitAll()
+
+          .requestMatchers(POST, AUTH_PATH + "/login").permitAll()
 
           .requestMatchers(
             // Actuator: Health mit Liveness und Readiness fuer Kubernetes

@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.gentle.bank.customer.security.Rolle.ADMIN;
+import static com.gentle.bank.customer.security.Rolle.GENTLECORP_ADMIN;
 
 @Service
 @Transactional(readOnly = true)
@@ -40,7 +40,7 @@ public class CustomerReadService {
         return customer;
       }
 
-      if (!rollen.contains(ADMIN)) {
+      if (!rollen.contains(GENTLECORP_ADMIN)) {
         // nicht admin, aber keine eigenen (oder keine) Gaestedaten
         throw new AccessForbiddenException(rollen);
       }

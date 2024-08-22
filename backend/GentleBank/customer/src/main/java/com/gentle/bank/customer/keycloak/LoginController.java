@@ -1,11 +1,14 @@
 package com.gentle.bank.customer.keycloak;
 
 
+import com.gentle.bank.customer.security.JwtService;
 import com.gentle.bank.customer.security.TokenDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LoginController {
 
     private final LoginService loginService;
+  private final JwtService jwtService;
 
     /**
      * Login with username and password.
@@ -58,9 +62,14 @@ public class LoginController {
      *
      */
     @GetMapping("login")
-    public String login() {
+    public String login(@AuthenticationPrincipal final Jwt jwt) {
+      final var username = jwtService.getUsername(jwt);
+      final var realmRollen = jwtService.getRealmRollen(jwt);
+      final var clientRollen =  jwtService.getClientRollen(jwt);
+      log.trace("getById: realmRollen={} clientRollen={}",realmRollen, clientRollen);
 
-        return "Hallo!";
+
+        return "Hallo! " +  username;
     }
 
     /**

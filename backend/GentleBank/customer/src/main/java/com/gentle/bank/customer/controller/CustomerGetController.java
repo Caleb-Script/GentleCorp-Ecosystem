@@ -84,11 +84,12 @@ public class CustomerGetController {
         return status(UNAUTHORIZED).build();
       }
 
-      final var rollen = jwtService.getRollen(jwt);
-      log.trace("getById: rollen={}", rollen);
+      final var realmRollen = jwtService.getRealmRollen(jwt);
+      final var clientRollen =  jwtService.getClientRollen(jwt);
+      log.trace("getById: realmRollen={} clientRollen={}",realmRollen, clientRollen);
 
         // "Distributed Tracing" durch https://micrometer.io bei Aufruf eines anderen Microservice
-        final var customer = customerReadService.findById(id, username, rollen);
+        final var customer = customerReadService.findById(id, username, realmRollen);
         log.debug("getById: {}", customer);
 
         final var currentVersion = STR."\"\{customer.getVersion()}\"";

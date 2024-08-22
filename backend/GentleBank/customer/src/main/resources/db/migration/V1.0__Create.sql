@@ -1,4 +1,3 @@
-
 CREATE TABLE IF NOT EXISTS address
 (
     id           BINARY(16)   NOT NULL PRIMARY KEY,
@@ -25,6 +24,7 @@ CREATE TABLE IF NOT EXISTS customer
     address_id           BINARY(16)   UNIQUE REFERENCES address,
     created              DATETIME NOT NULL,
     updated              DATETIME NOT NULL,
+    username             VARCHAR(40)  NOT NULL UNIQUE,
 
     INDEX     customer_last_name_idx(last_name)
 );

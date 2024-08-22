@@ -39,12 +39,15 @@ public class LoginService {
      * @return accessToken und etc...
      */
     public TokenDTO login(final String username, final String password) {
-        log.debug("login: username={}", username);
+        log.debug("login: username={}, password={}", username, password);
+        log.debug("KEYCLOAK PROPS: clientID={}, clientSecret={}", keycloakProps.clientId(), keycloakProps.clientSecret());
 
         final var tokenDTO = keycloakRepository.login(
-            "grant_type=password&username=" + username +
-                "&password=" + password + "&client_id=" + keycloakProps.clientId() +
-                "&client_secret" + keycloakProps.clientSecret(),
+          "grant_type=password&username=" + username
+            + "&password=" + password
+            + "&client_id=" + keycloakProps.clientId()
+            + "&client_secret=" + keycloakProps.clientSecret()
+            + "&scope=openid",
             "Basic " + clientAndSecretEncoded,
             APPLICATION_FORM_URLENCODED_VALUE
         );

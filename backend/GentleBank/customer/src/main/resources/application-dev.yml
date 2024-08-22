@@ -71,6 +71,7 @@ app:
     host: localhost
     port: 8880
     client-secret: 6J3uzo8E8jbCUbiraQIAOKuPRA4xKO7S
+    client-id: GentleBank
   #mail:
   #  from: Theo Test <theo@test.de>
   #  sales: Maxi Musterfrau <maxi.musterfrau@test.de>
@@ -97,7 +98,7 @@ logging:
     console: trace
     file: trace
   level:
-    com.gentlebank.customerservice: trace
+    com.gentle.bank.customer: trace
     org.apache.catalina.loader.WebappClassLoaderBase: info
     org.springframework.boot.availability.ApplicationAvailabilityBean: debug
     org.springframework.boot.devtools.autoconfigure.ConditionEvaluationDeltaLoggingListener: warn

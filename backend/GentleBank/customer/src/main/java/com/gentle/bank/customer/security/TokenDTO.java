@@ -45,6 +45,8 @@ public record TokenDTO(
     int notBeforePolicy,
     @JsonProperty("session_state")
     String sessionState,
+    @JsonProperty("id_token")
+    String idToken,
     ScopeType scope
 ) {
 }

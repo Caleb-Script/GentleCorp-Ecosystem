@@ -41,7 +41,7 @@ public class JwtService {
      * @param jwt JWT für Security
      * @return Die gesuchten Rollen oder die leere Liste
      */
-    public List<Rolle> getRollen(final Jwt jwt) {
+    public List<Rolle> getRealmRollen(final Jwt jwt) {
         @SuppressWarnings("unchecked")
         final var realmAccess = (Map<String, List<String>>) jwt.getClaims().get("realm_access");
         final var rollenStr = realmAccess.get("roles");
@@ -52,4 +52,17 @@ public class JwtService {
             .filter(Objects::nonNull)
             .toList();
     }
+
+  public List<Rolle> getClientRollen(final Jwt jwt) {
+    @SuppressWarnings("unchecked")
+    final var resourceAccess = (Map<String, Map<String, List<String>>>) jwt.getClaims().get("resource_access");
+    final var client = resourceAccess.get("GentleBank");
+    final var rollenStr = client.get("roles");
+    log.trace("getRollen: rollenStr={}", rollenStr);
+    return rollenStr
+      .stream()
+      .map(Rolle::of)
+      .filter(Objects::nonNull)
+      .toList();
+  }
 }
