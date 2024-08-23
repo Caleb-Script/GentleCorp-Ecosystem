@@ -1,6 +1,6 @@
 package com.gentle.bank.customer.util;
 
-import com.gentle.bank.customer.service.exception.VersionInvalidException;
+import com.gentle.bank.customer.exception.VersionInvalidException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 

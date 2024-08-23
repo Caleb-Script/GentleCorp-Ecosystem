@@ -16,11 +16,11 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
 
-import static com.gentle.bank.customer.security.AuthController.AUTH_PATH;
-import static com.gentle.bank.customer.security.Rolle.ELITE;
-import static com.gentle.bank.customer.security.Rolle.GENTLEBANK_ADMIN;
-import static com.gentle.bank.customer.security.Rolle.GENTLECORP_ADMIN;
-import static com.gentle.bank.customer.security.Rolle.GENTLECORP_USER;
+import static com.gentle.bank.customer.controller.AuthController.AUTH_PATH;
+import static com.gentle.bank.customer.entity.enums.Role.ELITE;
+import static com.gentle.bank.customer.entity.enums.Role.ESSENTIAL;
+import static com.gentle.bank.customer.entity.enums.Role.GENTLECORP_ADMIN;
+import static com.gentle.bank.customer.entity.enums.Role.GENTLECORP_USER;
 import static com.gentle.bank.customer.util.Constants.CUSTOMER_PATH;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
@@ -30,18 +30,29 @@ import static org.springframework.http.HttpMethod.PUT;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 import static org.springframework.security.crypto.factory.PasswordEncoderFactories.createDelegatingPasswordEncoder;
 
-// https://github.com/spring-projects/spring-security/tree/master/samples
 /**
- * Security-Konfiguration.
+ * Security configuration for the application.
  *
- * @author <a href="mailto:Caleb_G@outlook.de">Caleb Gyamfi</a>
+ * <p>This interface defines security configurations including authorization rules, password encoding,
+ * and settings for handling security contexts and sessions.</p>
+ *
+ * <p>The interface is {@code sealed} and allows implementation only by {@link ApplicationConfig}.</p>
+ *
+ * @since 23.08.2024
+ * @author Caleb Gyamfi
+ * @see ApplicationConfig
  */
 @SuppressWarnings("TrailingComment")
 sealed interface SecurityConfig permits ApplicationConfig {
+
   /**
-   * Bean-Methode zur Integration von Spring Security mit Keycloak.
+   * Bean method to integrate Spring Security with Keycloak.
    *
-   * @return Post-Prozessor für Spring Security zur Integration mit Keycloak
+   * <p>This method returns a {@link ResourceServerExpressionInterceptUrlRegistryPostProcessor} that configures
+   * URL patterns for authentication and authorization rules. It permits all requests to {@code /rest/**} with
+   * OPTIONS method and ensures all other requests are authenticated.</p>
+   *
+   * @return a post-processor for Spring Security to integrate with Keycloak
    */
   @Bean
   default ResourceServerExpressionInterceptUrlRegistryPostProcessor authorizePostProcessor() {
@@ -52,16 +63,17 @@ sealed interface SecurityConfig permits ApplicationConfig {
   }
 
   /**
-   * Bean-Definition, um den Zugriffsschutz an der REST-Schnittstelle zu konfigurieren,
-   * d.h. vor Anwendung von @PreAuthorize.
+   * Bean definition to configure access control at REST endpoints before applying {@code @PreAuthorize}.
    *
-   * @param httpSecurity Injiziertes Objekt von HttpSecurity als Ausgangspunkt für die Konfiguration.
-   * @param jwtAuthenticationConverter Injiziertes Objekt von Converter für die Anpassung an Keycloak
-   * @return Objekt von SecurityFilterChain
-   * @throws Exception Wegen HttpSecurity.authorizeHttpRequests()
+   * <p>This method configures {@link HttpSecurity} to define authorization rules for various endpoints,
+   * including support for JWT authentication and session management. It also sets up security for actuator
+   * endpoints and Swagger UI.</p>
+   *
+   * @param httpSecurity the injected {@link HttpSecurity} object used as a starting point for configuration
+   * @param jwtAuthenticationConverter the injected {@link Converter} for JWT to Keycloak authentication
+   * @return an instance of {@link SecurityFilterChain}
+   * @throws Exception if an error occurs during {@link HttpSecurity#authorizeHttpRequests()}
    */
-  // https://github.com/spring-projects/spring-security-samples/blob/main/servlet/java-configuration/...
-  // ...authentication/preauth/src/main/java/example/SecurityConfiguration.java
   @Bean
   @SuppressWarnings("LambdaBodyLength")
   default SecurityFilterChain securityFilterChain(
@@ -72,27 +84,24 @@ sealed interface SecurityConfig permits ApplicationConfig {
       .authorizeHttpRequests(authorize -> {
         authorize
           .requestMatchers(POST,  "/login").permitAll()
-          .requestMatchers(GET,  "/login").permitAll()
 
           .requestMatchers(GET, CUSTOMER_PATH).hasAnyRole(GENTLECORP_USER.getRole(), GENTLECORP_ADMIN.getRole())
           .requestMatchers(GET, CUSTOMER_PATH + "/**").permitAll()
           .requestMatchers(POST, CUSTOMER_PATH).permitAll()
-          .requestMatchers(PUT, CUSTOMER_PATH + "**").permitAll()
+          .requestMatchers(PUT, CUSTOMER_PATH + "**").hasAnyRole(GENTLECORP_ADMIN.getRole(), GENTLECORP_USER.getRole(), ELITE.getRole(), ESSENTIAL.getRole())
           .requestMatchers(DELETE, CUSTOMER_PATH + "/**").hasAnyRole(GENTLECORP_ADMIN.getRole())
 
           .requestMatchers(GET, AUTH_PATH + "/me").hasRole(GENTLECORP_ADMIN.name())
 
-
-
           .requestMatchers(POST, AUTH_PATH + "/login").permitAll()
 
           .requestMatchers(
-            // Actuator: Health mit Liveness und Readiness fuer Kubernetes
+            // Actuator: Health for liveness and readiness for Kubernetes
             EndpointRequest.to(HealthEndpoint.class),
-            // Actuator: Prometheus fuer Monitoring
+            // Actuator: Prometheus for monitoring
             EndpointRequest.to(PrometheusScrapeEndpoint.class)
           ).permitAll()
-          // OpenAPI bzw. Swagger UI und GraphiQL
+          // OpenAPI or Swagger UI and GraphiQL
           .requestMatchers(GET, "/v3/api-docs.yaml", "/v3/api-docs", "/graphiql").permitAll()
           .requestMatchers("/error", "/error/**").permitAll()
 
@@ -103,7 +112,7 @@ sealed interface SecurityConfig permits ApplicationConfig {
         .jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(jwtAuthenticationConverter))
       )
 
-      // Spring Security erzeugt keine HttpSession und verwendet keine fuer SecurityContext
+      // Spring Security does not create or use HttpSession for SecurityContext
       .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
       .formLogin(AbstractHttpConfigurer::disable)
       .csrf(AbstractHttpConfigurer::disable) // NOSONAR
@@ -112,17 +121,21 @@ sealed interface SecurityConfig permits ApplicationConfig {
   }
 
   /**
-   * Bean-Definition, um den Verschlüsselungsalgorithmus für Passwörter bereitzustellen. Es wird der
-   * Default-Algorithmus von Spring Security verwendet: bcrypt.
+   * Bean definition to provide the password encryption algorithm. The default algorithm provided by Spring Security, bcrypt, is used.
    *
-   * @return Objekt für die Verschlüsselung von Passwörtern.
+   * @return a {@link PasswordEncoder} instance for password encryption
    */
   @Bean
   default PasswordEncoder passwordEncoder() {
     return createDelegatingPasswordEncoder();
   }
 
-@Bean
+  /**
+   * Bean definition to provide a checker for compromised passwords using the Have I Been Pwned API.
+   *
+   * @return a {@link CompromisedPasswordChecker} instance
+   */
+  @Bean
   default CompromisedPasswordChecker compromisedPasswordChecker() {
     return new HaveIBeenPwnedRestApiPasswordChecker();
   }

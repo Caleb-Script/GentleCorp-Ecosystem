@@ -8,25 +8,54 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+/**
+ * Interface for logging password encoding processes using a specified {@link PasswordEncoder}.
+ * <p>
+ * This interface provides a method to create a Spring Bean that listens for the {@link ApplicationReadyEvent}
+ * and logs the encoded form of a specified password using the configured {@link PasswordEncoder}.
+ * </p>
+ *
+ * <h2>Key Features:</h2>
+ * <ul>
+ *   <li>Logs the encoded version of a password, demonstrating the configured {@link PasswordEncoder}'s behavior.</li>
+ *   <li>Uses Spring's {@link Value} annotation to inject the password to be encoded.</li>
+ * </ul>
+ *
+ * <h2>Usage</h2>
+ * <p>
+ * The `logPasswordEncoding` method is defined as a default method, making it easy to integrate
+ * this functionality into a Spring Boot application. It can be particularly useful for verifying
+ * password encoding configurations during application startup.
+ * </p>
+ *
+ * @author Caleb Gyamfi
+ * @version 1.0
+ * @since 23.08.2024
+ */
 interface LogPasswordEncoding {
-    Logger LOGGER = LoggerFactory.getLogger(LogPasswordEncoding.class);
-    /**
-     * Bean-Definition, um einen Listener bereitzustellen, der verschiedene Verschlüsselungsverfahren ausgibt.
-     *
-     * @param passwordEncoder PasswordEncoder für Argon2
-     * @param password Das zu verschlüsselnde Passwort
-     * @return Listener für die Ausgabe der verschiedenen Verschlüsselungsverfahren
-     */
-    @Bean
-    default ApplicationListener<ApplicationReadyEvent> logPasswordEncoding(
-        final PasswordEncoder passwordEncoder,
-        @Value("${app.password}") final String password
-    ) {
-        //noinspection unused
-        return event -> {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Argon2id mit \"{}\":   {}", password, passwordEncoder.encode(password));
-                }
-            };
-    }
+  Logger LOGGER = LoggerFactory.getLogger(LogPasswordEncoding.class);
+
+  /**
+   * Logs the encoded form of a password using the configured {@link PasswordEncoder}.
+   * <p>
+   * This method defines a bean that listens for the {@link ApplicationReadyEvent} and logs
+   * the encoded version of a specified password. The password is injected via the {@link Value} annotation
+   * from the application's configuration.
+   * </p>
+   *
+   * @param passwordEncoder the {@link PasswordEncoder} to be used for encoding the password.
+   * @param password the password to be encoded, injected from the application's configuration.
+   * @return an {@link ApplicationListener} for the {@link ApplicationReadyEvent} that logs the encoded password.
+   */
+  @Bean
+  default ApplicationListener<ApplicationReadyEvent> logPasswordEncoding(
+    final PasswordEncoder passwordEncoder,
+    @Value("${app.password}") final String password
+  ) {
+    return event -> {
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Argon2id with password \"{}\": {}", password, passwordEncoder.encode(password));
+      }
+    };
+  }
 }

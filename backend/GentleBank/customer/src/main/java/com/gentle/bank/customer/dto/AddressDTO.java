@@ -5,27 +5,68 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 /**
- * DTO for {@link Address}
+ * Data Transfer Object (DTO) for representing an address.
+ * <p>
+ * This DTO encapsulates the details of an address, including street, house number, postal code,
+ * state, city, and country. It is used for transferring address information between different
+ * layers of the application, particularly in requests and responses involving address data.
+ * </p>
+ *
+ * @param street The street of the address. Must match the {@link #STREET_PATTERN} regular expression.
+ * @param houseNumber The house number of the address.
+ * @param zipCode The postal code of the address.
+ * @param state The state of the address.
+ * @param city The city of the address.
+ * @param country The country of the address.
+ *
+ * @since 23.08.2024
+ * @version 1.0
+ * @author Caleb Gyamfi
  */
 public record AddressDTO(
+  /**
+   * The street of the address. This field must not be {@code null} and must match the {@link #STREET_PATTERN} regex.
+   * <p>
+   * The pattern requires the street to consist of letters and spaces, optionally followed by a space and digits (for street numbers).
+   * </p>
+   */
+  @Pattern(message = "Invalid street format. Letters are expected.", regexp = STREET_PATTERN)
+  @NotNull(message = "Street must not be null")
+  String street,
 
-  @Pattern(message = "Ungültiges Straßenformat. Es werden Buchstaben erwartet.", regexp = GERMAN_STREET_PATTERN)
-  @NotNull(message = "Straße darf nicht null sein")
-        String street,
+  /**
+   * The house number of the address. This field must not be {@code null}.
+   */
+  @NotNull(message = "House number must not be null")
+  String houseNumber,
 
-  @NotNull(message = "Hausnummer darf nicht null sein")
-        String houseNumber,
+  /**
+   * The postal code of the address. This field must not be {@code null}.
+   */
+  @NotNull(message = "Zip code must not be null")
+  String zipCode,
 
-  @NotNull(message = "Die Postleitzahl darf nicht null sein")
-  @Pattern(message = "Ungültiges Postleitzahlenformat. Es werden 5 Ziffern erwartet.", regexp = ZIP_CODE_PATTERN)
-        String zipCode,
+  /**
+   * The state of the address. This field must not be {@code null}.
+   */
+  @NotNull(message = "State must not be null")
+  String state,
 
-  @NotNull(message = "Das Bundesland darf nicht null sein")
-        String state,
+  /**
+   * The city of the address. This field must not be blank.
+   */
+  @NotBlank(message = "City must not be empty")
+  String city,
 
-  @NotBlank(message = "Die Stadt darf nicht leer sein")
-        String city
+  /**
+   * The country of the address. This field must not be blank.
+   */
+  @NotBlank(message = "Country must not be empty")
+  String country
 ) {
-  public static final String ZIP_CODE_PATTERN = "^\\d{5}$";
-  public static final String GERMAN_STREET_PATTERN = "^[a-zA-ZäöüßÄÖÜ\\s]+(?:\\s\\d+)?$";
+  /**
+   * Regular expression pattern for validating the street field. It requires the street to consist of letters and spaces,
+   * optionally followed by a space and digits (for street numbers).
+   */
+  public static final String STREET_PATTERN = "^[a-zA-ZäöüßÄÖÜ\\s]+(?:\\s\\d+)?$";
 }

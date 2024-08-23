@@ -4,8 +4,10 @@ CREATE TABLE IF NOT EXISTS address
     street       VARCHAR(100) NOT NULL,
     house_number VARCHAR(5)   NOT NULL,
     zip_code     VARCHAR(6)   NOT NULL,
+    city         VARCHAR(50) NOT NULL,
     state        VARCHAR(20)  NOT NULL,
-    city         VARCHAR(50)  NOT NULL,
+    country      VARCHAR(20) NOT NULL,
+    
 
     INDEX     address_zip_code_idx(zip_code)
 );

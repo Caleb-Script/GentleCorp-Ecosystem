@@ -7,28 +7,65 @@ import lombok.RequiredArgsConstructor;
 import java.util.stream.Stream;
 
 /**
- * Enum zur Darstellung verschiedener Kontaktmöglichkeiten.
+ * Enum representing various contact options for customers.
+ * <p>
+ * This enum defines different types of contact methods that a customer might prefer. It is used to categorize
+ * contact options such as email, phone, mail, and SMS.
+ * </p>
+ *
+ * @since 23.08.2024
+ * @version 1.0
+ * @author Caleb Gyamfi
  */
 @RequiredArgsConstructor
 public enum ContactOptionsType {
-    EMAIL("Email"),
-    PHONE("Phone"),
-    MAIL("Mail"),
-    SMS("SMS");
+  /**
+   * Contact option via email.
+   */
+  EMAIL("Email"),
 
-    private final String  type;
+  /**
+   * Contact option via phone.
+   */
+  PHONE("Phone"),
 
-    @JsonValue
-    public String getType() {
-        return type;
-    }
+  /**
+   * Contact option via traditional mail.
+   */
+  MAIL("Mail"),
 
-    @JsonCreator
-    public static ContactOptionsType of(final String value) {
-        return Stream.of(values())
-                .filter(interest -> interest.type.equalsIgnoreCase(value))
-                .findFirst()
-                .orElse(null);
-    }
+  /**
+   * Contact option via SMS.
+   */
+  SMS("SMS");
+
+  private final String type;
+
+  /**
+   * Gets the string representation of the contact option.
+   *
+   * @return the type of contact option as a string.
+   */
+  @JsonValue
+  public String getType() {
+    return type;
+  }
+
+  /**
+   * Creates a {@link ContactOptionsType} from a string value.
+   * <p>
+   * This method is used to convert a string representation of a contact option into its corresponding enum constant.
+   * </p>
+   *
+   * @param value the string value of the contact option.
+   * @return the {@link ContactOptionsType} enum constant corresponding to the provided string value,
+   *         or {@code null} if no matching constant is found.
+   */
+  @JsonCreator
+  public static ContactOptionsType of(final String value) {
+    return Stream.of(values())
+      .filter(option -> option.type.equalsIgnoreCase(value))
+      .findFirst()
+      .orElse(null);
+  }
 }
-

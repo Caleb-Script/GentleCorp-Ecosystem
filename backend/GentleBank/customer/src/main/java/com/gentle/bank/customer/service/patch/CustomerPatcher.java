@@ -1,19 +1,16 @@
 package com.gentle.bank.customer.service.patch;
 
-import com.gentle.bank.customer.controller.mapper.CustomerInputMapper;
+import com.gentle.bank.customer.mapper.CustomerInputMapper;
 import com.gentle.bank.customer.entity.Customer;
 import com.gentle.bank.customer.entity.enums.*;
 import com.gentle.bank.customer.service.CustomerWriteService;
-import com.google.common.base.Splitter;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 

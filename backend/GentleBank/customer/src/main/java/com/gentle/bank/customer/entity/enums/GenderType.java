@@ -8,56 +8,56 @@ import lombok.RequiredArgsConstructor;
 import java.util.stream.Stream;
 
 /**
- * Aufzählung für Geschlecht. Dies kann beispielsweise verwendet werden, um Radio-Buttons auf der Clientseite zu implementieren.
+ * Enumeration for gender types. This can be used, for example, to implement radio buttons on the client side.
  *
- * <p>Repräsentiert verschiedene Geschlechtertypen wie männlich, weiblich oder divers.</p>
+ * <p>Represents various gender types such as male, female, or diverse.</p>
  *
- * <p>Jeder Enum-Wert ist mit einer Zeichenfolgenrepräsentation verbunden, die für Serialisierung und Deserialisierung verwendet wird.
- * Die {@link JsonCreator}-Annotation wird für die Deserialisierung verwendet, und die {@link JsonValue}-Annotation wird für die Serialisierung verwendet.</p>
+ * <p>Each enum value is associated with a string representation used for serialization and deserialization.
+ * The {@link JsonCreator} annotation is used for deserialization, and the {@link JsonValue} annotation is used for serialization.</p>
  *
- * <p>Beispielverwendung:
+ * <p>Example usage:
  * <pre>{@code
  * GenderType gender = GenderType.of("M");
- * String genderString = gender.getType(); // Gibt "M" zurück
+ * String genderString = gender.getType(); // Returns "M"
  * }</pre>
  * </p>
  */
 @Getter
 @RequiredArgsConstructor
 public enum GenderType {
-    /** Männliches Geschlecht. */
-    MALE("M"),
+  /** Male gender type. */
+  MALE("M"),
 
-    /** Weibliches Geschlecht. */
-    FEMALE("F"),
+  /** Female gender type. */
+  FEMALE("F"),
 
-    /** Diverser Geschlechtstyp. */
-    DIVERSE("D");
+  /** Diverse gender type. */
+  DIVERSE("D");
 
-    /** Die Zeichenfolgen repräsentation des Geschlechtstyps. */
-    private final String type;
+  /** The string representation of the gender type. */
+  private final String type;
 
-    /**
-     * Gibt den Geschlechtstyp zurück, der mit dem angegebenen Zeichenfolgen wert verbunden ist.
-     *
-     * @param value Der Zeichenfolgen wert, der den Geschlechtstyp darstellt.
-     * @return Der Enum-Wert GenderType, der mit dem angegebenen Zeichenfolgen wert verbunden ist, oder null, wenn keine Übereinstimmung gefunden wird.
-     */
-    @JsonCreator
-    public static GenderType of(final String value) {
-        return Stream.of(values())
-                .filter(gender -> gender.type.equalsIgnoreCase(value))
-                .findFirst()
-                .orElse(null);
-    }
+  /**
+   * Returns the {@link GenderType} associated with the given string value.
+   *
+   * @param value The string value representing the gender type.
+   * @return The {@link GenderType} enum constant associated with the given string value, or {@code null} if no match is found.
+   */
+  @JsonCreator
+  public static GenderType of(final String value) {
+    return Stream.of(values())
+      .filter(gender -> gender.type.equalsIgnoreCase(value))
+      .findFirst()
+      .orElse(null);
+  }
 
-    /**
-     * Gibt die Zeichenfolgen repräsentation des Geschlechtstyps zurück.
-     *
-     * @return Die Zeichenfolgen repräsentation des Geschlechtstyps.
-     */
-    @JsonValue
-    public String getType() {
-        return type;
-    }
+  /**
+   * Returns the string representation of the gender type.
+   *
+   * @return The string representation of the gender type.
+   */
+  @JsonValue
+  public String getType() {
+    return type;
+  }
 }

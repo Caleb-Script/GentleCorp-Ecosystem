@@ -1,28 +1,18 @@
 package com.gentle.bank.customer.service;
 
+import com.gentle.bank.customer.MailProps;
 import com.gentle.bank.customer.entity.Customer;
-import com.gentle.bank.customer.keycloak.KeycloakProps;
-import com.gentle.bank.customer.keycloak.LoginService;
-import com.gentle.bank.customer.mail.Mailer;
 import com.gentle.bank.customer.repository.CustomerRepository;
-import com.gentle.bank.customer.service.exception.ConstraintViolationsException;
-import com.gentle.bank.customer.service.exception.EmailExistsException;
-import com.gentle.bank.customer.service.exception.NotFoundException;
-import com.gentle.bank.customer.service.exception.VersionOutdatedException;
-import com.gentle.bank.customer.util.MailProps;
-import jakarta.validation.Validator;
-import jakarta.validation.groups.Default;
+import com.gentle.bank.customer.exception.AccessForbiddenException;
+import com.gentle.bank.customer.exception.EmailExistsException;
+import com.gentle.bank.customer.exception.NotFoundException;
+import com.gentle.bank.customer.exception.VersionOutdatedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.graphql.client.FieldAccessException;
-import org.springframework.graphql.client.GraphQlTransportException;
-import org.springframework.graphql.client.HttpGraphQlClient;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -41,7 +31,7 @@ public class CustomerWriteService {
     private final CustomerRepository customerRepository;
     private final Mailer mailer;
     private final MailProps props;
-    private final LoginService loginService;
+    private final KeycloakService keycloakService;
 
     @Transactional
     public Customer create(final Customer customer, final String password, final Jwt jwt) {
@@ -63,21 +53,23 @@ public class CustomerWriteService {
           ? "gentlecorp-elite"
           : "gentlecorp-essential";
 
-        loginService.signIn(customer, password, role,jwt);
+        keycloakService.signIn(customer, password, role);
 
         log.debug("create: customerDb={}", customerDb);
         return customerDb;
     }
 
     @Transactional
-    public Customer update(final Customer customer, final UUID id, final int version) {
+    public Customer update(final Customer customer, final UUID id, final int version, final String role, final String username, final Jwt jwt) {
         log.debug("update: customer={}", customer);
-
         log.debug("update: id={}, version={}", id, version);
-
         log.trace("update: Keine Constraints verletzt");
 
         final var customerDb = customerRepository.findById(id).orElseThrow(() -> new NotFoundException(id));
+
+        if (!Objects.equals(customerDb.getUsername(), username) && !Objects.equals(role,"ADMIN")) {
+          throw new AccessForbiddenException("DU BIST NICHT DER USER");
+        }
 
         if (version != customerDb.getVersion()) {
             log.error("version ist nicht die Aktuelle Verion");
@@ -103,7 +95,16 @@ public class CustomerWriteService {
         log.debug("update: updatedCustomerDB={}", customerDb);
         log.debug("update: updatedCustomer={}", customerDb);
 
+      keycloakService.update(updatedCustomerDb,jwt);
+
         return updatedCustomerDb;
+    }
+
+    @Transactional
+    public void updatePassword(final Jwt jwt, final String password) {
+      log.debug("updatePassword: jwt={}", jwt);
+
+      keycloakService.updatePassword(password,jwt);
     }
 
     /**

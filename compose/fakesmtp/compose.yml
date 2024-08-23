@@ -10,7 +10,7 @@ services:
         target: 8081
     volumes:
       - type: bind
-        source: /Users/gentlebookpro/GentleCorp/fakesmtp
+        source: /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/volumes/fakesmtp
         target: /tmp
     environment:
       TZ: Europe/Berlin

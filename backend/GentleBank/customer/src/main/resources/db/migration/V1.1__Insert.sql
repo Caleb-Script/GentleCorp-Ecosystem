@@ -1,46 +1,58 @@
-
 INSERT INTO
-    address (id, street, house_number, zip_code, state, city)
+    address (
+        id,
+        street,
+        house_number,
+        zip_code,
+        city,
+        state,
+        country
+    )
 VALUES
     (
         UUID_TO_BIN('10000000-0000-0000-0000-000000000000'),
         'Namurstraße',
         '4',
         '70374',
+        'Stuttgart',
         'Baden Württemberg',
-        'Stuttgart'
+        'Deutschland'
     ),
     (
         UUID_TO_BIN('10000000-0000-0000-0000-000000000001'),
         'Namurstraße',
         '4',
         '70374',
+        'Stuttgart',
         'Baden Württemberg',
-        'Stuttgart'
+        'Deutschland'
     ),
     (
         UUID_TO_BIN('10000000-0000-0000-0000-000000000002'),
         'Namurstraße',
         '4',
         '70374',
+        'Stuttgart',
         'Baden Württemberg',
-        'Stuttgart'
+        'Deutschland'
     ),
     (
         UUID_TO_BIN('10000000-0000-0000-0000-000000000003'),
         'Namurstraße',
         '4',
         '70374',
+        'Stuttgart',
         'Baden Württemberg',
-        'Stuttgart'
+        'Deutschland'
     ),
     (
         UUID_TO_BIN('10000000-0000-0000-0000-000000000004'),
         'Namurstraße',
         '4',
         '70374',
-        'Baden Württemberg',
-        'Stuttgart'
+        'Stuttgart',
+        'Baden-Württemberg',
+        'Deutschland'
     );
 
 -- Beispiele für Customer

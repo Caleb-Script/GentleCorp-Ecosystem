@@ -10,13 +10,8 @@ import java.util.Locale;
 
 public final class Banner {
 
-    private static final String FIGLET = """
-                            _                              ____   ___ ____  _  _    ____    ____  _____\s
-              ___ _   _ ___| |_ ___  _ __ ___   ___ _ __  |___ \\ / _ \\___ \\| || |  |___ \\  |___ \\|___ /\s
-             / __| | | / __| __/ _ \\| '_ ` _ \\ / _ \\ '__|   __) | | | |__) | || |_   __) |   __) | |_ \\\s
-            | (__| |_| \\__ \\ || (_) | | | | | |  __/ |     / __/| |_| / __/|__   _| / __/ _ / __/ ___) |
-             \\___|\\__,_|___/\\__\\___/|_| |_| |_|\\___|_|    |_____|\\___/_____|  |_|(_)_____(_)_____|____/\s
-                                                                                                       \s""";
+  static Figlets figlets = new Figlets();
+    private static final String FIGLET = figlets.randomFigletGenerator();
     private static final String SERVICE_HOST = System.getenv("CUSTOMER_SERVICE_HOST");
     private static final String KUBERNETES = SERVICE_HOST == null
         ? "N/A"
@@ -29,7 +24,7 @@ public final class Banner {
 
         \{FIGLET}
         (C) Caleb Gyamfi, Gentle Bank
-        Version             2024.2.23
+        Version             2024.08.24
         Spring Boot         \{SpringBootVersion.getVersion()}
         Spring Security     \{SpringSecurityCoreVersion.getVersion()}
         Spring Framework    \{SpringVersion.getVersion()}
@@ -43,9 +38,6 @@ public final class Banner {
         Kubernetes          \{KUBERNETES}
         Username            \{System.getProperty("user.name")}
         JVM Locale          \{Locale.getDefault().toString()}
-        GraphiQL            /graphiql   {"Authorization": "Basic YWRtaW46cA=="}
-        OpenAPI             /swagger-ui.html /v3/api-docs.yaml
-        H2 Console          /h2-console (JDBC URL: "jdbc:h2:mem:testdb" mit User "sa" und Passwort "")
         """;
 
     private Banner() {

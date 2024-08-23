@@ -2,7 +2,7 @@ package com.gentle.bank.customer.repository;
 
 import com.gentle.bank.customer.entity.*;
 import com.gentle.bank.customer.entity.enums.*;
-import jakarta.persistence.criteria.Join;
+import com.gentle.bank.customer.exception.IllegalArgumentException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
@@ -55,11 +55,14 @@ public class SpecificationBuilder {
     return switch (key) {
       case "lastName" -> lastName(value);
       case "email" -> email(value);
+      case "elite" -> isElite(value);
       case "gender" -> gender(value);
       case "maritalStatus" -> maritalStatus(value);
       case "zipCode" -> zipCode(value);
       case "city" -> city(value);
-      default -> null;
+      case "state" -> state(value);
+      case "country" -> country(value);
+      default -> throw new IllegalArgumentException(key);
     };
   }
 
@@ -94,6 +97,13 @@ public class SpecificationBuilder {
     );
   }
 
+  private Specification<Customer> isElite(final String isElite) {
+    return (root, query, builder) -> builder.equal(
+      root.get(Customer_.isElite),
+      Boolean.parseBoolean(isElite)
+    );
+  }
+
   private Specification<Customer> gender(final String geschlecht) {
     return (root, query, builder) -> builder.equal(
       root.get(Customer_.gender),
@@ -121,12 +131,28 @@ public class SpecificationBuilder {
   }
 
   private Specification<Customer> zipCode(final String prefix) {
-    return (root, query, builder) -> builder.like(root.get(Customer_.address).get(Address_.zipCode), STR."%\{prefix}%");
+    return (root, query, builder) -> builder.like(
+      root.get(Customer_.address)
+        .get(Address_.zipCode), STR."%\{prefix}%");
   }
 
   private Specification<Customer> city(final String prefix) {
     return (root, query, builder) -> builder.like(
       builder.lower(root.get(Customer_.address).get(Address_.city)),
+      builder.lower(builder.literal(STR."%\{prefix}%"))
+    );
+  }
+
+  private Specification<Customer> state(final String prefix) {
+    return (root, query, builder) -> builder.like(
+      builder.lower(root.get(Customer_.address).get(Address_.state)),
+      builder.lower(builder.literal(STR."%\{prefix}%"))
+    );
+  }
+
+  private Specification<Customer> country(final String prefix) {
+    return (root, query, builder) -> builder.like(
+      builder.lower(root.get(Customer_.address).get(Address_.country)),
       builder.lower(builder.literal(STR."%\{prefix}%"))
     );
   }
