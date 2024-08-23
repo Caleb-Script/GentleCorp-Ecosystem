@@ -2,7 +2,6 @@ package com.gentle.bank.customer.service;
 import com.gentle.bank.customer.entity.Customer;
 import com.gentle.bank.customer.repository.CustomerRepository;
 import com.gentle.bank.customer.repository.SpecificationBuilder;
-import com.gentle.bank.customer.security.Rolle;
 import com.gentle.bank.customer.service.exception.AccessForbiddenException;
 import com.gentle.bank.customer.service.exception.NotFoundException;
 import lombok.NonNull;
@@ -14,9 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
-
-import static com.gentle.bank.customer.security.Rolle.GENTLECORP_ADMIN;
 
 @Service
 @Transactional(readOnly = true)
@@ -29,20 +27,21 @@ public class CustomerReadService {
     public @NonNull Customer findById(
       final UUID id,
       final String username,
-      final List<Rolle> rollen
+      final String role
     ) {
-      log.debug("findById: id={}, username={}, rollen={}", id, username, rollen);
+      log.debug("findById: id={}, username={}, role={}", id, username, role);
 
-        final var customer = customerRepository.findById(id).orElseThrow(NotFoundException::new);
+        final var customer = customerRepository.findById(id)
+          .orElseThrow(NotFoundException::new);
 
       if (customer != null && customer.getUsername().contentEquals(username)) {
         // eigene Gaestedaten
         return customer;
       }
 
-      if (!rollen.contains(GENTLECORP_ADMIN)) {
+      if (!Objects.equals(role, "ADMIN") && !Objects.equals(role, "USER")) {
         // nicht admin, aber keine eigenen (oder keine) Gaestedaten
-        throw new AccessForbiddenException(rollen);
+        throw new AccessForbiddenException(role);
       }
 
       if (customer == null) {
@@ -61,6 +60,8 @@ public class CustomerReadService {
      * @throws NotFoundException Falls keine Kunden gefunden wurden
      */
     public @NonNull Collection<Customer> find(@NonNull final Map<String, List<String>> searchCriteria) {
+
+
         log.debug("find: searchCriteria={}", searchCriteria);
 
         if (searchCriteria.isEmpty()) {

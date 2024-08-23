@@ -1,6 +1,7 @@
 
 package com.gentle.bank.customer.security;
 
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.client.HttpClientErrorException;
@@ -8,6 +9,8 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 
+import java.net.http.HttpResponse;
+import java.util.Collection;
 import java.util.Map;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -42,4 +45,43 @@ public interface KeycloakRepository {
         @RequestHeader(AUTHORIZATION) String authorization,
         @RequestHeader(CONTENT_TYPE) String contentType
     );
+
+  @PostExchange("/admin/realms/GentleCorp-Ecosystem/users")
+  @SuppressWarnings("JavadocReference")
+  HttpResponse<Void> signIn(
+    @RequestBody String customer,
+    @RequestHeader(AUTHORIZATION) String authorization,
+    @RequestHeader(CONTENT_TYPE) String contentType
+  );
+
+  @PostExchange("/realms/master/protocol/openid-connect/token")
+  @SuppressWarnings("JavadocReference")
+  MasterTokenDTO masterToken(
+    @RequestBody String adminData,
+    @RequestHeader(CONTENT_TYPE) String contentType
+  );
+
+  @PostExchange("/admin/realms/GentleCorp-Ecosystem/users/{userId}/role-mappings/realm")
+  @SuppressWarnings("JavadocReference")
+  void assignRoleToUser(
+    @RequestBody String roleData,
+    @RequestHeader(AUTHORIZATION) String authorization,
+    @RequestHeader(CONTENT_TYPE) String contentType,
+    @PathVariable("userId") String userId
+  );
+
+  @PostExchange("/realms/GentleCorp-Ecosystem/protocol/openid-connect/userinfo")
+  @SuppressWarnings("JavadocReference")
+  UserInfo userInfo(
+    @RequestHeader(AUTHORIZATION) String authorization,
+    @RequestHeader(CONTENT_TYPE) String contentType
+  );
+
+  @GetExchange("/admin/realms/GentleCorp-Ecosystem/roles")
+  @SuppressWarnings("JavadocReference")
+  Collection<Role> getRoles(
+    @RequestHeader(AUTHORIZATION) String authorization,
+    @RequestHeader(CONTENT_TYPE) String contentType
+  );
+
 }

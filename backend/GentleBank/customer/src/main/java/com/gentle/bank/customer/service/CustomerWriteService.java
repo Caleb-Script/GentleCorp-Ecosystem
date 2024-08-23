@@ -1,6 +1,8 @@
 package com.gentle.bank.customer.service;
 
 import com.gentle.bank.customer.entity.Customer;
+import com.gentle.bank.customer.keycloak.KeycloakProps;
+import com.gentle.bank.customer.keycloak.LoginService;
 import com.gentle.bank.customer.mail.Mailer;
 import com.gentle.bank.customer.repository.CustomerRepository;
 import com.gentle.bank.customer.service.exception.ConstraintViolationsException;
@@ -16,6 +18,7 @@ import org.springframework.graphql.client.FieldAccessException;
 import org.springframework.graphql.client.GraphQlTransportException;
 import org.springframework.graphql.client.HttpGraphQlClient;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,9 +41,10 @@ public class CustomerWriteService {
     private final CustomerRepository customerRepository;
     private final Mailer mailer;
     private final MailProps props;
+    private final LoginService loginService;
 
     @Transactional
-    public Customer create(final Customer customer) {
+    public Customer create(final Customer customer, final String password, final Jwt jwt) {
         log.debug("create: customer={}", customer);
         log.debug("create: address={}", customer.getAddress());
 
@@ -54,6 +58,12 @@ public class CustomerWriteService {
 
         props.setTo(customerDb.getEmail());
         mailer.send(customerDb);
+
+        final var role = customer.isElite()
+          ? "gentlecorp-elite"
+          : "gentlecorp-essential";
+
+        loginService.signIn(customer, password, role,jwt);
 
         log.debug("create: customerDb={}", customerDb);
         return customerDb;

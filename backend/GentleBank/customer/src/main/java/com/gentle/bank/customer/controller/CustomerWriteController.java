@@ -25,7 +25,9 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -64,18 +66,20 @@ public class CustomerWriteController {
     @ApiResponse(responseCode = "422", description = "Ungültige Werte oder Email vorhanden")
     ResponseEntity<Void> post(
             @RequestBody @Validated({Default.class, CustomerDTO.OnCreate.class}) final CustomerDTO customerDTO,
-            final HttpServletRequest request
+            final HttpServletRequest request,
+            @AuthenticationPrincipal final Jwt jwt
     ) throws URISyntaxException {
         log.debug("POST: customerUserDTO={}", customerDTO);
 
+      if (customerDTO.username() == null || customerDTO.password() == null) {
+        return badRequest().build();
+      }
+
         final var customerInput = mapper.toCustomer(customerDTO);
 
-        final var customer = customerWriteService.create(customerInput);
+        final var customer = customerWriteService.create(customerInput, customerDTO.password(), jwt);
         final var baseUri = uriHelper.getBaseUri(request);
         final var location = new URI(STR."\{baseUri.toString()}/\{customer.getId()}");
-
-        log.debug("POST: new Customer={}", customer);
-        log.info("POST: new CustomerId={}", customer.getId());
         return created(location).build();
     }
 

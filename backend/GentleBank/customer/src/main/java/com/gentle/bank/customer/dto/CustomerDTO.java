@@ -8,8 +8,6 @@ import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.UniqueElements;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,6 +31,8 @@ public record CustomerDTO(
   @Size(max = EMAIL_MAX_LENGTH, message = "Die E-Mail-Adresse darf nicht länger als {max} Zeichen sein")
   String email,
 
+  boolean isElite,
+
   @Past(message = "Das Geburtsdatum muss in der Vergangenheit liegen")
   LocalDate birthDate,
 
@@ -47,7 +47,13 @@ public record CustomerDTO(
   List<ContactOptionsType> contactOptions,
 
   @NotNull(groups = OnCreate.class)
-  AddressDTO address
+  AddressDTO address,
+
+  @Pattern(regexp = USERNAME_PATTERN, message = "Der Benutzername muss zwischen 4 und 20 alphanumerischen Zeichen sein")
+  @Size(min = USERNAME_MIN_LENGTH, max = USERNAME_MAX_LENGTH, message = "Der Benutzername muss zwischen 4 und 20 Zeichen lang sein")
+  @NotNull(message = "Username darf nicht null sein")
+  String username,
+  String password
 ) {
   /**
    * Marker-Interface f&uuml;r Jakarta Validation: zus&auml;tzliche Validierung beim Neuanlegen.
@@ -59,7 +65,9 @@ public record CustomerDTO(
    */
   public static final String LAST_NAME_PATTERN = "(o'|von|von der|von und zu|van)?[A-ZÄÖÜ][a-zäöüß]+(-[A-ZÄÖÜ][a-zäöüß]+)?";
 
-
+  public static final String USERNAME_PATTERN = "[a-zA-Z0-9_\\-.]{4,}";
+  public static final int USERNAME_MAX_LENGTH = 20;
+  public static final int USERNAME_MIN_LENGTH = 4;
 
   private static final int EMAIL_MAX_LENGTH = 40;
 

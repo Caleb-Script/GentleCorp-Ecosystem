@@ -16,11 +16,11 @@ public class AccessForbiddenException extends RuntimeException {
     /**
      * Vorhandene Rollen.
      */
-    private final Collection<Rolle> rollen;
+    private final String role;
 
     @SuppressWarnings("ParameterHidesMemberVariable")
-    public AccessForbiddenException(final Collection<Rolle> rollen) {
-        super("Unzureichende Rollen: " + rollen);
-        this.rollen = rollen;
+    public AccessForbiddenException(final String role) {
+        super("Unzureichende Rolle als : " + role);
+        this.role = role;
     }
 }

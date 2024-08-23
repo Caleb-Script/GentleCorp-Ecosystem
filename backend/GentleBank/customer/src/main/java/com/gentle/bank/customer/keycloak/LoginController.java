@@ -64,8 +64,8 @@ public class LoginController {
     @GetMapping("login")
     public String login(@AuthenticationPrincipal final Jwt jwt) {
       final var username = jwtService.getUsername(jwt);
-      final var realmRollen = jwtService.getRealmRollen(jwt);
-      final var clientRollen =  jwtService.getClientRollen(jwt);
+      final var realmRollen = jwtService.getRealmRole(jwt);
+      final var clientRollen =  jwtService.getClientRole(jwt);
       log.trace("getById: realmRollen={} clientRollen={}",realmRollen, clientRollen);
 
 

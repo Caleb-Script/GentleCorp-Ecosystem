@@ -10,6 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.gentle.bank.customer.security.Rolle.ELITE;
+import static com.gentle.bank.customer.security.Rolle.GENTLEBANK_ADMIN;
+import static com.gentle.bank.customer.security.Rolle.GENTLEBANK_USER;
+import static com.gentle.bank.customer.security.Rolle.GENTLECORP_ADMIN;
+import static com.gentle.bank.customer.security.Rolle.GENTLECORP_USER;
+
 /**
  * Service-Klasse, um Benutzernamen und Rollen aus einem JWT von Keycloak zu extrahieren.
  *
@@ -35,13 +41,38 @@ public class JwtService {
         return username;
     }
 
+    public String getRole(final Jwt jwt) {
+      final var realmRoles = getRealmRole(jwt);
+      log.debug("getRole: realmRoles={}", realmRoles);
+
+      if(realmRoles.contains(GENTLECORP_ADMIN)) {
+        final var clientRoles = getClientRole(jwt);
+        if(clientRoles.contains(GENTLEBANK_ADMIN)) {
+          return "ADMIN";
+        } else {
+          return "USER";
+        }
+      } else if(realmRoles.contains(GENTLECORP_USER)) {
+        final var clientRoles = getClientRole(jwt);
+        if(clientRoles.contains(GENTLEBANK_USER)) {
+          return "USER";
+        } else {
+          return "ELITE";
+        }
+      } else if( realmRoles.contains(ELITE)) {
+        return "ELITE";
+      } else {
+        return "CUSTOMER";
+      }
+    }
+
     /**
      * Zu einem gegebenen JWT werden die zugehörigen Rollen gesucht.
      *
      * @param jwt JWT für Security
      * @return Die gesuchten Rollen oder die leere Liste
      */
-    public List<Rolle> getRealmRollen(final Jwt jwt) {
+    public List<Rolle> getRealmRole(final Jwt jwt) {
         @SuppressWarnings("unchecked")
         final var realmAccess = (Map<String, List<String>>) jwt.getClaims().get("realm_access");
         final var rollenStr = realmAccess.get("roles");
@@ -53,7 +84,7 @@ public class JwtService {
             .toList();
     }
 
-  public List<Rolle> getClientRollen(final Jwt jwt) {
+  public List<Rolle> getClientRole(final Jwt jwt) {
     @SuppressWarnings("unchecked")
     final var resourceAccess = (Map<String, Map<String, List<String>>>) jwt.getClaims().get("resource_access");
     final var client = resourceAccess.get("GentleBank");

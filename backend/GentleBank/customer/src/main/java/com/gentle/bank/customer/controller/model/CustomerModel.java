@@ -26,6 +26,7 @@ public class CustomerModel extends RepresentationModel<CustomerModel> {
     private final String firstName;
     @EqualsAndHashCode.Include
     private final String email;
+    private final boolean isElite;
     private final LocalDate birthDate;
     private final GenderType gender;
     private final MaritalStatusType maritalStatus;
@@ -36,6 +37,7 @@ public class CustomerModel extends RepresentationModel<CustomerModel> {
         lastName = customer.getLastName();
         firstName = customer.getFirstName();
         email = customer.getEmail();
+        isElite = customer.isElite();
         birthDate = customer.getBirthDate();
         gender = customer.getGender();
         maritalStatus = customer.getMaritalStatus();

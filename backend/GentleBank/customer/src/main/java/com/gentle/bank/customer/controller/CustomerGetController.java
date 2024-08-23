@@ -5,8 +5,6 @@ import com.gentle.bank.customer.controller.model.CustomerModel;
 import com.gentle.bank.customer.security.JwtService;
 import com.gentle.bank.customer.service.CustomerReadService;
 import com.gentle.bank.customer.util.UriHelper;
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.annotation.Observed;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,10 +30,8 @@ import java.util.UUID;
 import static com.gentle.bank.customer.util.Constants.CUSTOMER_PATH;
 import static com.gentle.bank.customer.util.Constants.ID_PATTERN;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
-import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_MODIFIED;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
@@ -77,19 +73,17 @@ public class CustomerGetController {
         @AuthenticationPrincipal final Jwt jwt
     ) {
       final var username = jwtService.getUsername(jwt);
-        log.debug("getById: id={}, version={}, username{}", id, version, username);
+        log.debug("getById: id={}, version={}, username={}", id, version, username);
 
       if (username == null) {
         log.error("Trotz Spring Security wurde getById() ohne Benutzername im JWT aufgerufen");
         return status(UNAUTHORIZED).build();
       }
 
-      final var realmRollen = jwtService.getRealmRollen(jwt);
-      final var clientRollen =  jwtService.getClientRollen(jwt);
-      log.trace("getById: realmRollen={} clientRollen={}",realmRollen, clientRollen);
+      final var role = jwtService.getRole(jwt);
+      log.trace("getById: role={}", role);
 
-        // "Distributed Tracing" durch https://micrometer.io bei Aufruf eines anderen Microservice
-        final var customer = customerReadService.findById(id, username, realmRollen);
+        final var customer = customerReadService.findById(id, username, role);
         log.debug("getById: {}", customer);
 
         final var currentVersion = STR."\"\{customer.getVersion()}\"";

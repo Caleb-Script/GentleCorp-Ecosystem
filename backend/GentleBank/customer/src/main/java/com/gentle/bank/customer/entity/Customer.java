@@ -3,6 +3,7 @@ package com.gentle.bank.customer.entity;
 import com.gentle.bank.customer.entity.enums.ContactOptionsType;
 import com.gentle.bank.customer.entity.enums.GenderType;
 import com.gentle.bank.customer.entity.enums.MaritalStatusType;
+import com.gentle.bank.customer.security.Rolle;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -59,6 +60,8 @@ public class Customer {
 
     private String username;
 
+    private boolean isElite;
+
     /** Geburtsdatum des Kunden */
     private LocalDate birthDate;
 
@@ -70,7 +73,6 @@ public class Customer {
     /** Familienstand des Kunden */
     @Enumerated(EnumType.STRING)
     private MaritalStatusType maritalStatus;
-
 
     /** Kontaktmöglichkeiten des Kunden */
     @NotNull(message = "kontak optionen dürfen nicht null sein")
@@ -102,6 +104,7 @@ public class Customer {
         lastName = customer.getLastName();
         firstName = customer.getFirstName();
         email = customer.getEmail();
+        isElite = customer.isElite();
         birthDate = customer.getBirthDate();
         gender = customer.getGender();
         maritalStatus = customer.getMaritalStatus();
