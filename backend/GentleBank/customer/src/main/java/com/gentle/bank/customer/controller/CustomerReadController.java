@@ -36,20 +36,15 @@ import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
 /**
- * REST controller for handling HTTP GET requests related to customer data.
+ * REST controller for handling HTTP requests related to customer data.
  *
- * <p>This controller provides endpoints for searching and retrieving customer information. It includes
- * methods to find a customer by their ID and to search for customers using various criteria provided as query parameters.</p>
- *
- * <p>The controller supports HATEOAS by adding hypermedia links to the responses, allowing clients to easily navigate
- * through related resources.</p>
- *
- * <p>Key functionalities:
+ * <p>This controller provides endpoints for searching and retrieving customer information. It includes methods to:
  * <ul>
- *   <li>Get a customer by their ID, including handling ETag-based conditional requests to optimize network traffic.</li>
- *   <li>Search for customers based on various query parameters, returning a collection of matching customer models.</li>
- * </ul>
- * </p>
+ *   <li>Retrieve a customer by their unique ID, including support for ETag-based conditional requests to optimize network traffic.</li>
+ *   <li>Search for customers using various query parameters and return a collection of matching customer models.</li>
+ * </ul></p>
+ *
+ * <p>The controller supports HATEOAS by adding hypermedia links to the responses, enabling clients to navigate through related resources.</p>
  *
  * <p>Annotations:
  * <ul>
@@ -57,13 +52,15 @@ import static org.springframework.http.ResponseEntity.status;
  *   <li>{@code @RequestMapping} - Specifies the base URL path for the controller's endpoints.</li>
  *   <li>{@code @Observed} - Applies Micrometer's observation support for monitoring performance.</li>
  *   <li>{@code @OpenAPIDefinition} - Provides metadata for API documentation.</li>
- * </ul>
- * </p>
+ * </ul></p>
  *
- * @since 23.08.2024
- * @author Caleb Gyamfi
+ * @since 24.08.2024
+ * @version 1.0
+ * @author <a href="mailto:Caleb_G@outlook.de">Caleb Gyamfi</a>
  * @see com.gentle.bank.customer.service.CustomerReadService
  * @see JwtService
+ * @see com.gentle.bank.customer.model.CustomerModel
+ * @see com.gentle.bank.customer.util.UriHelper
  */
 @RestController
 @RequestMapping(CUSTOMER_PATH)
@@ -71,31 +68,38 @@ import static org.springframework.http.ResponseEntity.status;
 @RequiredArgsConstructor
 @Slf4j
 public class CustomerReadController {
+
   private final CustomerReadService customerReadService;
   private final JwtService jwtService;
   private final UriHelper uriHelper;
 
   /**
-   * Searches for a customer by their ID provided as a path parameter.
+   * Retrieves a customer by their unique ID.
    *
-   * <p>This method retrieves a customer's details using their unique ID. It also handles conditional requests
-   * using the ETag from the `If-None-Match` header to optimize network traffic by returning a `304 Not Modified`
-   * status if the customer's data has not changed.</p>
+   * <p>This method fetches a customer's details using their unique ID provided as a path variable. It also handles
+   * conditional requests using the ETag from the `If-None-Match` header to return a `304 Not Modified` status if
+   * the customer’s data has not changed.</p>
    *
    * <p>Hypermedia links (HATEOAS) are added to the response to facilitate easy navigation through related resources.</p>
    *
-   * @param id ID of the customer to search for
-   * @param version ETag version from the `If-None-Match` header
-   * @param request The HttpServletRequest object, used to create HATEOAS links.
-   * @param jwt The JSON Web Token for security purposes
-   * @return A response with status code 200 and the found customer model with hypermedia links, or status code 404 if not found.
+   * @param id the unique ID of the customer to search for
+   * @param version the ETag version from the `If-None-Match` header
+   * @param request the HttpServletRequest object used to create HATEOAS links
+   * @param jwt the JSON Web Token for security purposes
+   * @return a {@link ResponseEntity} containing the {@link CustomerModel} if found, or status code 404 if not found
+   * @since 24.08.2024
+   * @version 1.0
+   * @author <a href="mailto:Caleb_G@outlook.de">Caleb Gyamfi</a>
+   * @see CustomerReadService#findById(UUID, String, String)
+   * @see JwtService#getUsername(Jwt)
+   * @see JwtService#getRole(Jwt)
    */
   @GetMapping(path = "{id:" + ID_PATTERN + "}", produces = HAL_JSON_VALUE)
   @Observed(name = "get-by-id")
   @Operation(summary = "Search for a customer by ID", tags = "Search")
   @ApiResponse(responseCode = "200", description = "Customer found")
   @ApiResponse(responseCode = "404", description = "Customer not found")
-  ResponseEntity<CustomerModel> getById(
+  public ResponseEntity<CustomerModel> getById(
     @PathVariable final UUID id,
     @RequestHeader("If-None-Match") final Optional<String> version,
     final HttpServletRequest request,
@@ -111,21 +115,30 @@ public class CustomerReadController {
 
     final var role = jwtService.getRole(jwt);
     final var customer = customerReadService.findById(id, username, role);
-    final var currentVersion = STR."\"\{customer.getVersion()}\"";
+    final var currentVersion = String.format("\"%s\"", customer.getVersion());
 
     if (Objects.equals(version.orElse(null), currentVersion)) {
       return status(NOT_MODIFIED).build();
     }
-    final var model = customerToModel(customer, request);
 
+    final var model = customerToModel(customer, request);
     log.debug("getById: model={}", model);
     return ok().eTag(currentVersion).body(model);
   }
 
+  /**
+   * Converts a {@link Customer} entity to a {@link CustomerModel} with HATEOAS links.
+   *
+   * @param customer the {@link Customer} entity to convert
+   * @param request the HttpServletRequest object used to create HATEOAS links
+   * @return a {@link CustomerModel} with HATEOAS links
+   * @see CustomerModel
+   * @see UriHelper#getBaseUri(HttpServletRequest)
+   */
   private CustomerModel customerToModel(final Customer customer, final HttpServletRequest request) {
     final var model = new CustomerModel(customer);
     final var baseUri = uriHelper.getBaseUri(request).toString();
-    final var idUri = STR."\{baseUri}/\{customer.getId()}";
+    final var idUri = String.format("%s/%s", baseUri, customer.getId());
 
     final var selfLink = Link.of(idUri);
     final var listLink = Link.of(baseUri, LinkRelation.of("list"));
@@ -140,17 +153,24 @@ public class CustomerReadController {
    * Searches for customers based on various search criteria provided as query parameters.
    *
    * <p>This method allows searching for multiple customers using a map of query parameters. The found customers
-   * are returned as a `CollectionModel`, which includes the customers and hypermedia links for further navigation.</p>
+   * are returned as a {@link CollectionModel} of {@link CustomerModel} instances, including hypermedia links for
+   * further navigation.</p>
    *
-   * @param searchCriteria The query parameters as a map.
-   * @param request The HttpServletRequest object, used to create HATEOAS links.
-   * @return A response with status code 200 and a `CollectionModel` of found customers, or status code 404 if no customers are found.
+   * @param searchCriteria the query parameters as a map
+   * @param request the HttpServletRequest object used to create HATEOAS links
+   * @return a {@link CollectionModel} of {@link CustomerModel} instances, or status code 404 if no customers are found
+   * @since 24.08.2024
+   * @version 1.0
+   * @author <a href="mailto:Caleb_G@outlook.de">Caleb Gyamfi</a>
+   * @see CustomerReadService#find(MultiValueMap)
+   * @see CustomerModel
+   * @see UriHelper#getBaseUri(HttpServletRequest)
    */
   @GetMapping(produces = HAL_JSON_VALUE)
   @Operation(summary = "Search for customers using criteria", tags = "Search")
   @ApiResponse(responseCode = "200", description = "CollectionModel with customers found")
   @ApiResponse(responseCode = "404", description = "No customers found")
-  CollectionModel<CustomerModel> get(
+  public CollectionModel<CustomerModel> get(
     @RequestParam @NonNull final MultiValueMap<String, String> searchCriteria,
     final HttpServletRequest request
   ) {
@@ -161,7 +181,7 @@ public class CustomerReadController {
       .stream()
       .map(customer -> {
         final var model = new CustomerModel(customer);
-        model.add(Link.of(STR."\{baseUri}/\{customer.getId()}"));
+        model.add(Link.of(String.format("%s/%s", baseUri, customer.getId())));
         return model;
       })
       .toList();

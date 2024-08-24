@@ -10,11 +10,15 @@
  * Each controller also handles various exceptions, returning appropriate HTTP status codes and detailed error messages conforming to the
  * RFC 7807 specification.
  * </p>
+ *
+ * <p>These controllers leverage HATEOAS principles to provide hypermedia links in responses, facilitating navigation through related resources.</p>
+ *
  * <p>
  * Key classes in this package include:
  * <ul>
  *     <li>{@link com.gentle.bank.customer.controller.CustomerWriteController}: Handles write operations such as creating, updating, and deleting customers.</li>
  *     <li>{@link com.gentle.bank.customer.controller.CustomerReadController}: Handles read operations such as retrieving customer details.</li>
+ *     <li>{@link com.gentle.bank.customer.controller.AuthController} - Handles authentication and authorization operations.</li>
  * </ul>
  * </p>
  * <p>
@@ -23,9 +27,9 @@
  * </p>
  *
  * @since 23.08.2024
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  * @see com.gentle.bank.customer.service
  * @see com.gentle.bank.customer.dto
- * @see com.gentle.bank.customer.security
+ * @see com.gentle.bank.customer.mapper
  */
 package com.gentle.bank.customer.controller;

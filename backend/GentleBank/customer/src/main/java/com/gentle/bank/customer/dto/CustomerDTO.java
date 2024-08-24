@@ -32,9 +32,9 @@ import java.util.List;
  * @param address The address of the customer. Must not be {@code null} and must be validated for creation with the {@link OnCreate} group.
  * @param username The username of the customer. Must not be {@code null} and must match the {@link #USERNAME_PATTERN} regex.
  *
- * @since 23.08.2024
+ * @since 24.08.2024
  * @version 1.0
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  */
 public record CustomerDTO(
   /**

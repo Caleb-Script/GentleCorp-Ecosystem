@@ -1,0 +1,131 @@
+
+@startuml Kunde
+
+skinparam classAttributeIconSize 0
+' skinparam monochrome true
+
+package java {
+    package util {
+        class UUID
+        interface List<T>
+        class URL
+        class Currency
+    }
+
+    package math {
+        class BigDecimal
+    }
+
+    package time {
+        class LocalDate
+        class LocalDateTime
+    }
+
+    LocalDate .right[hidden].> LocalDateTime
+    LocalDateTime .[hidden].> Currency
+    Currency .[hidden].> BigDecimal
+}
+
+package jakarta.persistence {
+    interface "@Entity" as Entity
+    interface "@Table" as Table
+
+    Entity -[hidden]down-> Table
+    LocalDateTime .up[hidden].> Table
+}
+
+package com.acme.kunde {
+    package entity #DDDDDD {
+        class Umsatz << entity >> {
+            @Id
+            @GeneratedValue
+            id : UUID
+            betrag: BigDecimal
+            waehrung: Currency
+        }
+        Umsatz ..> UUID
+
+        class Adresse << entity >> {
+            @Id
+            @GeneratedValue
+            id : UUID
+            plz: String
+            ort: String
+        }
+        Adresse ..> UUID
+
+        enum GeschlechtType {
+            MAENNLICH
+            WEIBLICH
+            DIVERS
+        }
+
+        enum FamilienstandType {
+            LEDIG
+            VERHEIRATET
+            GESCHIEDEN
+            VERWITWET
+        }
+
+        enum InteresseType {
+            SPORT
+            LESEN
+            REISEN
+        }
+
+        class Kunde << entity >>  << @Entity >>  << @Table >> {
+            @Id
+            @GeneratedValue
+            id : UUID
+            @Version
+            version : int
+            nachname : String
+            email : String
+            kategorie: int
+            hasNewsletter : boolean
+            geburtsdatum: LocalDate
+            homepage: URL
+            @Enumerated
+            geschlecht: GeschlechtType
+            @Enumerated
+            familienstand: FamilienstandType
+            @Transient
+            @UniqueElements
+            interessen: List<InteresseType>
+            @Column
+            interessenStr: String
+            username: String
+            @CreationTimestamp
+            erzeugt: LocalDateTime
+            @UpdateTimestamp
+            aktualisiert: LocalDateTime
+        }
+
+        Kunde *--> "0..*" Umsatz : @OneToOne(cascade = [...]) \n@JoinColumn(...) \numsaetze
+        Kunde *--> "1" Adresse : @OneToOne(cascade = [...]) \nadresse
+
+        Kunde .up.> GeschlechtType
+        Kunde .up.> FamilienstandType
+        Kunde .up.> InteresseType
+
+        Kunde .right.> UUID
+        Kunde .right.> URL
+        Kunde .right.> LocalDate
+        Kunde .right.> LocalDateTime
+
+        Kunde .right.> List
+        Kunde .right.> Entity
+        Kunde .right.> Table
+
+        Umsatz ..> Currency
+        Umsatz ..> BigDecimal
+
+        GeschlechtType .[hidden].> List
+    }
+}
+
+hide empty members
+
+footer (c) Jürgen Zimmermann
+
+@enduml

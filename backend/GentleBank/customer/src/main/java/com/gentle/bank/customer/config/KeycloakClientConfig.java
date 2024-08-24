@@ -11,15 +11,17 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * Configuration for the Spring HTTP client used to access the Keycloak service.
- *
- * <p>This interface defines a method for configuring a {@link KeycloakRepository} client.
+ * <p>
+ * This interface defines a method for configuring a {@link KeycloakRepository} client.
  * The implementation of this interface creates a bean that will be used for communication
- * with the Keycloak service.</p>
+ * with the Keycloak service.
+ * </p>
+ * <p>
+ * The interface is {@code sealed} and only allows implementation by {@link ApplicationConfig}.
+ * </p>
  *
- * <p>The interface is {@code sealed} and only allows implementation by {@link ApplicationConfig}.</p>
- *
- * @since 23.08.2024
- * @author Caleb Gyamfi
+ * @since 2024-08-24
+ * @author <a href="mailto:Caleb_G@outlook.de">Caleb Gyamfi</a>
  * @see ApplicationConfig
  * @see KeycloakRepository
  */
@@ -27,21 +29,24 @@ sealed interface KeycloakClientConfig permits ApplicationConfig {
 
   /**
    * Logger object for the {@code KeycloakClientConfig} interface.
-   *
-   * <p>This logger object is used to log debug and other messages related to
-   * the Keycloak client configuration.</p>
+   * <p>
+   * This logger object is used to log debug and other messages related to
+   * the Keycloak client configuration.
+   * </p>
    */
   Logger LOGGER = LoggerFactory.getLogger(KeycloakClientConfig.class);
 
   /**
    * Creates a {@link KeycloakRepository} bean for communication with the Keycloak service.
-   *
-   * <p>This method configures the {@code RestClient} with the base URL defined by environment variables.
+   * <p>
+   * This method configures the {@code RestClient} with the base URL defined by environment variables.
    * The client is then adapted into a {@code RestClientAdapter}, and an {@code HttpServiceProxyFactory}
-   * is used to create a proxy for the {@link KeycloakRepository} interface.</p>
+   * is used to create a proxy for the {@link KeycloakRepository} interface.
+   * </p>
    *
    * @param clientBuilder the {@link RestClient.Builder} used to create the {@code RestClient}
    * @return an instance of {@link KeycloakRepository} used for interacting with the Keycloak service
+   * @since 2024-08-24
    */
   @Bean
   default KeycloakRepository keycloakRepository(

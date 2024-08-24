@@ -23,9 +23,9 @@ import com.gentle.bank.customer.entity.enums.TokenType;
  * @param idToken The ID token provided by Keycloak, which contains user information.
  * @param scope The scope of the access granted by the token, as per <a href="https://www.rfc-editor.org/rfc/rfc6749.html">OAuth 2.0</a> (e.g., "email profile").
  *
- * @since 23.08.2024
+ * @since 24.08.2024
  * @version 1.0
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  */
 public record TokenDTO(
   @JsonProperty("access_token")
@@ -52,6 +52,7 @@ public record TokenDTO(
   @JsonProperty("id_token")
   String idToken,
 
+  @JsonProperty("scope")
   ScopeType scope
 ) {
 }

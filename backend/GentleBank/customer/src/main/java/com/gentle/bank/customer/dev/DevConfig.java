@@ -27,9 +27,9 @@ import org.springframework.context.annotation.Profile;
  * @see LogSignatureAlgorithms
  * @see K8s
  *
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  * @version 1.0
- * @since 23.08.2024
+ * @since 24.08.2024
  */
 @Profile(DevConfig.DEV)
 public class DevConfig implements Flyway, LogRequestHeaders, LogPasswordEncoding, LogSignatureAlgorithms, K8s {

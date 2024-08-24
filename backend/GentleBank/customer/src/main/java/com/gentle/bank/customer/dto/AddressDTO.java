@@ -12,16 +12,21 @@ import jakarta.validation.constraints.Pattern;
  * layers of the application, particularly in requests and responses involving address data.
  * </p>
  *
- * @param street The street of the address. Must match the {@link #STREET_PATTERN} regular expression.
- * @param houseNumber The house number of the address.
- * @param zipCode The postal code of the address.
- * @param state The state of the address.
- * @param city The city of the address.
- * @param country The country of the address.
+ * <p>
+ * Validation constraints are applied to ensure that address fields are properly formatted and not null where required.
+ * The {@link #STREET_PATTERN} regular expression is used to validate the format of the street field.
+ * </p>
  *
- * @since 23.08.2024
+ * @param street The street of the address. Must match the {@link #STREET_PATTERN} regular expression.
+ * @param houseNumber The house number of the address. Must not be {@code null}.
+ * @param zipCode The postal code of the address. Must not be {@code null}.
+ * @param state The state of the address. Must not be {@code null}.
+ * @param city The city of the address. Must not be blank.
+ * @param country The country of the address. Must not be blank.
+ *
+ * @since 24.08.2024
  * @version 1.0
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  */
 public record AddressDTO(
   /**

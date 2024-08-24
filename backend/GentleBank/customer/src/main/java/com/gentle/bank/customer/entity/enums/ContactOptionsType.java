@@ -13,12 +13,13 @@ import java.util.stream.Stream;
  * contact options such as email, phone, mail, and SMS.
  * </p>
  *
- * @since 23.08.2024
+ * @since 24.08.2024
  * @version 1.0
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_G@outlook.de">Caleb Gyamfi</a>
  */
 @RequiredArgsConstructor
 public enum ContactOptionsType {
+
   /**
    * Contact option via email.
    */
@@ -43,6 +44,9 @@ public enum ContactOptionsType {
 
   /**
    * Gets the string representation of the contact option.
+   * <p>
+   * This method returns the string value associated with the contact option. For example, "Email" for the EMAIL enum constant.
+   * </p>
    *
    * @return the type of contact option as a string.
    */
@@ -55,6 +59,7 @@ public enum ContactOptionsType {
    * Creates a {@link ContactOptionsType} from a string value.
    * <p>
    * This method is used to convert a string representation of a contact option into its corresponding enum constant.
+   * For example, it can convert the string "Email" to the EMAIL enum constant.
    * </p>
    *
    * @param value the string value of the contact option.

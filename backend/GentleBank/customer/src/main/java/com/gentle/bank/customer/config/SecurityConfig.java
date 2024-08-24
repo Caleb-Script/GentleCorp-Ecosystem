@@ -17,10 +17,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
 
 import static com.gentle.bank.customer.controller.AuthController.AUTH_PATH;
-import static com.gentle.bank.customer.entity.enums.Role.ELITE;
-import static com.gentle.bank.customer.entity.enums.Role.ESSENTIAL;
-import static com.gentle.bank.customer.entity.enums.Role.GENTLECORP_ADMIN;
-import static com.gentle.bank.customer.entity.enums.Role.GENTLECORP_USER;
+import static com.gentle.bank.customer.entity.enums.RoleType.ELITE;
+import static com.gentle.bank.customer.entity.enums.RoleType.ESSENTIAL;
+import static com.gentle.bank.customer.entity.enums.RoleType.GENTLECORP_ADMIN;
+import static com.gentle.bank.customer.entity.enums.RoleType.GENTLECORP_USER;
 import static com.gentle.bank.customer.util.Constants.CUSTOMER_PATH;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
@@ -32,14 +32,14 @@ import static org.springframework.security.crypto.factory.PasswordEncoderFactori
 
 /**
  * Security configuration for the application.
+ * <p>
+ * This interface defines security configurations including authorization rules, password encoding,
+ * and settings for handling security contexts and sessions. It is designed to be implemented by
+ * {@link ApplicationConfig}.
+ * </p>
  *
- * <p>This interface defines security configurations including authorization rules, password encoding,
- * and settings for handling security contexts and sessions.</p>
- *
- * <p>The interface is {@code sealed} and allows implementation only by {@link ApplicationConfig}.</p>
- *
- * @since 23.08.2024
- * @author Caleb Gyamfi
+ * @since 2024-08-24
+ * @author <a href="mailto:Caleb_G@outlook.de">Caleb Gyamfi</a>
  * @see ApplicationConfig
  */
 @SuppressWarnings("TrailingComment")
@@ -47,12 +47,14 @@ sealed interface SecurityConfig permits ApplicationConfig {
 
   /**
    * Bean method to integrate Spring Security with Keycloak.
-   *
-   * <p>This method returns a {@link ResourceServerExpressionInterceptUrlRegistryPostProcessor} that configures
+   * <p>
+   * This method returns a {@link ResourceServerExpressionInterceptUrlRegistryPostProcessor} that configures
    * URL patterns for authentication and authorization rules. It permits all requests to {@code /rest/**} with
-   * OPTIONS method and ensures all other requests are authenticated.</p>
+   * OPTIONS method and ensures all other requests are authenticated.
+   * </p>
    *
    * @return a post-processor for Spring Security to integrate with Keycloak
+   * @since 2024-08-24
    */
   @Bean
   default ResourceServerExpressionInterceptUrlRegistryPostProcessor authorizePostProcessor() {
@@ -64,15 +66,17 @@ sealed interface SecurityConfig permits ApplicationConfig {
 
   /**
    * Bean definition to configure access control at REST endpoints before applying {@code @PreAuthorize}.
-   *
-   * <p>This method configures {@link HttpSecurity} to define authorization rules for various endpoints,
+   * <p>
+   * This method configures {@link HttpSecurity} to define authorization rules for various endpoints,
    * including support for JWT authentication and session management. It also sets up security for actuator
-   * endpoints and Swagger UI.</p>
+   * endpoints and Swagger UI.
+   * </p>
    *
    * @param httpSecurity the injected {@link HttpSecurity} object used as a starting point for configuration
    * @param jwtAuthenticationConverter the injected {@link Converter} for JWT to Keycloak authentication
    * @return an instance of {@link SecurityFilterChain}
    * @throws Exception if an error occurs during {@link HttpSecurity#authorizeHttpRequests()}
+   * @since 2024-08-24
    */
   @Bean
   @SuppressWarnings("LambdaBodyLength")
@@ -83,7 +87,7 @@ sealed interface SecurityConfig permits ApplicationConfig {
     return httpSecurity
       .authorizeHttpRequests(authorize -> {
         authorize
-          .requestMatchers(POST,  "/login").permitAll()
+          .requestMatchers(POST, "/login").permitAll()
 
           .requestMatchers(GET, CUSTOMER_PATH).hasAnyRole(GENTLECORP_USER.getRole(), GENTLECORP_ADMIN.getRole())
           .requestMatchers(GET, CUSTOMER_PATH + "/**").permitAll()
@@ -124,6 +128,7 @@ sealed interface SecurityConfig permits ApplicationConfig {
    * Bean definition to provide the password encryption algorithm. The default algorithm provided by Spring Security, bcrypt, is used.
    *
    * @return a {@link PasswordEncoder} instance for password encryption
+   * @since 2024-08-24
    */
   @Bean
   default PasswordEncoder passwordEncoder() {
@@ -134,6 +139,7 @@ sealed interface SecurityConfig permits ApplicationConfig {
    * Bean definition to provide a checker for compromised passwords using the Have I Been Pwned API.
    *
    * @return a {@link CompromisedPasswordChecker} instance
+   * @since 2024-08-24
    */
   @Bean
   default CompromisedPasswordChecker compromisedPasswordChecker() {

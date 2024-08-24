@@ -1,0 +1,376 @@
+= Projekt-Handbuch
+
+== Einführung
+
+Dieses Dokument bietet eine detaillierte Übersicht über die Struktur und die wichtigsten Klassen des Projekts. Es dient als Referenz für Entwickler und Administratoren, um sich im Projekt zurechtzufinden und die verschiedenen Komponenten zu verstehen.
+
+== Projektübersicht
+
+Das Projekt ist ein Customer-Service-System, das verschiedene Aspekte der Kundenverwaltung abdeckt. Es nutzt Spring Boot und bietet Konfigurationsmöglichkeiten für Keycloak und E-Mail-Versand.
+
+== Paketübersicht
+
+=== `com.gentle.bank.customer`
+
+Dieses Paket enthält die Hauptanwendungsklassen und -konfigurationen für den Customer-Service. Es umfasst:
+
+==== `CustomerApplication`
+
+Die Hauptklasse zum Starten der Spring Boot-Anwendung. Sie konfiguriert verschiedene Spring Boot-Eigenschaften und startet die Anwendung.
+
+[source,java]
+----
+package com.gentle.bank.customer;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.hateoas.config.EnableHypermediaSupport;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+
+import static com.gentle.bank.customer.util.Banner.TEXT;
+import static org.springframework.hateoas.config.EnableHypermediaSupport.HypermediaType.HAL;
+import static org.springframework.hateoas.support.WebStack.WEBMVC;
+
+@SpringBootApplication(proxyBeanMethods = false)
+@Import({ApplicationConfig.class, com.gentle.bank.customer.dev.DevConfig.class})
+@EnableConfigurationProperties({KeycloakProps.class, MailProps.class})
+@EnableHypermediaSupport(type = HAL, stacks = WEBMVC)
+@EnableJpaRepositories
+@EnableWebSecurity
+@EnableMethodSecurity
+@EnableAsync
+@SuppressWarnings({"ImplicitSubclassInspection", "ClassUnconnectedToPackage"})
+public class CustomerApplication {
+
+  public static void main(String[] args) {
+    final var app = new SpringApplication(CustomerApplication.class);
+    app.setBanner((_,_, out) -> out.println(TEXT));
+    app.run(args);
+  }
+}
+----
+
+==== `KeycloakProps`
+
+Konfigurationseigenschaften für die Keycloak-Integration. Enthält Felder für Schema, Host, Port, Client-ID und Client-Secret.
+
+[source,java]
+----
+package com.gentle.bank.customer;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+/**
+ * Spring-Konfiguration für Properties "app.keycloak.*".
+ *
+ * @param schema  http oder https
+ * @param host    Rechnername des Keycloak-Servers
+ * @param port    Port, auf dem Keycloak läuft
+ * @param clientId  Client-ID gemäß der Client-Konfiguration in Keycloak
+ * @param clientSecret  Client-Secret gemäß der Client-Konfiguration in Keycloak
+ */
+@ConfigurationProperties(prefix = "app.keycloak")
+public record KeycloakProps(
+    String schema,
+    String host,
+    int port,
+    String clientId,
+    String clientSecret
+) {
+}
+----
+
+==== `MailProps`
+
+Konfigurationseigenschaften für den E-Mail-Versand. Enthält Felder für die Absender- und Empfängeradressen.
+
+[source,java]
+----
+package com.gentle.bank.customer;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+@ConfigurationProperties(prefix = "app.mail")
+public class MailProps {
+  private String from;
+  private String to;
+}
+----
+
+=== `com.gentle.bank.customer.config`
+
+Dieses Paket enthält Konfigurationsklassen für die Anwendung, einschließlich benutzerdefinierter Bean-Definitionen und Spring Boot-Einstellungen.
+
+=== `com.gentle.bank.customer.dev`
+
+Enthält Entwicklungs-spezifische Konfigurationen, die während der Entwicklungsphase verwendet werden.
+
+=== `com.gentle.bank.customer.entity`
+
+Enthält die JPA-Entitäten, die die Datenbanktabellen repräsentieren.
+
+=== `com.gentle.bank.customer.exception`
+
+Definiert benutzerdefinierte Ausnahmen für spezifische Fehlerfälle innerhalb der Anwendung.
+
+==== `VersionInvalidException`
+
+Eine benutzerdefinierte Ausnahme, die verwendet wird, um Fehler im Zusammenhang mit ungültigen Versionsnummern zu behandeln.
+
+[source,java]
+----
+package com.gentle.bank.customer.exception;
+
+import org.springframework.http.HttpStatus;
+
+import java.net.URI;
+
+public class VersionInvalidException extends RuntimeException {
+    private final HttpStatus status;
+    private final URI uri;
+
+    public VersionInvalidException(HttpStatus status, String message, URI uri) {
+        super(message);
+        this.status = status;
+        this.uri = uri;
+    }
+
+    public HttpStatus getStatus() {
+        return status;
+    }
+
+    public URI getUri() {
+        return uri;
+    }
+}
+----
+
+=== `com.gentle.bank.customer.repository`
+
+Beinhaltet Repository-Interfaces für die Datenzugriffsschicht.
+
+=== `com.gentle.bank.customer.service`
+
+Beinhaltet die Dienstklassen für die Geschäftslogik und -verarbeitung.
+
+=== `com.gentle.bank.customer.util`
+
+Stellt verschiedene Hilfsklassen und -methoden zur Verfügung, darunter Banner-Anzeigen, URI-Helper und Versionsverarbeitung.
+
+==== `Banner`
+
+Enthält verschiedene ASCII-Banner, die in der Anwendung angezeigt werden können.
+
+[source,java]
+----
+package com.gentle.bank.customer.util;
+
+public class Banner {
+  public static final String TEXT = "Hier steht Ihr Bannertext...";
+}
+----
+
+==== `Figlets`
+
+Generiert zufällige ASCII-Figlets für Banneranzeigen.
+
+[source,java]
+----
+package com.gentle.bank.customer.util;
+
+import java.util.Random;
+
+public class Figlets {
+
+  private static final String IVRIT = """
+                    _                              ____   ___ ____  _  _    ___   ___   ____  _  _  \s
+      ___ _   _ ___| |_ ___  _ __ ___   ___ _ __  |___ \\ / _ \\___ \\| || |  / _ \\ ( _ ) |___ \\| || | \s
+     / __| | | / __| __/ _ \\| '_ ` _ \\ / _ \\ '__|   __) | | | |__) | || |_| | | |/ _ \\   __) | || |_\s
+    | (__| |_| \\__ \\ || (_) | | | | | |  __/ |     / __/| |_| / __/|__   _| |_| | (_) | / __/|__   _|
+     \\___|\\__,_|___/\\__\\___/|_| |_| |_|\\___|_|    |_____|\\___/_____|  |_|(_)___/ \\___(_)_____|  |_| \s
+                                                                                                    \s""";
+
+  private static final String BIG = """
+                    _                              ___   ___ ___  _  _    ___   ___   ___  _  _  \s
+                   | |                            |__ \\ / _ \\__ \\| || |  / _ \\ / _ \\ |__ \\| || | \s
+      ___ _   _ ___| |_ ___  _ __ ___   ___ _ __     ) | | | | ) | || |_| | | | (_) |   ) | || |_\s
+     / __| | | / __| __/ _ \\| '_ ` _ \\ / _ \\ '__|   / /| | | |/ /|__   _| | | |> _ <   / /|__   _|
+    | (__| |_| \\__ \\ || (_) | | | | | |  __/ |     / /_| |_| / /_   | |_| |_| | (_) | / /_   | | \s
+     \\___|\\__,_|___/\\__\\___/|_| |_| |_|\\___|_|    |____|\\___/____|  |_(_)\\___/ \\___(_)____|  |_| \s
+                                                                                                 \s
+                                                                                                 \s""";
+
+  private static final String SLANT = """
+                       __                               ___   ____ ___  __ __   ____  ____   ___  __ __
+      _______  _______/ /_____  ____ ___  ___  _____   |__ \\ / __ \\__ \\/ // /  / __ \\( __ ) |__ \\/ // /
+     / ___/ / / / ___/ __/ __ \\/ __ `__ \\/ _ \\/ ___/   __/ // / / /_/ / // /_ / / / / __  | __/ / // /_
+    / /__/ /_/ (__  ) /_/ /_/ / / / / / /  __/ /      / __// /_/ / __/__  __// /_/ / /_/ / / __/__  __/
+    \\___/\\__,_/____/\\__/\\____/_/ /_/ /_/\\___/_/      /____/\\____/____/ /_/ (_)____/\\____(_)____/ /_/  \s
+                                                                                                      \s""";
+
+  private static final String DOOM = """
+                    _                              _____  _____  _____   ___  _____ _____   _____   ___\s
+                   | |                            / __  \\|  _  |/ __  \\ /   ||  _  |  _  | / __  \\ /   |
+      ___ _   _ ___| |_ ___  _ __ ___   ___ _ __  `' / /'| |/' |`' / /'/ /| || |/' |\\ V /  `' / /'/ /| |
+     / __| | | / __| __/ _ \\| '_ ` _ \\ / _ \\ '__|   / /  |  /| |  / / / /_| ||  /| |/ _ \\    / / / /_| |
+    | (__| |_| \\__ \\ || (_) | | | | | |  __/ |    ./ /___\\ |_/ /./ /__\\___  |\\ |_/ / |_| |_./ /__\\___  |
+     \\___|\\__,_|___/\\__\\___/|_| |_| |_|\\___|_|    \\_____/ \\___/ \\_____/   |_(_)___/\\_____(_)_____/   |_/
+                                                                                                       \s
+                                                                                                       \s""";
+
+  private static final Random RANDOM = new Random();
+
+  public String randomFigletGenerator() {
+    int choice = RANDOM.nextInt(5);
+    switch (choice) {
+      case 0:
+        return IVRIT;
+      case 1:
+        return BIG;
+      case 2:
+        return SLANT;
+      case 3:
+        return DOOM;
+      case 4:
+        return GHOST;
+      default:
+        throw new IllegalStateException("Unexpected value: " + choice);
+    }
+  }
+}
+----
+
+==== `UriHelper`
+
+Hilfsklasse zur Ermittlung der Basis-URI basierend auf den HTTP-Headern. Unterstützt Forwarding durch Ingress-Controller oder API-Gateways.
+
+[source,java]
+----
+package com.gentle.bank.customer.util;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+
+import static com.gentle.bank.customer.util.Constants.CUSTOMER_PATH;
+
+@Component
+@Slf4j
+public class UriHelper {
+    private static final String X_FORWARDED_PROTO = "X-Forwarded-Proto";
+    private static final String X_FORWARDED_HOST = "x-forwarded-host";
+    private static final String X_FORWARDED_PREFIX = "x-forwarded-prefix";
+    private static final String CUSTOMER_PREFIX = "/customer";
+
+    /**
+     * Basis-URI ermitteln, d.h. ohne Query-Parameter.
+     *
+     * @param request Servlet-Request
+     * @return Die Basis-URI als String
+     */
+    public URI getBaseUri(final HttpServletRequest request) {
+        final var forwardedHost = request.getHeader(X_FORWARDED_HOST);
+        if (forwardedHost != null) {
+            // Forwarding durch Kubernetes Ingress Controller oder Spring Cloud Gateway
+            return getBaseUriForwarded(request, forwardedHost);
+        }
+
+        // KEIN Forwarding von einem API-Gateway
+        // URI aus Schema, Host, Port und Pfad
+        final var uriComponents = ServletUriComponentsBuilder.fromRequestUri(request).build();
+        final var baseUri =
+            String.format("%s://%s:%d%s", uriComponents.getScheme(), uriComponents.getHost(), uriComponents.getPort(), CUSTOMER_PATH);
+        log.debug("getBaseUri (ohne Forwarding): baseUri={}", baseUri);
+        return URI.create(baseUri);
+    }
+
+    private URI getBaseUriForwarded(final HttpServletRequest request, final String forwardedHost) {
+        // x-forwarded-host = Hostname des API-Gateways
+
+        // "https" oder "http"
+        final var forwardedProto = request.getHeader(X_FORWARDED_PROTO);
+        if (forwardedProto == null) {
+            throw new IllegalStateException(String.format("Kein \"%s\" im Header", X_FORWARDED_PROTO));
+        }
+
+        var forwardedPrefix = request.getHeader(X_FORWARDED_PREFIX);
+        // x-forwarded-prefix: null bei Kubernetes Ingress Controller bzw. "/kunden" bei Spring Cloud Gateway
+        if (forwardedPrefix == null) {
+            log.trace("getBaseUriForwarded: Kein \"{}\" im Header", X_FORWARDED_PREFIX);
+            forwardedPrefix = CUSTOMER_PREFIX;
+        }
+        final var baseUri = String.format("%s://%s%s%s", forwardedProto, forwardedHost, forwardedPrefix, CUSTOMER_PATH);
+        log.debug("getBaseUriForwarded: baseUri={}", baseUri);
+        return URI.create(baseUri);
+    }
+}
+----
+
+==== `VersionUtils`
+
+Bietet Hilfsmethoden zur Verarbeitung und Validierung von Versionsnummern, die in ETag-Headern verwendet werden.
+
+[source,java]
+----
+package com.gentle.bank.customer.util;
+
+import com.gentle.bank.customer.exception.VersionInvalidException;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+
+import java.net.URI;
+import java.util.Optional;
+
+import static com.gentle.bank.customer.util.Constants.VERSION_NUMBER_MISSING;
+import static org.springframework.http.HttpStatus.PRECONDITION_FAILED;
+import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
+
+@Slf4j
+public class VersionUtils {
+
+    public static int getVersion(final Optional<String> versionOpt, final HttpServletRequest request) {
+        log.trace("getVersion: {}", versionOpt);
+        return versionOpt.map(versionStr -> {
+            if (isValidVersion(versionStr)) {
+                return Integer.parseInt(versionStr.substring(1, versionStr.length() - 1));
+            } else {
+                throw new VersionInvalidException(
+                        PRECONDITION_FAILED,
+                        String.format("Ungueltiges ETag %s", versionStr),
+                        URI.create(request.getRequestURL().toString())
+                );
+            }
+        }).orElseThrow(() -> new VersionInvalidException(
+                PRECONDITION_REQUIRED,
+                VERSION_NUMBER_MISSING,
+                URI.create(request.getRequestURL().toString())
+        ));
+    }
+
+    private static boolean isValidVersion(String versionStr) {
+        log.debug("länger des versionStrings={} versionString={}", versionStr.length(), versionStr);
+        return versionStr.length() >= 3 &&
+                versionStr.charAt(0) == '"' &&
+                versionStr.charAt(versionStr.length() - 1) == '"';
+    }
+}
+----
+
+== Lizenz
+
+Dieses Projekt ist lizenziert unter der [MIT License](https://opensource.org/licenses/MIT).
+
+== Kontakt
+
+Für Fragen oder Unterstützung kontaktieren Sie bitte:
+
+Caleb Gyamfi
+E-Mail: Caleb_G@outlook.de

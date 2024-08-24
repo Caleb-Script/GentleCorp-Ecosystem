@@ -1,18 +1,13 @@
-
 package com.gentle.bank.customer.controller;
-
 
 import com.gentle.bank.customer.dto.LoginDTO;
 import com.gentle.bank.customer.dto.TokenDTO;
-import com.gentle.bank.customer.KeycloakProps;
 import com.gentle.bank.customer.service.KeycloakService;
 import com.gentle.bank.customer.exception.UnauthorizedException;
-import com.gentle.bank.customer.service.JwtService;
 import com.gentle.bank.customer.repository.KeycloakRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,15 +24,29 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 
-import java.nio.charset.Charset;
-import java.util.Base64;
 import java.util.Map;
 
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 /**
- * Controller für Abfragen bei Security.
+ * Controller for handling authentication-related requests.
+ * <p>
+ * This controller provides endpoints for user authentication, including
+ * logging in and retrieving JWT information for the authenticated user.
+ * It integrates with Keycloak for managing authentication and uses Spring
+ * Security to secure the endpoints.
+ * </p>
+ * <p>
+ * The controller also handles exceptions related to unauthorized access
+ * by providing custom responses for these scenarios.
+ * </p>
  *
+ * @see com.gentle.bank.customer.service.KeycloakService
+ * @see com.gentle.bank.customer.dto.LoginDTO
+ * @see com.gentle.bank.customer.dto.TokenDTO
+ * @see com.gentle.bank.customer.exception.UnauthorizedException
+ * @since 24.08.2024
+ * @version 1.0
  * @author <a href="mailto:Caleb_G@outlook.de">Caleb Gyamfi</a>
  */
 @RestController
@@ -47,57 +56,62 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 @Slf4j
 @SuppressWarnings("java:S1075")
 public class AuthController {
-    /**
-     * Pfad für Authentifizierung.
-     */
-    public static final String AUTH_PATH = "/auth";
-
-    private final KeycloakRepository keycloakRepository;
-    private final CompromisedPasswordChecker passwordChecker;
-  private final KeycloakService keycloakService;
-  private final JwtService jwtService;
-
-    private final KeycloakProps keycloakProps;
-
-    private String clientAndSecretEncoded;
-
-    @PostConstruct
-    private void encodeClientAndSecret() {
-        final var clientAndSecret = "spring-client:" + keycloakProps.clientSecret();
-        clientAndSecretEncoded = Base64
-            .getEncoder()
-            .encodeToString(clientAndSecret.getBytes(Charset.defaultCharset()));
-    }
-
-    @GetMapping("/me")
-    @Operation(summary = "JWT bei OAuth 2.0 abfragen", tags = "Auth")
-    @ApiResponse(responseCode = "200", description = "Eingeloggt")
-    @ApiResponse(responseCode = "401", description = "Fehler bei Username oder Passwort")
-    Map<String, Object> me(@AuthenticationPrincipal final Jwt jwt) {
-        // https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html
-        log.info("me: isCompromised() bei Passwort 'pass1234': {}", passwordChecker.check("pass1234").isCompromised());
-
-        return Map.of(
-            "subject", jwt.getSubject(),
-            "claims", jwt.getClaims()
-        );
-    }
 
   /**
-   * Login with username and password.
-   * Supports application/x-www-form-urlencoded and application/json.
+   * The path for authentication-related requests.
+   */
+  public static final String AUTH_PATH = "/auth";
+
+  private final KeycloakRepository keycloakRepository;
+  private final CompromisedPasswordChecker passwordChecker;
+  private final KeycloakService keycloakService;
+
+  /**
+   * Retrieves information about the currently authenticated user.
+   * <p>
+   * This endpoint returns the JWT subject and claims associated with the authenticated user.
+   * It also logs whether a sample password has been compromised using the {@link CompromisedPasswordChecker}.
+   * </p>
    *
-   * @param login Request Body with username and password.
-   * @return ResponseEntity containing TokenDTO if successful (Status 200).
-   *         Throws UnauthorizedException with Status 401 if authentication fails.
+   * @param jwt the JWT of the authenticated user, injected by Spring Security
+   * @return a map containing the subject and claims of the JWT
+   * @see org.springframework.security.oauth2.jwt.Jwt
+   * @since 24.08.2024
+   * @version 1.0
+   */
+  @GetMapping("/me")
+  @Operation(summary = "JWT bei OAuth 2.0 abfragen", tags = "Auth")
+  @ApiResponse(responseCode = "200", description = "Eingeloggt")
+  @ApiResponse(responseCode = "401", description = "Fehler bei Username oder Passwort")
+  public Map<String, Object> me(@AuthenticationPrincipal final Jwt jwt) {
+    log.info("me: isCompromised() bei Passwort 'pass1234': {}", passwordChecker.check("pass1234").isCompromised());
+
+    return Map.of(
+      "subject", jwt.getSubject(),
+      "claims", jwt.getClaims()
+    );
+  }
+
+  /**
+   * Authenticates a user with the provided username and password.
+   * <p>
+   * This endpoint supports both {@code application/x-www-form-urlencoded} and {@code application/json} formats.
+   * If authentication is successful, it returns a {@link TokenDTO} containing the JWT token.
+   * </p>
    *
+   * @param login the login credentials provided by the user
+   * @return a {@link ResponseEntity} containing the {@link TokenDTO} if authentication is successful
+   * @throws UnauthorizedException if the username or password is incorrect
+   * @see com.gentle.bank.customer.dto.LoginDTO
+   * @see com.gentle.bank.customer.dto.TokenDTO
+   * @since 24.08.2024
+   * @version 1.0
    */
   @PostMapping("login")
   public ResponseEntity<TokenDTO> login(@RequestBody final LoginDTO login) {
     final var username = login.username();
     final var password = login.password();
 
-    // Call KeycloakService for authentication
     final TokenDTO result = keycloakService.login(username, password);
     log.debug("Login successful for username: {}", username);
 
@@ -108,24 +122,36 @@ public class AuthController {
     return ResponseEntity.ok(result);
   }
 
-
-  //TODO catch unauthorize exception
   /**
-   * Exception handler for UnauthorizedException.
+   * Handles {@link UnauthorizedException} thrown during authentication.
+   * <p>
+   * This method returns a {@link ResponseEntity} with a status of {@code 401 Unauthorized}
+   * and the error message from the exception.
+   * </p>
    *
-   * @param ex exception
-   * @return ResponseEntity with status code 401 and error message.
-   *
+   * @param ex the {@link UnauthorizedException} thrown
+   * @return a {@link ResponseEntity} with a status of {@code 401 Unauthorized} and the exception message
+   * @see com.gentle.bank.customer.exception.UnauthorizedException
+   * @since 24.08.2024
+   * @version 1.0
    */
   @ExceptionHandler(UnauthorizedException.class)
   public ResponseEntity<String> handleUnauthorizedException(final UnauthorizedException ex) {
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+    return ResponseEntity.status(UNAUTHORIZED).body(ex.getMessage());
   }
 
-    @ExceptionHandler
-    @ResponseStatus(UNAUTHORIZED)
-    void onUnauthorized(@SuppressWarnings("unused") final HttpClientErrorException.Unauthorized ex) {
-    }
-
-
+  /**
+   * Handles {@link HttpClientErrorException.Unauthorized} thrown during HTTP requests.
+   * <p>
+   * This method responds with a status of {@code 401 Unauthorized} when an unauthorized exception occurs.
+   * </p>
+   *
+   * @param ex the {@link HttpClientErrorException.Unauthorized} thrown
+   * @since 24.08.2024
+   * @version 1.0
+   */
+  @ExceptionHandler
+  @ResponseStatus(UNAUTHORIZED)
+  void onUnauthorized(@SuppressWarnings("unused") final HttpClientErrorException.Unauthorized ex) {
+  }
 }

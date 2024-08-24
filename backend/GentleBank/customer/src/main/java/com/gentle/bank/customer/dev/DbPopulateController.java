@@ -34,9 +34,9 @@ import static org.springframework.http.ResponseEntity.ok;
  * available when the application is running in the "dev" profile.
  * </p>
  *
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  * @version 1.0
- * @since 23.08.2024
+ * @since 24.08.2024
  * @see org.flywaydb.core.Flyway
  */
 @Controller
@@ -59,8 +59,8 @@ public class DbPopulateController {
    *
    * @return A {@link ResponseEntity} with a plain text message indicating the operation was successful.
    *
-   * @author Caleb Gyamfi
-   * @since 23.08.2024
+   * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
+   * @since 24.08.2024
    */
   @PostMapping(value = "db_populate", produces = TEXT_PLAIN_VALUE)
   public ResponseEntity<String> dbPopulate() {

@@ -15,14 +15,26 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @param customerDTO The details of the customer to be created.
  * @param passwordDTO The password for the new customer.
  *
- * @since 23.08.2024
+ * @since 24.08.2024
  * @version 1.0
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  */
 public record CustomerCreateDTO(
+  /**
+   * The details of the customer to be created. This includes all relevant customer information.
+   * <p>
+   * The customer details are represented by the {@link CustomerDTO} class.
+   * </p>
+   */
   @JsonProperty("customer")
   CustomerDTO customerDTO,
 
+  /**
+   * The password for the new customer. This is required to set up the customer's account.
+   * <p>
+   * The password information is represented by the {@link PasswordDTO} class.
+   * </p>
+   */
   @JsonProperty("password")
   PasswordDTO passwordDTO
 ) {

@@ -22,8 +22,8 @@
  * @see com.gentle.bank.customer.dev.K8s
  * @see com.gentle.bank.customer.dev.DevConfig
  *
- * @since 23.08.2024
+ * @since 24.08.2024
  * @version 1.0
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  */
 package com.gentle.bank.customer.dev;

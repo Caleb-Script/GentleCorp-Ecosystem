@@ -30,9 +30,9 @@ import static org.springframework.boot.cloud.CloudPlatform.KUBERNETES;
  * a default method, making it easy to integrate this functionality into a Spring Boot application.
  * </p>
  *
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  * @version 1.0
- * @since 23.08.2024
+ * @since 24.08.2024
  */
 interface K8s {
 

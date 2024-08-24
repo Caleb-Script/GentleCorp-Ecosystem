@@ -38,9 +38,9 @@ import java.util.Arrays;
  * @see ApplicationReadyEvent
  * @see Logger
  *
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  * @version 1.0
- * @since 23.08.2024
+ * @since 24.08.2024
  */
 public interface LogSignatureAlgorithms {
 

@@ -34,10 +34,14 @@ import static java.util.Collections.emptyList;
  * <p>
  * The entity is mapped to the "customer" table in the database and includes timestamps for creation and last update.
  * </p>
+ * <p>
+ * The entity uses Jakarta Persistence (JPA) annotations for mapping to the database, and Lombok annotations for boilerplate code
+ * generation. The entity manages the lifecycle of customer data including its creation and updates.
+ * </p>
  *
- * @since 23.08.2024
+ * @since 24.08.2024
  * @version 1.0
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_G@outlook.de">Caleb Gyamfi</a>
  */
 @Entity
 @Table(name = "customer")

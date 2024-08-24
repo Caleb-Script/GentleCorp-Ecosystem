@@ -5,7 +5,7 @@ import org.springframework.web.ErrorResponseException;
 
 import java.net.URI;
 
-import static com.gentle.bank.customer.service.ProblemType.UNPROCESSABLE;
+import static com.gentle.bank.customer.entity.enums.ProblemType.UNPROCESSABLE;
 import static com.gentle.bank.customer.util.Constants.PROBLEM_PATH;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 

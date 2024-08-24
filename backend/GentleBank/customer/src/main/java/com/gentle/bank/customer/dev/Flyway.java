@@ -26,9 +26,9 @@ import org.springframework.context.annotation.Bean;
  * a ready-to-use implementation.
  * </p>
  *
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  * @version 1.0
- * @since 23.08.2024
+ * @since 24.08.2024
  */
 interface Flyway {
 

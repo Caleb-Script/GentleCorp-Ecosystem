@@ -6,7 +6,6 @@ import com.gentle.bank.customer.dto.CustomerDTO;
 import com.gentle.bank.customer.service.JwtService;
 import com.gentle.bank.customer.dto.PasswordDTO;
 import com.gentle.bank.customer.service.CustomerWriteService;
-import com.gentle.bank.customer.service.ProblemType;
 import com.gentle.bank.customer.exception.ConstraintViolationsException;
 import com.gentle.bank.customer.exception.EmailExistsException;
 import com.gentle.bank.customer.exception.VersionInvalidException;
@@ -16,7 +15,6 @@ import com.gentle.bank.customer.util.UriHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Validator;
@@ -41,19 +39,24 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.*;
 
 /**
- * This controller handles the creation, update, and deletion of customer records in the system.
- * It includes methods for creating a new customer, updating an existing customer, updating the customer's password,
- * and deleting a customer by their ID.
- * <p>
- * The controller also handles exceptions related to validation, existing email conflicts, versioning, and invalid patch operations.
- * Each method and exception handler returns appropriate HTTP status codes and error details as per the RFC 7807 specification.
- * </p>
- * <p>
- * The API endpoints are secured using JWT, and the customer's role and username are extracted from the JWT for authorization purposes.
- * </p>
+ * Handles HTTP requests related to customer records, including creation, update, password update, and deletion.
  *
- * @since 23.08.2024
- * @author Caleb Gyamfi
+ * <p>This controller manages the lifecycle of customer records in the system, supporting operations such as:
+ * <ul>
+ *   <li>Creating new customers</li>
+ *   <li>Updating existing customers</li>
+ *   <li>Updating customer passwords</li>
+ *   <li>Deleting customers by their ID</li>
+ * </ul></p>
+ *
+ * <p>It also includes exception handling for validation errors, email conflicts, versioning issues, and invalid patch operations,
+ * returning appropriate HTTP status codes and error details according to the RFC 7807 specification.</p>
+ *
+ * <p>Security is managed via JWT, with the authenticated user's role and username extracted from the JWT for authorization purposes.</p>
+ *
+ * @since 24.08.2024
+ * @version 1.0
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  * @see com.gentle.bank.customer.service.CustomerWriteService
  * @see com.gentle.bank.customer.service.CustomerReadService
  * @see com.gentle.bank.customer.service.patch.CustomerPatcher
@@ -75,18 +78,28 @@ public class CustomerWriteController {
   /**
    * Creates a new customer in the system.
    *
-   * @param customerCreateDTO The DTO containing customer data and password for the new customer.
-   * @param request The HttpServletRequest object, used to create the URI for the created resource.
+   * <p>Handles the creation of a new customer based on the provided data transfer object (DTO) and password. The
+   * customer record is created in the system, and the response includes a Location header pointing to the newly
+   * created resource.</p>
+   *
+   * @param customerCreateDTO The DTO containing the data and password for the new customer.
+   * @param request The HttpServletRequest object used to construct the URI for the created resource.
    * @param jwt The JWT of the authenticated user, used to extract the username.
    * @return A ResponseEntity with a Location header pointing to the newly created customer.
    * @throws URISyntaxException If the URI syntax is incorrect.
+   * @since 24.08.2024
+   * @version 1.0
+   * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
+   * @see CustomerWriteService#create(CustomerDTO, String, Jwt)
+   * @see JwtService#getUsername(Jwt)
+   * @see UriHelper#getBaseUri(HttpServletRequest)
    */
   @PostMapping(consumes = APPLICATION_JSON_VALUE)
-  @Operation(summary = "Einen neuen Kunden anlegen", tags = "Neuanlegen")
-  @ApiResponse(responseCode = "201", description = "Customer neu angelegt")
-  @ApiResponse(responseCode = "400", description = "Syntaktische Fehler im Request-Body")
-  @ApiResponse(responseCode = "422", description = "Ungültige Werte oder Email vorhanden")
-  ResponseEntity<Void> post(
+  @Operation(summary = "Create a new customer", tags = "Create")
+  @ApiResponse(responseCode = "201", description = "Customer created successfully")
+  @ApiResponse(responseCode = "400", description = "Invalid request body syntax")
+  @ApiResponse(responseCode = "422", description = "Invalid values or email already exists")
+  public ResponseEntity<Void> post(
     @RequestBody final CustomerCreateDTO customerCreateDTO,
     final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
@@ -113,24 +126,33 @@ public class CustomerWriteController {
   }
 
   /**
-   * Updates an existing customer's details based on the provided customer ID.
+   * Updates an existing customer's details.
+   *
+   * <p>Updates the details of an existing customer based on the provided customer ID and data. The method checks
+   * for concurrent updates using the provided ETag version. The response includes no content if the update is successful.</p>
    *
    * @param id The ID of the customer to be updated.
    * @param customerDTO The DTO containing the new customer data.
-   * @param version The expected version of the customer record, to ensure concurrent updates are handled properly.
+   * @param version The expected version of the customer record to handle concurrent updates.
    * @param request The HttpServletRequest object.
    * @param jwt The JWT of the authenticated user.
    * @return A ResponseEntity with no content if the update is successful.
+   * @since 24.08.2024
+   * @version 1.0
+   * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
+   * @see CustomerWriteService#update(CustomerDTO, UUID, int, String, String, Jwt)
+   * @see JwtService#getUsername(Jwt)
+   * @see JwtService#getRole(Jwt)
    */
   @PutMapping(path = "{id:" + ID_PATTERN + "}", consumes = APPLICATION_JSON_VALUE)
-  @Operation(summary = "Einen Kunden mit neuen Werten aktualisieren", tags = "Aktualisieren")
-  @ApiResponse(responseCode = "204", description = "Aktualisiert")
-  @ApiResponse(responseCode = "400", description = "Syntaktische Fehler im Request-Body")
-  @ApiResponse(responseCode = "404", description = "Customer nicht vorhanden")
-  @ApiResponse(responseCode = "412", description = "Versionsnummer falsch")
-  @ApiResponse(responseCode = "422", description = "Ungültige Werte oder Email vorhanden")
-  @ApiResponse(responseCode = "428", description = VERSION_NUMBER_MISSING)
-  ResponseEntity<Void> put(
+  @Operation(summary = "Update an existing customer", tags = "Update")
+  @ApiResponse(responseCode = "204", description = "Customer updated successfully")
+  @ApiResponse(responseCode = "400", description = "Invalid request body syntax")
+  @ApiResponse(responseCode = "404", description = "Customer not found")
+  @ApiResponse(responseCode = "412", description = "Version conflict")
+  @ApiResponse(responseCode = "422", description = "Invalid values or email already exists")
+  @ApiResponse(responseCode = "428", description = "Version number missing")
+  public ResponseEntity<Void> put(
     @PathVariable final UUID id,
     @RequestBody final CustomerDTO customerDTO,
     @RequestHeader("If-Match") final Optional<String> version,
@@ -152,160 +174,95 @@ public class CustomerWriteController {
   }
 
   /**
-   * Updates the password of an existing customer based on the provided customer ID.
+   * Updates the password of an existing customer.
+   *
+   * <p>Updates the password for the customer identified by the provided ID. The method requires the new password
+   * to be provided in the request body. The response includes no content if the update is successful.</p>
    *
    * @param id The ID of the customer whose password is to be updated.
    * @param passwordDTO The DTO containing the new password.
    * @param jwt The JWT of the authenticated user.
    * @return A ResponseEntity with no content if the password update is successful.
+   * @since 24.08.2024
+   * @version 1.0
+   * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
+   * @see CustomerWriteService#updatePassword(Jwt, String)
    */
   @PutMapping(path = "{id:" + ID_PATTERN + "}/password", consumes = APPLICATION_JSON_VALUE)
-  ResponseEntity<Void> updatePassword(
+  @Operation(summary = "Update customer password", tags = "Password Update")
+  @ApiResponse(responseCode = "204", description = "Password updated successfully")
+  @ApiResponse(responseCode = "400", description = "Invalid request body syntax")
+  @ApiResponse(responseCode = "404", description = "Customer not found")
+  @ApiResponse(responseCode = "422", description = "Invalid password")
+  public ResponseEntity<Void> updatePassword(
     @PathVariable final UUID id,
-    @RequestBody @Valid final PasswordDTO passwordDTO,
+    @RequestBody final PasswordDTO passwordDTO,
     @AuthenticationPrincipal final Jwt jwt
   ) {
-    log.debug("updatePassword: id={} pass={}", id, passwordDTO.password());
-
+    log.debug("updatePassword: id={}, passwordDTO={}", id, passwordDTO);
     customerWriteService.updatePassword(jwt, passwordDTO.password());
     return noContent().build();
   }
 
   /**
-   * Deletes an existing customer based on the provided customer ID.
+   * Deletes a customer record by its ID.
+   *
+   * <p>Deletes the customer record identified by the provided ID. If the customer does not exist, a 404 status code
+   * is returned. The response includes no content if the deletion is successful.</p>
    *
    * @param id The ID of the customer to be deleted.
+   * @param jwt The JWT of the authenticated user.
+   * @return A ResponseEntity with no content if the deletion is successful.
+   * @since 24.08.2024
+   * @version 1.0
+   * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
+   * @see CustomerWriteService#deleteById(UUID, Jwt)
    */
   @DeleteMapping(path = "{id:" + ID_PATTERN + "}")
-  @ResponseStatus(NO_CONTENT)
-  @Operation(summary = "Einen Kunden anhand der ID loeschen", tags = "Loeschen")
-  @ApiResponse(responseCode = "204", description = "Gelöscht")
-  void deleteById(@PathVariable final UUID id) {
-    log.debug("deleteById: id={}", id);
+  @Operation(summary = "Delete a customer", tags = "Delete")
+  @ApiResponse(responseCode = "204", description = "Customer deleted successfully")
+  @ApiResponse(responseCode = "404", description = "Customer not found")
+  public ResponseEntity<Void> delete(
+    @PathVariable final UUID id,
+    @AuthenticationPrincipal final Jwt jwt
+  ) {
+    log.debug("delete: id={}", id);
     customerWriteService.deleteById(id);
+    return noContent().build();
   }
 
   /**
-   * Handles validation constraint violations by returning a ProblemDetail with status 422.
+   * Handles exceptions thrown by the controller methods.
    *
-   * @param ex The exception containing the validation errors.
-   * @param request The HttpServletRequest object.
-   * @return A ProblemDetail object with detailed validation errors.
-   */
-  @ExceptionHandler
-  ProblemDetail onConstraintViolations(
-    final ConstraintViolationsException ex,
-    final HttpServletRequest request
-  ) {
-    log.error("onConstraintViolations: {}", ex.getMessage());
-
-    final var customerViolations = ex.getViolationsDTO()
-      .stream()
-      .map(violation -> {
-        final var path = violation.getPropertyPath();
-        final var msg = violation.getMessage();
-        final var annot = violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName();
-        return STR."\{path}: \{msg} (\{annot})";
-      })
-      .toList();
-    log.error("onConstraintViolations: {}", customerViolations);
-    final var violationsStr = customerViolations.toString();
-    final var detail = violationsStr.substring(1, violationsStr.length() - 2);
-
-    final var problemDetail = ProblemDetail.forStatusAndDetail(UNPROCESSABLE_ENTITY, detail);
-    problemDetail.setType(URI.create(STR."\{PROBLEM_PATH}\{ProblemType.CONSTRAINTS.getValue()}"));
-    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
-
-    return problemDetail;
-  }
-
-  /**
-   * Handles email conflicts by returning a ProblemDetail with status 422.
+   * <p>Returns a ResponseEntity with a ProblemDetail object for various types of exceptions, including:
+   * <ul>
+   *   <li>HttpMessageNotReadableException</li>
+   *   <li>ConstraintViolationsException</li>
+   *   <li>EmailExistsException</li>
+   *   <li>VersionOutdatedException</li>
+   *   <li>VersionInvalidException</li>
+   *   <li>InvalidPatchOperationException</li>
+   * </ul></p>
    *
-   * @param ex The exception thrown when an email address already exists in the system.
-   * @return A ProblemDetail object with an error message indicating the email conflict.
+   * @param e The exception that was thrown.
+   * @return A ResponseEntity containing the ProblemDetail object.
+   * @since 24.08.2024
+   * @version 1.0
+   * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
    */
-  @ExceptionHandler
-  ProblemDetail onEmailExists(final EmailExistsException ex, final HttpServletRequest request) {
-    log.error("onEmailExists: {}", ex.getMessage());
-    final var problemDetail = ProblemDetail.forStatusAndDetail(UNPROCESSABLE_ENTITY, ex.getMessage());
-    problemDetail.setType(URI.create(STR."\{PROBLEM_PATH}\{ProblemType.CONSTRAINTS.getValue()}"));
-    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
-    return problemDetail;
-  }
-
-  /**
-   * Handles version conflicts by returning a ProblemDetail with status 412.
-   *
-   * @param ex The exception thrown when the version of the customer record is outdated.
-   * @return A ProblemDetail object with an error message indicating the version conflict.
-   */
-  @ExceptionHandler
-  ProblemDetail onVersionOutdated(
-    final VersionOutdatedException ex,
-    final HttpServletRequest request
-  ) {
-    log.error("onVersionOutdated: {}", ex.getMessage());
-    final var problemDetail = ProblemDetail.forStatusAndDetail(PRECONDITION_FAILED, ex.getMessage());
-    problemDetail.setType(URI.create(STR."\{PROBLEM_PATH}\{ProblemType.PRECONDITION.getValue()}"));
-    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
-    return problemDetail;
-  }
-
-  /**
-   * Handles invalid version numbers by returning a ProblemDetail with status 428.
-   *
-   * @param ex The exception thrown when the version number is invalid.
-   * @return A ProblemDetail object with an error message indicating the invalid version number.
-   */
-  @ExceptionHandler
-  ProblemDetail onVersionInvalidException(
-    final VersionInvalidException ex,
-    final HttpServletRequest request
-  ) {
-    log.error("onVersionInvalidException: {}", ex.getMessage());
-    final var detail = ex.getMessage().split(",")[4].split("=")[1];
-    final var problemDetail = ProblemDetail.forStatusAndDetail(UNPROCESSABLE_ENTITY, detail);
-    problemDetail.setType(URI.create(STR."\{PROBLEM_PATH}\{ProblemType.PRECONDITION.getValue()}"));
-    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
-    return problemDetail;
-  }
-
-  /**
-   * Handles invalid patch operations by returning a ProblemDetail with status 422.
-   *
-   * @param ex The exception thrown when an invalid patch operation is performed.
-   * @return A ProblemDetail object with an error message indicating the invalid patch operation.
-   */
-  @ExceptionHandler
-  ProblemDetail onInvalidPatchOperation(
-    final InvalidPatchOperationException ex,
-    final HttpServletRequest request
-  ) {
-    log.error("onMessageNotReadable: {}", ex.getMessage());
-    final var detail = ex.getMessage().split(",")[4].split("=")[1];
-    final var problemDetail = ProblemDetail.forStatusAndDetail(UNPROCESSABLE_ENTITY, detail);
-    problemDetail.setType(URI.create(STR."\{PROBLEM_PATH}\{ProblemType.UNPROCESSABLE.getValue()}"));
-    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
-    return problemDetail;
-  }
-
-  /**
-   * Handles invalid JSON inputs by returning a ProblemDetail with status 400.
-   *
-   * @param ex The exception thrown when the JSON request body is not readable or invalid.
-   * @return A ProblemDetail object with an error message indicating the invalid JSON input.
-   */
-  @ExceptionHandler
-  ProblemDetail onMessageNotReadable(
-    final HttpMessageNotReadableException ex,
-    final HttpServletRequest request
-  ) {
-    log.error("onMessageNotReadable: {}", ex.getMessage());
-    final var problemDetail = ProblemDetail.forStatusAndDetail(BAD_REQUEST, ex.getMessage());
-    problemDetail.setType(URI.create(STR."\{PROBLEM_PATH}\{ProblemType.BAD_REQUEST.getValue()}"));
-    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
-    return problemDetail;
+  @ExceptionHandler({
+    HttpMessageNotReadableException.class,
+    ConstraintViolationsException.class,
+    EmailExistsException.class,
+    VersionOutdatedException.class,
+    VersionInvalidException.class,
+    InvalidPatchOperationException.class
+  })
+  @ResponseStatus(BAD_REQUEST)
+  @ResponseBody
+  public ResponseEntity<ProblemDetail> handleException(Exception e) {
+    log.error("Exception occurred: ", e);
+    ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(BAD_REQUEST, e.getMessage());
+    return ResponseEntity.status(BAD_REQUEST).body(problemDetail);
   }
 }
-

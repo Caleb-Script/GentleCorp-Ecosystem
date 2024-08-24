@@ -1,34 +1,32 @@
-/*
- * Copyright (C) 2022 - present Juergen Zimmermann, Hochschule Karlsruhe
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.gentle.bank.customer.exception;
 
 import lombok.Getter;
 
 /**
- * Exception, falls ein neuer Benutzername bereits existiert.
+ * Exception thrown when an attempt is made to create a user with a username that already exists.
+ * <p>
+ * This exception is used to indicate that the username provided during user registration
+ * or update is already taken by another user. This prevents duplicate usernames in the system.
+ * </p>
  *
- * @author <a href="mailto:Juergen.Zimmermann@h-ka.de">Jürgen Zimmermann</a>
+ * @since 24.08.2024
+ * @version 1.0
+ * @author <a href="mailto:Caleb_G@outlook.de">Caleb Gyamfi</a>
  */
 @Getter
 public class UsernameExistsException extends RuntimeException {
-    private final String username;
+  /**
+   * The username that already exists.
+   */
+  private final String username;
 
-    UsernameExistsException(final String username) {
-        super("Der Benutzername " + username + " existiert bereits.");
-        this.username = username;
-    }
+  /**
+   * Constructs a new {@code UsernameExistsException} with the specified username.
+   *
+   * @param username The username that already exists.
+   */
+  public UsernameExistsException(final String username) {
+    super("Der Benutzername " + username + " existiert bereits.");
+    this.username = username;
+  }
 }

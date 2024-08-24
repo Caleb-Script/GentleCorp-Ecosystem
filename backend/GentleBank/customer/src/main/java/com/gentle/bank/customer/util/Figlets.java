@@ -2,6 +2,28 @@ package com.gentle.bank.customer.util;
 
 import java.util.Random;
 
+/**
+ * A utility class that provides various ASCII art representations for use in application banners or logs.
+ * <p>
+ * This class includes different styles of ASCII art, known as Figlets, which can be used to generate
+ * decorative text-based banners for visual purposes. The available Figlets are:
+ * <ul>
+ *   <li>{@link #IVRIT} - A stylized representation of text in a classic font.</li>
+ *   <li>{@link #BIG} - A bold and large font style for text representation.</li>
+ *   <li>{@link #SLANT} - A slanted, italicized font style.</li>
+ *   <li>{@link #DOOM} - A dramatic and eye-catching font style.</li>
+ *   <li>{@link #GHOST} - A whimsical and playful font style.</li>
+ * </ul>
+ * </p>
+ * <p>
+ * The Figlets are generated randomly from a predefined set of styles. This class can be used to
+ * add a unique and engaging touch to the application output.
+ * </p>
+ *
+ * @since 24.08.2024
+ * @version 1.0
+ * @author <a href="mailto:Caleb_G@outlook.de">Caleb Gyamfi</a>
+ */
 public class Figlets {
 
   private static final String IVRIT = """
@@ -49,13 +71,26 @@ public class Figlets {
      /_) |OO  )  |_|( OO ) '..`''.)  |  |   \\_) |  |\\|  ||  |'.'|  |(|  '--. |  |_.' |         .'  / |  |  '  |   .'  /  / / |  |_   |  |  '  | /  .-. '.      .'  /  / / |  |_ \s
      ||  |`-'||  | | `-' /.-._)   \\  |  |     \\ |  | |  ||  |   |  | |  .--' |  .  '.'       .'  /__ '  \\  /  ' .'  /__ /  '-'    |  '  \\  /  '|  |   |  |   .'  /__ /  '-'    |\s
     (_'  '--'('  '-'(_.-' \\       /  |  |      `'  '-'  '|  |   |  | |  `---.|  |\\  \\       |       | \\  `'  / |       |`----|  |-'.-.\\  `'  /  \\  '-'  /.-.|       |`----|  |-'\s
-       `-----' `-----'     `-----'   `--'        `-----' `--'   `--' `------'`--' '--'      `-------'  `---''  `-------'     `--'  `-' `---''    `----'' `-'`-------'     `--'  \s""";
+       `-----' `-----'     `-----'   `--'        `-----' `--'   `--' `------'`--' '--'      `-------'  `---''  `-------'     `--'  `-' `---''    `----'' `-'`-------'     `--'  \s
+                                                                                                       \s
+                                                                                                       \s""";
+
   private static final Random RANDOM = new Random();
 
+  /**
+   * Generates a random Figlet representation.
+   * <p>
+   * This method randomly selects one of the predefined Figlet styles and returns it as a string.
+   * The styles are defined as static final strings in the class.
+   * </p>
+   *
+   * @return A randomly selected Figlet representation as a string.
+   * @throws IllegalStateException If an unexpected value is encountered during random selection.
+   */
   public String randomFigletGenerator() {
-    // Generiert eine Zufallszahl zwischen 0 und 2 (einschließlich)
+    // Generates a random number between 0 and 4 (inclusive)
     int choice = RANDOM.nextInt(5);
-    // Wählt die entsprechende Figlet-Zeichnung basierend auf der Zufallszahl
+    // Selects the corresponding Figlet drawing based on the random number
     switch (choice) {
       case 0:
         return IVRIT;
@@ -63,13 +98,12 @@ public class Figlets {
         return BIG;
       case 2:
         return SLANT;
-        case 3:
-          return DOOM;
-          case 4:
-            return GHOST;
+      case 3:
+        return DOOM;
+      case 4:
+        return GHOST;
       default:
         throw new IllegalStateException("Unexpected value: " + choice);
     }
   }
-
 }

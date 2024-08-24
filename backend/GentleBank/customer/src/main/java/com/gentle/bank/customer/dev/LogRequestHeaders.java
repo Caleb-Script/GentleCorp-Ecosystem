@@ -24,9 +24,9 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
  * filter chain to log request details automatically.
  * </p>
  *
- * @author Caleb Gyamfi
+ * @author <a href="mailto:Caleb_g@outlook.de">Caleb Gyamfi</a>
  * @version 1.0
- * @since 23.08.2024
+ * @since 24.08.2024
  */
 interface LogRequestHeaders {
   /**
