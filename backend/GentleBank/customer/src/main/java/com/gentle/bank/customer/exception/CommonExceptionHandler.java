@@ -1,15 +1,13 @@
-package com.gentle.bank.customer.service;
+package com.gentle.bank.customer.exception;
 
 import com.gentle.bank.customer.entity.enums.ProblemType;
-import com.gentle.bank.customer.exception.AccessForbiddenException;
-import com.gentle.bank.customer.exception.IllegalArgumentException;
-import com.gentle.bank.customer.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
 
@@ -94,6 +92,23 @@ public class CommonExceptionHandler {
     log.error("onIllegalArgumentException: {}", ex.getMessage());
     final var problemDetail = ProblemDetail.forStatusAndDetail(BAD_REQUEST, ex.getMessage());
     problemDetail.setType(URI.create(String.format("%s/%s", PROBLEM_PATH, ProblemType.BAD_REQUEST.getValue())));
+    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
+    return problemDetail;
+  }
+
+  /**
+   * Handles {@link NoResourceFoundException} and creates a {@link ProblemDetail} response with HTTP status {@code 404 Not Found}.
+   *
+   * @param ex the {@link NoResourceFoundException} that was thrown.
+   * @param request the {@link HttpServletRequest} that triggered the exception.
+   * @return a {@link ProblemDetail} containing the error message and problem details.
+   */
+  @ExceptionHandler
+  @ResponseStatus(NOT_FOUND)
+  ProblemDetail onNoResourceFoundException(final NoResourceFoundException ex, final HttpServletRequest request) {
+    log.error("onNoResourceFoundException: {}", ex.getMessage());
+    final var problemDetail = ProblemDetail.forStatusAndDetail(NOT_FOUND, ex.getMessage());
+    problemDetail.setType(URI.create(String.format("%s/%s", PROBLEM_PATH, ProblemType.NOT_FOUND.getValue())));
     problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
     return problemDetail;
   }

@@ -1,0 +1,37 @@
+
+services:
+  customer:
+    image: gentlecorp/customer:2024.08.25
+    ports:
+      - published: 8080
+        target: 8080
+        #protocol: tcp
+    volumes:
+      - type: bind
+        source: ../../src/main/resources/application.yml
+        target: /workspace/BOOT-INF/classes/application.yml
+        read_only: true
+#      - type: bind
+#        source: ..\..\..\src\main\resources\private-key.pem
+#        target: /workspace/BOOT-INF/classes/private-key.pem
+#        read_only: true
+#      - type: bind
+#        source: ..\..\..\src\main\resources\certificate.crt
+#        target: /workspace/BOOT-INF/classes/certificate.crt
+#        read_only: true
+      - type: bind
+        source: ../../../../../volumes/GentleBank/customer
+        target: /tmp
+    env_file: .env
+    hostname: customer
+    cap_drop: [ ALL ]
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "1.0"
+          memory: 768M
+      #replicas: 2
+      #endpoint_mode: vip

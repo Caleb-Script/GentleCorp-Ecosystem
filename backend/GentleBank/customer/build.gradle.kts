@@ -1,4 +1,11 @@
+
+val javaLanguageVersion = project.properties["javaLanguageVersion"] as String? ?: JavaVersion.VERSION_22.majorVersion
+val javaVersion = project.properties["javaVersion"] ?: libs.versions.javaVersion.get()
+
 val enablePreview = if (project.properties["enablePreview"] == false) null else "--enable-preview"
+val imagePath = project.properties["imagePath"] ?: "gentlecorp"
+
+val alternativeBuildpack = project.properties["buildpack"]
 
 plugins {
   java
@@ -129,3 +136,23 @@ tasks.named<JavaCompile>("compileJava") {
     }
   }
 }
+
+tasks.named("bootBuildImage", org.springframework.boot.gradle.tasks.bundling.BootBuildImage::class.java) {
+  // statt "created xx years ago": https://medium.com/buildpacks/time-travel-with-pack-e0efd8bf05db
+  createdDate = "now"
+
+  // default:   imageName = "docker.io/${project.name}:${project.version}"
+  imageName = "$imagePath/${project.name}:$imageTag"
+
+  @Suppress("StringLiteralDuplication")
+  environment = mapOf(
+    "BP_JVM_VERSION" to javaLanguageVersion, // default: 17
+    "BPL_JVM_THREAD_COUNT" to "20", // default: 250 (reactive: 50)
+    "BPE_DELIM_JAVA_TOOL_OPTIONS" to " ",
+    "BPE_APPEND_JAVA_TOOL_OPTIONS" to enablePreview,
+  )
+      imageName = imageName.get()
+      println("")
+      println("Buildpacks: JVM durch   B e l l s o f t   L i b e r i c a   (default)")
+      println("")
+    }
