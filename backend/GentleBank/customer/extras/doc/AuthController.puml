@@ -1,0 +1,85 @@
+@startuml AuthController
+
+skinparam classAttributeIconSize 0
+
+package "org.springframework" {
+    package "web.bind.annotation" {
+        interface "@RestController" as RestController
+        interface "@RequestMapping" as RequestMapping
+        interface "@GetMapping" as GetMapping
+        interface "@PostMapping" as PostMapping
+        interface "@RequestBody" as RequestBody
+        interface "@AuthenticationPrincipal" as AuthenticationPrincipal
+        interface "@ExceptionHandler" as ExceptionHandler
+        interface "@ResponseStatus" as ResponseStatus
+    }
+
+    package "security.oauth2.jwt" {
+        class Jwt
+    }
+
+    package "http" {
+        class ResponseEntity<T>
+        class HttpStatus
+    }
+}
+
+package "org.springframework.security.authentication.password" {
+    class CompromisedPasswordChecker
+    class PasswordCheckResult
+}
+
+package "java.util" {
+    class Map<K,V>
+}
+
+package "com.gentle.bank.customer" {
+    package "controller" {
+        class AuthController << @RestController >> << @RequestMapping >> << @RequiredArgsConstructor >> << @Slf4j >> {
+            + @GetMapping me(@AuthenticationPrincipal jwt: Jwt): Map<String, Object>
+            + @PostMapping login(@RequestBody login: LoginDTO): ResponseEntity<TokenDTO>
+            + @ExceptionHandler handleUnauthorizedException(ex: UnauthorizedException): ResponseEntity<String>
+            + @ExceptionHandler @ResponseStatus(UNAUTHORIZED) onUnauthorized(ex: HttpClientErrorException.Unauthorized)
+        }
+    }
+
+    package "dto" {
+        class LoginDTO
+        class TokenDTO
+    }
+
+    package "service" {
+        class KeycloakService
+    }
+
+    package "exception" {
+        class UnauthorizedException
+    }
+}
+
+' Relations
+AuthController .up.> RestController
+AuthController .up.> RequestMapping
+AuthController .up.> GetMapping
+AuthController .up.> PostMapping
+AuthController .up.> RequestBody
+AuthController .up.> AuthenticationPrincipal
+AuthController .up.> ExceptionHandler
+AuthController .up.> ResponseStatus
+AuthController .up.> ResponseEntity
+
+AuthController o-right-> CompromisedPasswordChecker : passwordChecker
+AuthController o-right-> KeycloakService : keycloakService
+
+AuthController ..> Jwt
+AuthController ..> LoginDTO
+AuthController ..> TokenDTO
+AuthController .right.> Map
+AuthController ..> UnauthorizedException
+AuthController ..> HttpStatus
+
+hide empty members
+
+footer (c) Caleb Gyamfi
+
+@enduml

@@ -1,0 +1,20 @@
+@startuml UseCases
+
+left to right direction
+
+actor Admin
+actor User as User
+actor Customer as Customer
+
+
+rectangle customer {
+    Customer --> (Create Customer Data)
+    Customer --> (Update Customer Data)
+    User --> (Search Customer)
+    Admin --> (Create Customer Data)
+    Admin --> (Update Customer Data)
+    Admin --> (Search Customer)
+    Admin --> (Delete Customer Data)
+}
+
+@enduml

@@ -95,7 +95,7 @@ sealed interface SecurityConfig permits ApplicationConfig {
           .requestMatchers(PUT, CUSTOMER_PATH + "**").hasAnyRole(GENTLECORP_ADMIN.getRole(), GENTLECORP_USER.getRole(), ELITE.getRole(), ESSENTIAL.getRole())
           .requestMatchers(DELETE, CUSTOMER_PATH + "/**").hasAnyRole(GENTLECORP_ADMIN.getRole())
 
-          .requestMatchers(GET, AUTH_PATH + "/me").hasRole(GENTLECORP_ADMIN.name())
+          .requestMatchers(GET, AUTH_PATH + "/me").hasRole(GENTLECORP_ADMIN.getRole())
 
           .requestMatchers(POST, AUTH_PATH + "/login").permitAll()
 

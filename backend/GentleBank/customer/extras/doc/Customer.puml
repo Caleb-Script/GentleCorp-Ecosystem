@@ -1,19 +1,13 @@
-
-@startuml Kunde
+@startuml Customer
 
 skinparam classAttributeIconSize 0
-' skinparam monochrome true
 
 package java {
     package util {
         class UUID
-        interface List<T>
         class URL
         class Currency
-    }
-
-    package math {
-        class BigDecimal
+        interface List<T>
     }
 
     package time {
@@ -23,109 +17,146 @@ package java {
 
     LocalDate .right[hidden].> LocalDateTime
     LocalDateTime .[hidden].> Currency
-    Currency .[hidden].> BigDecimal
 }
 
 package jakarta.persistence {
     interface "@Entity" as Entity
     interface "@Table" as Table
+    interface "@Enumerated" as Enumerated
+    interface "@Column" as Column
+    interface "@OneToOne" as OneToOne
+    interface "@CreationTimestamp" as CreationTimestamp
+    interface "@UpdateTimestamp" as UpdateTimestamp
+    interface "@PrePersist" as PrePersist
+    interface "@PostLoad" as PostLoad
 
     Entity -[hidden]down-> Table
-    LocalDateTime .up[hidden].> Table
+    Entity -[hidden]down-> Enumerated
+    Entity -[hidden]down-> Column
+    Entity -[hidden]down-> OneToOne
+    Entity -[hidden]down-> CreationTimestamp
+    Entity -[hidden]down-> UpdateTimestamp
+    Entity -[hidden]down-> PrePersist
+    Entity -[hidden]down-> PostLoad
 }
 
-package com.acme.kunde {
-    package entity #DDDDDD {
-        class Umsatz << entity >> {
-            @Id
-            @GeneratedValue
-            id : UUID
-            betrag: BigDecimal
-            waehrung: Currency
-        }
-        Umsatz ..> UUID
+package org.hibernate.annotations {
+    interface "CreationTimestamp" as HCreationTimestamp
+    interface "UpdateTimestamp" as HUpdateTimestamp
+}
 
-        class Adresse << entity >> {
-            @Id
-            @GeneratedValue
-            id : UUID
-            plz: String
-            ort: String
-        }
-        Adresse ..> UUID
+package jakarta.validation.constraints {
+    interface "NotNull" as NotNull
+}
 
-        enum GeschlechtType {
-            MAENNLICH
-            WEIBLICH
-            DIVERS
+package org.hibernate.validator.constraints {
+    interface "UniqueElements" as UniqueElements
+}
+
+package com.gentle.bank.customer.entity {
+    package enums #DDDDDD {
+        enum GenderType {
+            MALE
+            FEMALE
+            DIVERSE
         }
 
-        enum FamilienstandType {
-            LEDIG
-            VERHEIRATET
-            GESCHIEDEN
-            VERWITWET
+        enum MaritalStatusType {
+            SINGLE
+            MARRIED
+            DIVORCED
+            WIDOWED
+            OTHER
         }
 
-        enum InteresseType {
-            SPORT
-            LESEN
-            REISEN
+        enum ContactOptionsType {
+            EMAIL
+            PHONE
+            MAIL
+            SMS
         }
-
-        class Kunde << entity >>  << @Entity >>  << @Table >> {
-            @Id
-            @GeneratedValue
-            id : UUID
-            @Version
-            version : int
-            nachname : String
-            email : String
-            kategorie: int
-            hasNewsletter : boolean
-            geburtsdatum: LocalDate
-            homepage: URL
-            @Enumerated
-            geschlecht: GeschlechtType
-            @Enumerated
-            familienstand: FamilienstandType
-            @Transient
-            @UniqueElements
-            interessen: List<InteresseType>
-            @Column
-            interessenStr: String
-            username: String
-            @CreationTimestamp
-            erzeugt: LocalDateTime
-            @UpdateTimestamp
-            aktualisiert: LocalDateTime
-        }
-
-        Kunde *--> "0..*" Umsatz : @OneToOne(cascade = [...]) \n@JoinColumn(...) \numsaetze
-        Kunde *--> "1" Adresse : @OneToOne(cascade = [...]) \nadresse
-
-        Kunde .up.> GeschlechtType
-        Kunde .up.> FamilienstandType
-        Kunde .up.> InteresseType
-
-        Kunde .right.> UUID
-        Kunde .right.> URL
-        Kunde .right.> LocalDate
-        Kunde .right.> LocalDateTime
-
-        Kunde .right.> List
-        Kunde .right.> Entity
-        Kunde .right.> Table
-
-        Umsatz ..> Currency
-        Umsatz ..> BigDecimal
-
-        GeschlechtType .[hidden].> List
     }
+
+    class Customer << entity >> << @Entity >> << @Table >> {
+        @Id
+        @GeneratedValue
+        id : UUID
+        @Version
+        version : int
+        lastName : String
+        firstName : String
+        email : String
+        username : String
+        isElite : boolean
+        birthDate : LocalDate
+        @Enumerated(STRING)
+        gender : enums.GenderType
+        @Enumerated(EnumType.STRING)
+        maritalStatus : enums.MaritalStatusType
+        @Transient
+        @UniqueElements
+        contactOptions : List<enums.ContactOptionsType>
+        @Column(name = "contact_options")
+        contactOptionsString : String
+        @OneToOne(fetch = LAZY, cascade = {PERSIST, REMOVE}, orphanRemoval = true)
+        address : Address
+        @CreationTimestamp
+        created : LocalDateTime
+        @UpdateTimestamp
+        updated : LocalDateTime
+
+        +set(customer: Customer)
+        +setContactOptionsString(optionsTypes: List<enums.ContactOptionsType>)
+        -buildInterestsStr()
+        -loadInterests()
+    }
+
+    class Address << entity >> << @Entity >> << @Table >> {
+        @Id
+        @GeneratedValue
+        id : UUID
+        street : String
+        houseNumber : String
+        zipCode : String
+        city : String
+        state : String
+        country : String
+    }
+
+    Customer *--> "1" Address : @OneToOne(fetch = LAZY, cascade = {PERSIST, REMOVE}, orphanRemoval = true) \naddress
+
+    Customer .up.> enums.GenderType
+    Customer .up.> enums.MaritalStatusType
+    Customer .up.> enums.ContactOptionsType
+
+    Customer .right.> UUID
+    Customer .right.> URL
+    Customer .right.> LocalDate
+    Customer .right.> LocalDateTime
+    Customer .right.> List
+    Customer .right.> Entity
+    Customer .right.> Table
+    Customer .right.> Enumerated
+    Customer .right.> Column
+    Customer .right.> OneToOne
+    Customer .right.> CreationTimestamp
+    Customer .right.> UpdateTimestamp
+    Customer .right.> PrePersist
+    Customer .right.> PostLoad
+    Customer .right.> HCreationTimestamp
+    Customer .right.> HUpdateTimestamp
+    Customer .right.> NotNull
+    Customer .right.> UniqueElements
+
+    Address .right.> UUID
+
+    enums.GenderType .[hidden].> List
+    enums.MaritalStatusType .[hidden].> List
+    enums.ContactOptionsType .[hidden].> List
 }
 
 hide empty members
 
-footer (c) Jürgen Zimmermann
+footer (c) Caleb Gyamfi
 
 @enduml

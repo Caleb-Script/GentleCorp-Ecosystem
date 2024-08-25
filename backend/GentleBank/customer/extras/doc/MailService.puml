@@ -1,0 +1,66 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package "java.util" {
+    class Objects
+}
+
+package "org.springframework" {
+    package "beans.factory.annotation" {
+        class Value
+    }
+
+    package "mail.javamail" {
+        class JavaMailSender
+        class MimeMessagePreparator
+    }
+
+    package "mail" {
+        class MailSendException
+        class MailAuthenticationException
+    }
+
+    package "scheduling.annotation" {
+        class Async
+    }
+
+    package "stereotype" {
+        interface Service
+    }
+}
+
+package "jakarta.mail.internet" {
+    class InternetAddress
+}
+
+package "com.gentle.bank.customer" {
+    class MailProps
+    class Customer
+}
+
+package "com.gentle.bank.customer.service" {
+    class MailService << Service >> << @RequiredArgsConstructor >> << @Slf4j >> {
+        - static final boolean SMTP_ACTIVATED
+        - JavaMailSender mailSender
+        - MailProps props
+        - String mailhost
+        + void send(final Customer neuerKunde)
+    }
+}
+
+' Relations
+MailService ..> Customer
+MailService ..> MailProps
+MailService ..> JavaMailSender
+MailService ..> MimeMessagePreparator
+MailService .down.> Value
+MailService .down.> Async
+MailService ..> MailSendException
+MailService ..> MailAuthenticationException
+MailService ..> InternetAddress
+MailService ..> Objects
+
+hide empty members
+
+footer (c) Caleb Gyamfi
+@enduml

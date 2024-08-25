@@ -1,0 +1,69 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package "com.gentle.bank.customer.service" {
+    class KeycloakService << Service >> << @Slf4j >> {
+        + TokenDTO login(final String username, final String password)
+        + void signIn(final Customer customer, final String password, final String role)
+        + void update(final Customer customer, final Jwt jwt)
+        + void updatePassword(String newPassword, final Jwt jwt)
+        - String getMasterToken()
+        - String getAdminToken()
+        - String getUserInfo(final String token)
+        - void assignRoleToUser(String userId, String roleName)
+        - String getRole(final String roleName, final String token)
+        - void encodeClientAndSecret()
+    }
+}
+
+package "com.gentle.bank.customer" {
+    package "dto" {
+        class TokenDTO
+    }
+
+    package "entity" {
+        class Customer
+    }
+
+    package "exception" {
+        class SignUpException
+    }
+
+    package "repository" {
+        class KeycloakRepository
+    }
+
+    package "Keycloak" {
+        class KeycloakProps
+    }
+}
+
+package "org.springframework.security.oauth2.jwt" {
+    class Jwt
+}
+
+' Relationships
+KeycloakService ..> KeycloakRepository
+KeycloakService ..> KeycloakProps
+KeycloakService ..> JwtService
+KeycloakService ..> TokenDTO
+KeycloakService ..> Customer
+KeycloakService ..> SignUpException
+
+KeycloakService ..> Jwt : getUserID()
+KeycloakService ..> KeycloakRepository : login()
+KeycloakService ..> KeycloakRepository : masterToken()
+KeycloakService ..> KeycloakRepository : signIn()
+KeycloakService ..> KeycloakRepository : assignRoleToUser()
+KeycloakService ..> KeycloakRepository : getRoles()
+KeycloakService ..> KeycloakRepository : updateUser()
+KeycloakService ..> KeycloakRepository : updateUserPassword()
+
+' Access to properties
+KeycloakService ..> KeycloakProps : clientId()
+KeycloakService ..> KeycloakProps : clientSecret()
+
+hide empty members
+
+footer (c) Caleb Gyamfi
+@enduml

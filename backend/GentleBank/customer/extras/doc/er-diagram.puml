@@ -1,0 +1,43 @@
+@startuml ER_Diagramm
+
+' Hide the spot
+hide circle
+
+' Avoid issues with crow's feet
+skinparam linetype ortho
+
+entity "Address" {
+  * id : UUID <<generated>>
+  --
+  * street : text
+  * houseNumber : text
+  * zipCode : text
+  * city : text
+  * state : text
+  * country : text
+}
+
+entity "Customer" {
+  * id : UUID <<generated>>
+  --
+  * version : integer
+  * lastName : text
+  * firstName : text
+  * email : text <<unique>>
+  * username : text <<unique>>
+  * isElite : boolean
+  * birthDate : date
+  * gender : text
+  * maritalStatus : text
+  * contactOptions : text
+  * address_id : UUID <<FK>>
+  * created : timestamp
+  * updated : timestamp
+}
+
+' 1:1 relationship between Customer and Address
+Customer ||.right.|| Address
+
+footer (c) Caleb Gyamfi
+
+@enduml

@@ -1,0 +1,28 @@
+@startuml SequenceDiagram
+
+actor Admin
+
+boundary AuthController
+boundary CustomerGetController
+control CustomerReadService
+control CustomerRepository
+database customer
+
+Admin -> AuthController : POST /auth/login
+AuthController -> AuthController: Validate credentials
+AuthController -> AuthController: Generate JWT
+AuthController -> Admin: JWT token
+
+Admin -> CustomerGetController : GET /customers/{id}
+Admin -> CustomerGetController : Include JWT token
+CustomerGetController -> CustomerReadService: findById(id)
+CustomerReadService -> CustomerRepository: findById(id)
+CustomerRepository -> customer: [Spring Data JPA]
+CustomerRepository <- customer: Customer data
+CustomerReadService <- CustomerRepository: Customer data
+CustomerGetController <- CustomerReadService: Customer data
+Admin <- CustomerGetController: Customer data
+
+footer (c) CalebGyamfi
+
+@enduml

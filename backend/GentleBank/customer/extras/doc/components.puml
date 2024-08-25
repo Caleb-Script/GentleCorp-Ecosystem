@@ -1,0 +1,69 @@
+@startuml Components
+
+package com.gentle.bank.customer #DDDDDD {
+    package controller <<boundary>> #FFFFFF {
+        [@RestController\nCustomerGetController] as CustomerGetController
+        [@Controller\nCustomerWriteController] as CustomerWriteController
+        [@RestController\nAuthController] as AuthController
+    }
+
+    package service <<control>> #FFFFFF {
+        [@Service\nCustomerReadService] as CustomerReadService
+        [@Service\nCustomerWriteService] as CustomerWriteService
+        [@Service\nJwtService] as JwtService
+        [@Service\nKeycloakService] as KeycloakService
+        [@Service\nMailService] as MailService
+    }
+
+    package repository <<control>> #FFFFFF {
+        [@Repository\nCustomerRepository] as CustomerRepository
+        [@Repository\nKeycloakRepository] as KeycloakRepository
+    }
+
+    package entity <<entity>> #FFFFFF {
+        [@Entity\nCustomer] as Customer
+        [@Entity\nAddress] as Address
+    }
+}
+
+cloud {
+    [Spring Data]
+}
+
+database "customer (MySQL)" {
+    [Table customer]
+    [Table address]
+
+    [Table customer] -[hidden]-> [Table address]
+}
+
+RESTClient ~~> [CustomerGetController]
+RESTClient ~~> [CustomerWriteController]
+RESTClient ~~> [AuthController]
+
+[CustomerGetController] --> [CustomerReadService]
+[AuthController] --> [KeycloakService]
+[CustomerWriteController] --> [CustomerWriteService]
+
+[CustomerReadService] --> [CustomerRepository]
+
+[CustomerWriteService] --> [CustomerRepository]
+[CustomerWriteService] --> [MailService]
+[CustomerWriteService] --> [KeycloakService]
+
+[KeycloakService] --> [KeycloakRepository]
+[KeycloakService] --> [JwtService]
+
+[CustomerGetController] .left.> [Customer]
+[CustomerWriteController] ..> [Customer]
+[CustomerReadService] .left.> [Customer]
+[CustomerWriteService] ..> [Customer]
+[CustomerRepository] ..> [Customer]
+
+[CustomerRepository] ~right~> [Spring Data]
+[Spring Data] ~right~> [Table customer]
+[Spring Data] ~~> [Table address]
+
+footer (c) Caleb Gyamfi
+
+@enduml

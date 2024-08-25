@@ -62,7 +62,6 @@ public class AuthController {
    */
   public static final String AUTH_PATH = "/auth";
 
-  private final KeycloakRepository keycloakRepository;
   private final CompromisedPasswordChecker passwordChecker;
   private final KeycloakService keycloakService;
 

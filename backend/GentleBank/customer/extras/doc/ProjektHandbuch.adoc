@@ -1,372 +1,779 @@
-= Projekt-Handbuch
+= GentleBank - Customer Service
+:toc:
+:doctype: book
+:toc: left
+:sectanchors:
+:sectlinks:
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
 
-== Einführung
+== Überblick
 
-Dieses Dokument bietet eine detaillierte Übersicht über die Struktur und die wichtigsten Klassen des Projekts. Es dient als Referenz für Entwickler und Administratoren, um sich im Projekt zurechtzufinden und die verschiedenen Komponenten zu verstehen.
+Der Customer-Service von GentleBank ist dafür verantwortlich, die Kundenstammdaten zu verwalten. Dies umfasst das Speichern, Abrufen und Verwalten der Informationen zu Kunden und deren Adressen. Der Service ermöglicht es, detaillierte Informationen zu Kunden zu verwalten und bietet eine REST-API für den Zugriff auf diese Daten.
 
-== Projektübersicht
-
-Das Projekt ist ein Customer-Service-System, das verschiedene Aspekte der Kundenverwaltung abdeckt. Es nutzt Spring Boot und bietet Konfigurationsmöglichkeiten für Keycloak und E-Mail-Versand.
-
-== Paketübersicht
-
-=== `com.gentle.bank.customer`
-
-Dieses Paket enthält die Hauptanwendungsklassen und -konfigurationen für den Customer-Service. Es umfasst:
-
-==== `CustomerApplication`
-
-Die Hauptklasse zum Starten der Spring Boot-Anwendung. Sie konfiguriert verschiedene Spring Boot-Eigenschaften und startet die Anwendung.
-
-[source,java]
+.Architektur als C4 Modell für die Microservices
+[plantuml,c4,svg]
 ----
-package com.gentle.bank.customer;
+include::./c4.plantuml[]
+----
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.hateoas.config.EnableHypermediaSupport;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+Das System ist in eine Microservice-Architektur integriert, bei der jeder Microservice eine spezifische Verantwortung hat. Der Customer-Service kommuniziert mit anderen Diensten, um sicherzustellen, dass alle Kundeninformationen aktuell und konsistent sind.
 
-import static com.gentle.bank.customer.util.Banner.TEXT;
-import static org.springframework.hateoas.config.EnableHypermediaSupport.HypermediaType.HAL;
-import static org.springframework.hateoas.support.WebStack.WEBMVC;
+.Use Cases für den Microservice "kunde"
+[plantuml,use-cases,svg]
+----
+include::./use-cases.puml[]
+----
 
-@SpringBootApplication(proxyBeanMethods = false)
-@Import({ApplicationConfig.class, com.gentle.bank.customer.dev.DevConfig.class})
-@EnableConfigurationProperties({KeycloakProps.class, MailProps.class})
-@EnableHypermediaSupport(type = HAL, stacks = WEBMVC)
-@EnableJpaRepositories
-@EnableWebSecurity
-@EnableMethodSecurity
-@EnableAsync
-@SuppressWarnings({"ImplicitSubclassInspection", "ClassUnconnectedToPackage"})
-public class CustomerApplication {
+Die Hauptanwendungsfälle für den Customer-Service umfassen das Erstellen, Lesen, Aktualisieren und Löschen von Kundeninformationen sowie das Verwalten von Adressen. Die folgenden Use Cases sind besonders wichtig:
 
-  public static void main(String[] args) {
-    final var app = new SpringApplication(CustomerApplication.class);
-    app.setBanner((_,_, out) -> out.println(TEXT));
-    app.run(args);
-  }
+- **Kunde erstellen**: Ein neuer Kunde wird im System registriert.
+- **Kunde abrufen**: Informationen zu einem bestimmten Kunden werden abgerufen.
+- **Kunde aktualisieren**: Vorhandene Kundeninformationen werden geändert.
+- **Kunde löschen**: Ein Kunde wird aus dem System entfernt.
+
+.Komponenten für die REST-Schnittstelle
+[plantuml,komponenten,svg]
+----
+include::./components.puml[]
+----
+
+Der Customer-Service besteht aus mehreren Komponenten, darunter:
+
+- **Controller**: Behandelt HTTP-Anfragen und leitet diese an die entsprechenden Service-Methoden weiter.
+- **Service**: Implementiert die Geschäftslogik für Kundenoperationen.
+- **Repository**: Verwaltet den Zugriff auf die Datenbank für Kunden- und Adressdaten.
+- **Model**: Repräsentiert die Datenstruktur für Kunden und Adressen.
+
+== Technologischer Stack
+
+- **Framework**: Spring Boot (Java)
+- **Datenbank**: MySQL
+- **Persistenz**: JPA (Jakarta Persistence API)
+- **Build-Tool**: Gradle
+- **Logging**: SLF4J
+
+Der technische Stack bietet eine robuste Grundlage für die Entwicklung und den Betrieb des Customer-Services. Spring Boot erleichtert die Erstellung von Produktions-ready Anwendungen, während PostgreSQL für die Speicherung von Daten verwendet wird.
+
+== Architektur
+
+Der Customer-Service ist eine Spring Boot-Anwendung, die über REST-API-Endpunkte kommuniziert. Die Architektur umfasst folgende Komponenten:
+
+- **Entities**: `Customer`, `Address`
+- **Repository**: JPA-Repository für Datenzugriff
+- **Service**: Geschäftslogik für Kundenverwaltung
+- **Controller**: REST-API-Endpunkte zur Interaktion mit dem Dienst
+
+[plantuml, architecture-diagram, png]
+----
+@startuml
+package "Customer Service" {
+  [Controller] --> [Service]
+  [Service] --> [Repository]
+  [Repository] --> [Database]
 }
+@enduml
 ----
 
-==== `KeycloakProps`
+=== Die REST-Schnittstelle
 
-Konfigurationseigenschaften für die Keycloak-Integration. Enthält Felder für Schema, Host, Port, Client-ID und Client-Secret.
+Die REST-API des Customer-Service ermöglicht es, mit Kundendaten über verschiedene Endpunkte zu interagieren. Diese Endpunkte unterstützen CRUD-Operationen (Create, Read, Update, Delete), wodurch verschiedene Aktionen wie das Abrufen, Erstellen, Aktualisieren und Löschen von Kundendaten möglich sind:
 
-[source,java]
+- **GET /customers/{id}**: Ruft die Kundeninformationen für eine bestimmte ID ab.
+- **POST /customers**: Erstellt einen neuen Kunden.
+- **PUT /customers/{id}**: Aktualisiert die Informationen eines bestehenden Kunden.
+- **DELETE /customers/{id}**: Löscht einen Kunden.
+
+==== Diagramme und Modelle der REST-API-Komponenten
+
+Um die Architektur und die Funktionsweise der einzelnen Komponenten der REST-Schnittstelle besser zu verstehen, werden im Folgenden verschiedene UML-Diagramme vorgestellt. Diese Diagramme veranschaulichen die Beziehungen und Abhängigkeiten zwischen den Komponenten sowie die Struktur der Datenmodelle.
+
+===== 1. Authentifizierungs- und Autorisierungskomponenten
+
+Der `AuthController` ist für die Authentifizierung und Autorisierung der Benutzer verantwortlich. Er umfasst Endpunkte für die Anmeldung und für das Abrufen der Benutzerinformationen:
+
+."AuthController"
+[plantuml,AuthController,svg]
 ----
-package com.gentle.bank.customer;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-/**
- * Spring-Konfiguration für Properties "app.keycloak.*".
- *
- * @param schema  http oder https
- * @param host    Rechnername des Keycloak-Servers
- * @param port    Port, auf dem Keycloak läuft
- * @param clientId  Client-ID gemäß der Client-Konfiguration in Keycloak
- * @param clientSecret  Client-Secret gemäß der Client-Konfiguration in Keycloak
- */
-@ConfigurationProperties(prefix = "app.keycloak")
-public record KeycloakProps(
-    String schema,
-    String host,
-    int port,
-    String clientId,
-    String clientSecret
-) {
-}
+include::./AuthController.puml[]
 ----
 
-==== `MailProps`
+===== 2. Lesekomponenten der REST-Schnittstelle
 
-Konfigurationseigenschaften für den E-Mail-Versand. Enthält Felder für die Absender- und Empfängeradressen.
+Der `CustomerGetController` ist für Lesezugriffe auf die Kundendaten zuständig. Hier werden zwei GET-Endpunkte implementiert, um Kundeninformationen basierend auf der Kunden-ID oder bestimmten Suchkriterien abzurufen:
 
-[source,java]
+."CustomerGetController"
+[plantuml,CustomerGetController,svg]
 ----
-package com.gentle.bank.customer;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-@ConfigurationProperties(prefix = "app.mail")
-public class MailProps {
-  private String from;
-  private String to;
-}
+include::./CustomerReadController.puml[]
 ----
 
-=== `com.gentle.bank.customer.config`
+===== 3. Datenmodell für GET-Anfragen
 
-Dieses Paket enthält Konfigurationsklassen für die Anwendung, einschließlich benutzerdefinierter Bean-Definitionen und Spring Boot-Einstellungen.
+Das `CustomerModel` repräsentiert die Struktur der Kundendaten, die bei GET-Anfragen zurückgegeben werden. Es enthält Informationen wie Name, E-Mail, Geburtsdatum und weitere relevante Details:
 
-=== `com.gentle.bank.customer.dev`
-
-Enthält Entwicklungs-spezifische Konfigurationen, die während der Entwicklungsphase verwendet werden.
-
-=== `com.gentle.bank.customer.entity`
-
-Enthält die JPA-Entitäten, die die Datenbanktabellen repräsentieren.
-
-=== `com.gentle.bank.customer.exception`
-
-Definiert benutzerdefinierte Ausnahmen für spezifische Fehlerfälle innerhalb der Anwendung.
-
-==== `VersionInvalidException`
-
-Eine benutzerdefinierte Ausnahme, die verwendet wird, um Fehler im Zusammenhang mit ungültigen Versionsnummern zu behandeln.
-
-[source,java]
+."CustomerModel"
+[plantuml,CustomerModel,svg]
 ----
-package com.gentle.bank.customer.exception;
-
-import org.springframework.http.HttpStatus;
-
-import java.net.URI;
-
-public class VersionInvalidException extends RuntimeException {
-    private final HttpStatus status;
-    private final URI uri;
-
-    public VersionInvalidException(HttpStatus status, String message, URI uri) {
-        super(message);
-        this.status = status;
-        this.uri = uri;
-    }
-
-    public HttpStatus getStatus() {
-        return status;
-    }
-
-    public URI getUri() {
-        return uri;
-    }
-}
+include::./CustomerModel.puml[]
 ----
 
-=== `com.gentle.bank.customer.repository`
+===== 4. Sequenzdiagramm
 
-Beinhaltet Repository-Interfaces für die Datenzugriffsschicht.
+Das Sequenzdiagramm zeigt den Ablauf der Methodenaufrufe und die Interaktion zwischen den Komponenten, wenn eine Anfrage an die REST-Schnittstelle gestellt wird:
 
-=== `com.gentle.bank.customer.service`
-
-Beinhaltet die Dienstklassen für die Geschäftslogik und -verarbeitung.
-
-=== `com.gentle.bank.customer.util`
-
-Stellt verschiedene Hilfsklassen und -methoden zur Verfügung, darunter Banner-Anzeigen, URI-Helper und Versionsverarbeitung.
-
-==== `Banner`
-
-Enthält verschiedene ASCII-Banner, die in der Anwendung angezeigt werden können.
-
-[source,java]
+."Sequenzdiagramm"
+[plantuml,sequenzdiagramm,svg]
 ----
-package com.gentle.bank.customer.util;
-
-public class Banner {
-  public static final String TEXT = "Hier steht Ihr Bannertext...";
-}
+include::SequenceDiagram.puml[]
 ----
 
-==== `Figlets`
+===== 5. Schreibkomponenten der REST-Schnittstelle
 
-Generiert zufällige ASCII-Figlets für Banneranzeigen.
+Der `CustomerWriteController` ist für die Bearbeitung und Erstellung von Kundendaten zuständig. Die Endpunkte erlauben das Erstellen, Aktualisieren und Löschen von Kundendaten:
 
-[source,java]
+."CustomerWriteController"
+[plantuml,CustomerWriteController,svg]
 ----
-package com.gentle.bank.customer.util;
-
-import java.util.Random;
-
-public class Figlets {
-
-  private static final String IVRIT = """
-                    _                              ____   ___ ____  _  _    ___   ___   ____  _  _  \s
-      ___ _   _ ___| |_ ___  _ __ ___   ___ _ __  |___ \\ / _ \\___ \\| || |  / _ \\ ( _ ) |___ \\| || | \s
-     / __| | | / __| __/ _ \\| '_ ` _ \\ / _ \\ '__|   __) | | | |__) | || |_| | | |/ _ \\   __) | || |_\s
-    | (__| |_| \\__ \\ || (_) | | | | | |  __/ |     / __/| |_| / __/|__   _| |_| | (_) | / __/|__   _|
-     \\___|\\__,_|___/\\__\\___/|_| |_| |_|\\___|_|    |_____|\\___/_____|  |_|(_)___/ \\___(_)_____|  |_| \s
-                                                                                                    \s""";
-
-  private static final String BIG = """
-                    _                              ___   ___ ___  _  _    ___   ___   ___  _  _  \s
-                   | |                            |__ \\ / _ \\__ \\| || |  / _ \\ / _ \\ |__ \\| || | \s
-      ___ _   _ ___| |_ ___  _ __ ___   ___ _ __     ) | | | | ) | || |_| | | | (_) |   ) | || |_\s
-     / __| | | / __| __/ _ \\| '_ ` _ \\ / _ \\ '__|   / /| | | |/ /|__   _| | | |> _ <   / /|__   _|
-    | (__| |_| \\__ \\ || (_) | | | | | |  __/ |     / /_| |_| / /_   | |_| |_| | (_) | / /_   | | \s
-     \\___|\\__,_|___/\\__\\___/|_| |_| |_|\\___|_|    |____|\\___/____|  |_(_)\\___/ \\___(_)____|  |_| \s
-                                                                                                 \s
-                                                                                                 \s""";
-
-  private static final String SLANT = """
-                       __                               ___   ____ ___  __ __   ____  ____   ___  __ __
-      _______  _______/ /_____  ____ ___  ___  _____   |__ \\ / __ \\__ \\/ // /  / __ \\( __ ) |__ \\/ // /
-     / ___/ / / / ___/ __/ __ \\/ __ `__ \\/ _ \\/ ___/   __/ // / / /_/ / // /_ / / / / __  | __/ / // /_
-    / /__/ /_/ (__  ) /_/ /_/ / / / / / /  __/ /      / __// /_/ / __/__  __// /_/ / /_/ / / __/__  __/
-    \\___/\\__,_/____/\\__/\\____/_/ /_/ /_/\\___/_/      /____/\\____/____/ /_/ (_)____/\\____(_)____/ /_/  \s
-                                                                                                      \s""";
-
-  private static final String DOOM = """
-                    _                              _____  _____  _____   ___  _____ _____   _____   ___\s
-                   | |                            / __  \\|  _  |/ __  \\ /   ||  _  |  _  | / __  \\ /   |
-      ___ _   _ ___| |_ ___  _ __ ___   ___ _ __  `' / /'| |/' |`' / /'/ /| || |/' |\\ V /  `' / /'/ /| |
-     / __| | | / __| __/ _ \\| '_ ` _ \\ / _ \\ '__|   / /  |  /| |  / / / /_| ||  /| |/ _ \\    / / / /_| |
-    | (__| |_| \\__ \\ || (_) | | | | | |  __/ |    ./ /___\\ |_/ /./ /__\\___  |\\ |_/ / |_| |_./ /__\\___  |
-     \\___|\\__,_|___/\\__\\___/|_| |_| |_|\\___|_|    \\_____/ \\___/ \\_____/   |_(_)___/\\_____(_)_____/   |_/
-                                                                                                       \s
-                                                                                                       \s""";
-
-  private static final Random RANDOM = new Random();
-
-  public String randomFigletGenerator() {
-    int choice = RANDOM.nextInt(5);
-    switch (choice) {
-      case 0:
-        return IVRIT;
-      case 1:
-        return BIG;
-      case 2:
-        return SLANT;
-      case 3:
-        return DOOM;
-      case 4:
-        return GHOST;
-      default:
-        throw new IllegalStateException("Unexpected value: " + choice);
-    }
-  }
-}
+include::./CustomerWriteController.puml[]
 ----
 
-==== `UriHelper`
+===== 6. Datenmodell für POST- und PUT-Anfragen
 
-Hilfsklasse zur Ermittlung der Basis-URI basierend auf den HTTP-Headern. Unterstützt Forwarding durch Ingress-Controller oder API-Gateways.
+Das `CustomerDTO` (Data Transfer Object) wird für den Datenaustausch bei POST- und PUT-Anfragen verwendet. Es enthält die notwendigen Informationen für die Erstellung oder Aktualisierung eines Kunden:
 
-[source,java]
+."CustomerDTO"
+[plantuml,CustomerDTO,svg]
 ----
-package com.gentle.bank.customer.util;
-
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import java.net.URI;
-
-import static com.gentle.bank.customer.util.Constants.CUSTOMER_PATH;
-
-@Component
-@Slf4j
-public class UriHelper {
-    private static final String X_FORWARDED_PROTO = "X-Forwarded-Proto";
-    private static final String X_FORWARDED_HOST = "x-forwarded-host";
-    private static final String X_FORWARDED_PREFIX = "x-forwarded-prefix";
-    private static final String CUSTOMER_PREFIX = "/customer";
-
-    /**
-     * Basis-URI ermitteln, d.h. ohne Query-Parameter.
-     *
-     * @param request Servlet-Request
-     * @return Die Basis-URI als String
-     */
-    public URI getBaseUri(final HttpServletRequest request) {
-        final var forwardedHost = request.getHeader(X_FORWARDED_HOST);
-        if (forwardedHost != null) {
-            // Forwarding durch Kubernetes Ingress Controller oder Spring Cloud Gateway
-            return getBaseUriForwarded(request, forwardedHost);
-        }
-
-        // KEIN Forwarding von einem API-Gateway
-        // URI aus Schema, Host, Port und Pfad
-        final var uriComponents = ServletUriComponentsBuilder.fromRequestUri(request).build();
-        final var baseUri =
-            String.format("%s://%s:%d%s", uriComponents.getScheme(), uriComponents.getHost(), uriComponents.getPort(), CUSTOMER_PATH);
-        log.debug("getBaseUri (ohne Forwarding): baseUri={}", baseUri);
-        return URI.create(baseUri);
-    }
-
-    private URI getBaseUriForwarded(final HttpServletRequest request, final String forwardedHost) {
-        // x-forwarded-host = Hostname des API-Gateways
-
-        // "https" oder "http"
-        final var forwardedProto = request.getHeader(X_FORWARDED_PROTO);
-        if (forwardedProto == null) {
-            throw new IllegalStateException(String.format("Kein \"%s\" im Header", X_FORWARDED_PROTO));
-        }
-
-        var forwardedPrefix = request.getHeader(X_FORWARDED_PREFIX);
-        // x-forwarded-prefix: null bei Kubernetes Ingress Controller bzw. "/kunden" bei Spring Cloud Gateway
-        if (forwardedPrefix == null) {
-            log.trace("getBaseUriForwarded: Kein \"{}\" im Header", X_FORWARDED_PREFIX);
-            forwardedPrefix = CUSTOMER_PREFIX;
-        }
-        final var baseUri = String.format("%s://%s%s%s", forwardedProto, forwardedHost, forwardedPrefix, CUSTOMER_PATH);
-        log.debug("getBaseUriForwarded: baseUri={}", baseUri);
-        return URI.create(baseUri);
-    }
-}
+include::./CustomerDTO.puml[]
 ----
 
-==== `VersionUtils`
+==== Fazit
 
-Bietet Hilfsmethoden zur Verarbeitung und Validierung von Versionsnummern, die in ETag-Headern verwendet werden.
+Die vorgestellten UML-Diagramme bieten eine detaillierte Übersicht über die Struktur und die Funktionsweise der REST-Schnittstelle des Customer-Service. Sie veranschaulichen die Beziehungen zwischen den Controllern, Modellen und anderen Komponenten, was für das Verständnis und die Wartung des Systems entscheidend ist. Die Diagramme helfen auch dabei, den Datenfluss und die Interaktionen zwischen den verschiedenen Teilen der Anwendung besser zu verstehen.
 
-[source,java]
+
+=== Die Geschäftslogik
+
+Der Customer-Service implementiert die folgenden Geschäftslogik-Funktionen:
+
+- Erstellung neuer Kunden
+- Aktualisierung bestehender Kunden
+- Löschung von Kunden
+- Abruf von Kundeninformationen
+
+Diese Funktionen sind zentral für die Verwaltung der Kundenstammdaten und sorgen für eine effiziente Handhabung von Kundenanfragen und -operationen.
+
+==== CustomerReadService im Anwendungskern
+
+[plantuml,CustomerReadService,svg]
 ----
-package com.gentle.bank.customer.util;
+include::./CustomerReadService.puml[]
+----
 
-import com.gentle.bank.customer.exception.VersionInvalidException;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
+Der `CustomerReadService` ist für die Leseoperationen zuständig:
 
-import java.net.URI;
-import java.util.Optional;
+- **findById**: Sucht einen Kunden basierend auf der ID, dem Benutzernamen und der Rolle.
+- **find**: Führt eine Suche nach Kunden basierend auf den angegebenen Suchkriterien durch.
 
-import static com.gentle.bank.customer.util.Constants.VERSION_NUMBER_MISSING;
-import static org.springframework.http.HttpStatus.PRECONDITION_FAILED;
-import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
+Der Service interagiert mit dem `CustomerRepository` und der `SpecificationBuilder`, um Daten zu extrahieren und zu spezifizieren.
 
-@Slf4j
-public class VersionUtils {
+==== CustomerWriteService für die Geschäftslogik
 
-    public static int getVersion(final Optional<String> versionOpt, final HttpServletRequest request) {
-        log.trace("getVersion: {}", versionOpt);
-        return versionOpt.map(versionStr -> {
-            if (isValidVersion(versionStr)) {
-                return Integer.parseInt(versionStr.substring(1, versionStr.length() - 1));
-            } else {
-                throw new VersionInvalidException(
-                        PRECONDITION_FAILED,
-                        String.format("Ungueltiges ETag %s", versionStr),
-                        URI.create(request.getRequestURL().toString())
-                );
+[plantuml,CustomerWriteService,svg]
+----
+include::./CustomerWriteService.puml[]
+----
+
+Der `CustomerWriteService` verwaltet die Schreiboperationen:
+
+- **create**: Erstellt einen neuen Kunden und speichert ihn in der Datenbank.
+- **update**: Aktualisiert die Daten eines bestehenden Kunden.
+- **updatePassword**: Ändert das Passwort eines bestehenden Kunden.
+- **deleteById**: Löscht einen Kunden anhand seiner ID.
+
+Der Service interagiert mit dem `CustomerRepository` für Datenoperationen und nutzt `MailService` für E-Mail-Benachrichtigungen und `KeycloakService` für die Integration mit Keycloak.
+
+==== MailService für E-Mail-Benachrichtigungen
+
+[plantuml,MailService,svg]
+----
+include::./MailService.puml[]
+----
+
+Der `MailService` ist zuständig für das Versenden von E-Mails. Er verwendet den `JavaMailSender` und konfiguriert E-Mails basierend auf den übergebenen Parametern. Typischerweise wird der Service für Benachrichtigungen bei Kundenaktionen verwendet.
+
+==== KeycloakService für Authentifizierung und Registrierung
+
+[plantuml,KeycloakService,svg]
+----
+include::./KeycloakService.puml[]
+----
+
+Der `KeycloakService` verwaltet die Authentifizierung und Registrierung von Benutzern in Keycloak. Wichtige Funktionen umfassen:
+
+- **login**: Authentifiziert einen Benutzer und erhält ein Token.
+- **signIn**: Registriert einen neuen Benutzer in Keycloak.
+- **update**: Aktualisiert Benutzerinformationen in Keycloak.
+- **updatePassword**: Ändert das Passwort eines Benutzers in Keycloak.
+
+Der Service verwendet `KeycloakRepository` für API-Aufrufe an Keycloak und `JwtService` für JWT-bezogene Operationen.
+
+==== JwtService für JWT-Operationen
+
+[plantuml,JwtService,svg]
+----
+include::./JwtService.puml[]
+----
+
+Der `JwtService` extrahiert und interpretiert Informationen aus JWTs. Wichtige Funktionen umfassen:
+
+- **getUsername**: Holt den Benutzernamen aus einem JWT.
+- **getUserID**: Holt die Benutzer-ID aus einem JWT.
+- **getRole**: Bestimmt die Rolle des Benutzers basierend auf Realm- und Client-Rollen.
+- **getRealmRole**: Holt eine Liste der Realm-Rollen aus einem JWT.
+- **getClientRole**: Holt eine Liste der Client-Rollen aus einem JWT für einen bestimmten Client.
+
+Der Service ist auf die Verarbeitung von JWTs spezialisiert und wird häufig für Authentifizierungs- und Autorisierungszwecke verwendet.
+
+==== Anmerkungen
+
+- Die Geschäftslogik-Klassen sind durch Dependency Injection und Transaktionsmanagement eng in das Spring Framework integriert.
+- Fehlerbehandlung ist durch benutzerdefinierte Ausnahmen wie `AccessForbiddenException` und `NotFoundException` gegeben.
+
+
+=== Die Entity-Klassen
+
+Die Haupt-Entity-Klassen im Customer-Service sind:
+
+- **Customer**: Repräsentiert einen Kunden im System.
+- **Address**: Repräsentiert die Adresse eines Kunden.
+
+Diese Klassen sind die Grundlage für die Datenmodellierung und -speicherung im System.
+
+==== Die Entity-Klasse "Customer" für Kundendaten
+
+[plantuml,Customer,svg]
+----
+include::./Customer.puml[]
+----
+
+==== ER-Diagramm
+
+Das ER-Diagramm zeigt die Beziehung zwischen den Tabellen `Customer` und `Address`.
+
+[plantuml,ER-Diagramm,svg]
+----
+include::./er-diagram.puml[]
+----
+
+=== Das Repository
+
+Im Customer-Service gibt es mehrere Repository-Klassen, die für unterschiedliche Aufgaben zuständig sind. Diese Klassen sind zentral für die Verwaltung von `Customer`-Entitäten, die Integration mit Keycloak und die flexible Abfrage von Daten. Im Folgenden werden die Hauptkomponenten des Repositories beschrieben.
+
+==== CustomerRepository
+
+Das `CustomerRepository` übernimmt die Verwaltung der `Customer`-Entitäten und ist für die grundlegenden CRUD-Operationen verantwortlich. Mit Hilfe von Spring Data JPA ermöglicht es den Zugriff auf die Datenbank und bietet leistungsfähige Methoden zur Abfrage von Kunden. Wichtige Funktionen umfassen:
+
+* **CRUD-Operationen**: Erstellen, Lesen, Aktualisieren und Löschen von `Customer`-Entitäten.
+* **Suchmethoden**: Abfragen nach E-Mail-Adressen, Nachnamen, Elite-Status, Geschlecht, Familienstand und Adresse.
+* **Spezialisierte Abfragen**: Unterstützung für komplexe Suchkriterien wie die Suche nach Teilen von Nachnamen oder E-Mail-Adressen sowie das Finden von Postleitzahlen und Städten.
+
+==== KeycloakRepository
+
+Das `KeycloakRepository` ermöglicht die Interaktion mit dem Keycloak-System, das für Authentifizierung und Benutzerverwaltung verantwortlich ist. Es definiert HTTP-Endpunkte für verschiedene Operationen mit Keycloak und ermöglicht die folgende Funktionalität:
+
+* **Token-Anforderung**: Anforderung von Zugangstoken und Refresh-Token zur Authentifizierung.
+* **Benutzerverwaltung**: Erstellung neuer Benutzer, Aktualisierung von Benutzerinformationen und Passwortänderungen.
+* **Rollenzuweisung**: Zuweisung und Verwaltung von Rollen für Benutzer.
+* **Benutzerinformationen**: Abruf von Informationen über den aktuell authentifizierten Benutzer.
+
+==== SpecificationBuilder
+
+Der `SpecificationBuilder` ist eine Hilfskomponente zur Erstellung von JPA-Spezifikationen, die für die flexible Abfrage von `Customer`-Entitäten verwendet werden. Er übersetzt eine Karte von Abfrageparametern in JPA-Spezifikationen und bietet folgende Funktionen:
+
+* **Konstruktion von Abfragen**: Erstellung von Abfrage-Spezifikationen auf Basis von verschiedenen Filterkriterien wie Nachname, E-Mail, Elite-Status und Adresse.
+* **Kontaktoptionen**: Unterstützung für spezifische Abfragen basierend auf Kontaktoptionen, die in den `Customer`-Entitäten gespeichert sind.
+* **Flexible Filterung**: Möglichkeit zur Kombination mehrerer Kriterien durch logische Verknüpfungen, um komplexe Suchanfragen zu ermöglichen.
+
+==== Detaillierte Beschreibung der Entity-Klassen
+
+===== Customer
+
+Die `Customer`-Entität repräsentiert die Kunden im System. Sie enthält folgende Attribute:
+
+- **id**: Eindeutige Identifikationsnummer des Kunden (UUID).
+- **version**: Versionsnummer für die Optimistic Locking.
+- **lastName**: Nachname des Kunden.
+- **firstName**: Vorname des Kunden.
+- **email**: E-Mail-Adresse des Kunden (eindeutig).
+- **username**: Benutzername des Kunden (eindeutig).
+- **isElite**: Gibt an, ob der Kunde ein Elite-Kunde ist.
+- **birthDate**: Geburtsdatum des Kunden.
+- **gender**: Geschlecht des Kunden (Enum `GenderType`).
+- **maritalStatus**: Familienstand des Kunden (Enum `MaritalStatusType`).
+- **contactOptions**: Kontaktmöglichkeiten des Kunden (Enum `ContactOptionsType` als String).
+- **address_id**: Fremdschlüssel zur Adresse des Kunden (UUID).
+- **created**: Erstellungszeitpunkt des Datensatzes.
+- **updated**: Letzter Aktualisierungszeitpunkt des Datensatzes.
+
+Die `Customer`-Entität hat eine **1:1**-Beziehung zur `Address`-Entität.
+
+===== Address
+
+Die `Address`-Entität repräsentiert die Adresse eines Kunden. Sie enthält folgende Attribute:
+
+- **id**: Eindeutige Identifikationsnummer der Adresse (UUID).
+- **street**: Straße der Adresse.
+- **houseNumber**: Hausnummer der Adresse.
+- **zipCode**: Postleitzahl der Adresse.
+- **city**: Stadt der Adresse.
+- **state**: Bundesland oder Region der Adresse.
+- **country**: Land der Adresse.
+
+Die `Address`-Entität wird durch die `Customer`-Entität referenziert und ist in einer **1:1**-Beziehung zur `Customer`-Entität.
+
+== Datenbankstruktur
+
+Die Datenbankstruktur für den Customer-Service umfasst zwei Haupttabellen: `Customer` und `Address`.
+
+=== Tabelle: Customer
+
+[cols="1,3", options="header"]
+|===
+| Feld               | Beschreibung
+
+| id
+| UUID, Primärschlüssel
+
+| version
+| Integer, Version des Datensatzes
+
+| lastName
+| String, Nachname des Kunden
+
+| firstName
+| String, Vorname des Kunden
+
+| email
+| String, E-Mail-Adresse des Kunden (eindeutig)
+
+| username
+| String, Benutzername des Kunden
+
+| isElite
+| Boolean, Status, ob der Kunde "Elite" ist
+
+| birthDate
+| LocalDate, Geburtsdatum des Kunden
+
+| gender
+| GenderType, Geschlecht des Kunden
+
+| maritalStatus
+| MaritalStatusType, Familienstand des Kunden
+
+| contactOptions
+| String, Kontaktoptionen als kommagetrennte Werte
+
+| contactOptionsString
+| String, Persistierter Kontaktoptionen-String
+
+| addressId
+| UUID, Fremdschlüssel zur Tabelle `Address`
+
+| created
+| LocalDateTime, Erstellungszeitpunkt
+
+| updated
+| LocalDateTime, Letzte Aktualisierung
+|===
+
+=== Tabelle: Address
+
+[cols="1,3", options="header"]
+|===
+| Feld       | Beschreibung
+
+| id
+| UUID, Primärschlüssel
+
+| street
+| String, Straße
+
+| houseNumber
+| String, Hausnummer
+
+| zipCode
+| String, Postleitzahl
+
+| city
+| String, Stadt
+
+| state
+| String, Bundesland
+
+| country
+| String, Land
+|===
+
+== API-Dokumentation
+
+Die API des Customer-Services bietet Endpunkte zum Verwalten von Kundeninformationen. Hier sind die wichtigsten Endpunkte:
+
+=== Authentifizierung API
+
+==== AuthController
+
+Der `AuthController` verwaltet die Authentifizierungsprozesse, einschließlich der Benutzeranmeldung und der Abfrage von JWT-Informationen.
+
+[cols="1,2", options="header"]
+|===
+| Pfad | `/auth`
+|===
+
+==== Endpunkte
+
+* GET /auth/me
+
+* Beschreibung: Gibt Informationen über den aktuell authentifizierten Benutzer zurück, einschließlich der JWT-Subjekt und -Ansprüche.
+* Antwort: Ein Map-Objekt mit dem JWT-Subjekt und den Ansprüchen.
+* Status Codes:
+- 200 OK – Erfolgreich, wenn der Benutzer authentifiziert ist.
+- 401 Unauthorized – Fehler bei der Authentifizierung.
+* Beispiel:
+[source,json]
+----
+{
+    "subject": "d8bdedce-9488-4862-9f76-4b5951559f0f",
+    "claims": {
+        "sub": "d8bdedce-9488-4862-9f76-4b5951559f0f",
+        "resource_access": {
+            "realm-management": {
+                "roles": [
+                    "view-users",
+                    "query-groups",
+                    "query-users"
+                ]
+            },
+            "GentleBank": {
+                "roles": [
+                    "gentlebank-admin"
+                ]
+            },
+            "account": {
+                "roles": [
+                    "manage-account",
+                    "manage-account-links",
+                    "view-profile"
+                ]
             }
-        }).orElseThrow(() -> new VersionInvalidException(
-                PRECONDITION_REQUIRED,
-                VERSION_NUMBER_MISSING,
-                URI.create(request.getRequestURL().toString())
-        ));
-    }
-
-    private static boolean isValidVersion(String versionStr) {
-        log.debug("länger des versionStrings={} versionString={}", versionStr.length(), versionStr);
-        return versionStr.length() >= 3 &&
-                versionStr.charAt(0) == '"' &&
-                versionStr.charAt(versionStr.length() - 1) == '"';
+        },
+        "email_verified": false,
+        "allowed-origins": [
+            "http://localhost:8080"
+        ],
+        "iss": "http://localhost:8880/realms/GentleCorp-Ecosystem",
+        "typ": "Bearer",
+        "preferred_username": "admin",
+        "given_name": "Caleb",
+        "sid": "24525ff6-2619-40c1-a012-d405e7e6c076",
+        "aud": [
+            "realm-management",
+            "account"
+        ],
+        "acr": "1",
+        "realm_access": {
+            "roles": [
+                "gentlecorp-admin",
+                "default-roles-gentlecorp-ecosystem",
+                "offline_access",
+                "uma_authorization"
+            ]
+        },
+        "azp": "GentleBank",
+        "auth_time": 1724603373,
+        "scope": "openid profile email",
+        "name": "Caleb Admin",
+        "exp": "2024-08-25T16:59:33Z",
+        "iat": "2024-08-25T16:29:33Z",
+        "family_name": "Admin",
+        "jti": "93410d8f-acac-48c7-bf2c-cc6999203ec0",
+        "email": "admin@gentlecorp.com"
     }
 }
 ----
+
+* POST /auth/login
+
+* Beschreibung: Authentifiziert einen Benutzer mit den bereitgestellten Anmeldeinformationen. Bei erfolgreicher Authentifizierung wird ein JWT zurückgegeben.
+* Anfragetyp: `application/json`
+* Antwort: Ein TokenDTO mit dem JWT-Token.
+* Status Codes:
+- 200 OK – Erfolgreich, wenn die Authentifizierung erfolgreich ist.
+- 401 Unauthorized – Fehler bei der Authentifizierung.
+* Beispiel:
+[source,json]
+----
+{
+    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJtWEN0VklybmtuWHJpSXNSdkw1ZEpad0xPLWlFQlVTazVTVmZ0bDVfdWJBIn0.eyJleHAiOjE3MjQ2MDU1NzMsImlhdCI6MTcyNDYwMzc3MywianRpIjoiOWE0YTE1M2MtZTdiMi00ZGU4LWFiNzUtN2VkMTAxM2FjNzMxIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4ODgwL3JlYWxtcy9HZW50bGVDb3JwLUVjb3N5c3RlbSIsImF1ZCI6WyJyZWFsbS1tYW5hZ2VtZW50IiwiYWNjb3VudCJdLCJzdWIiOiJkOGJkZWRjZS05NDg4LTQ4NjItOWY3Ni00YjU5NTE1NTlmMGYiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJHZW50bGVCYW5rIiwic2lkIjoiNzRkMGY1NGYtODNiZi00ZTcwLWE0NDItM2U5M2E0YjZiZTAzIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwOi8vbG9jYWxob3N0OjgwODAiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbImdlbnRsZWNvcnAtYWRtaW4iLCJkZWZhdWx0LXJvbGVzLWdlbnRsZWNvcnAtZWNvc3lzdGVtIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7InJlYWxtLW1hbmFnZW1lbnQiOnsicm9sZXMiOlsidmlldy11c2VycyIsInF1ZXJ5LWdyb3VwcyIsInF1ZXJ5LXVzZXJzIl19LCJHZW50bGVCYW5rIjp7InJvbGVzIjpbImdlbnRsZWJhbmstYWRtaW4iXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsIm5hbWUiOiJDYWxlYiBBZG1pbiIsInByZWZlcnJlZF91c2VybmFtZSI6ImFkbWluIiwiZ2l2ZW5fbmFtZSI6IkNhbGViIiwiZmFtaWx5X25hbWUiOiJBZG1pbiIsImVtYWlsIjoiYWRtaW5AZ2VudGxlY29ycC5jb20ifQ.XXcToFLoUzUh_pExqjFTYMZF_8P3Hoqct-FX_DYPBaCRXId39_CURDqe-hjNaglPRjM4eckG0qMkPBPZwHibfmGHDxF4Ua0qVLSGyJIvwSrXexa2PLKv0tIIZCOyYSTIvj7Vaw8JFur-sd17s4LURWp_CUmblCG08PxcBjswyC2YXeeYA5rbX6Ey46u7f7sRJVywfKnVv2ojay5qQb7VL5mA9Ges0jH8awAcSAWh16dVH_1E3R0m-imVDnjBeETOYUy2uIvARm1EKxRIWTHfEpuj9hPI40Wl-RB6xsk9oJW2r-usc6R57IFR8FueweoI_m3uSzXx1f_iKKJ-zpDNlg",
+    "expires_in": 1800,
+    "refresh_expires_in": 1800,
+    "refresh_token": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIyMGVkYTljNS01NTk1LTQyZGEtYmZjZS1jNjgwOTRlZGU3ZTkifQ.eyJleHAiOjE3MjQ2MDU1NzMsImlhdCI6MTcyNDYwMzc3MywianRpIjoiNTQxZjg5ODAtZjE2MC00M2QxLTllNDYtOTE0OGFhMjQ0NmVlIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4ODgwL3JlYWxtcy9HZW50bGVDb3JwLUVjb3N5c3RlbSIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODg4MC9yZWFsbXMvR2VudGxlQ29ycC1FY29zeXN0ZW0iLCJzdWIiOiJkOGJkZWRjZS05NDg4LTQ4NjItOWY3Ni00YjU5NTE1NTlmMGYiLCJ0eXAiOiJSZWZyZXNoIiwiYXpwIjoiR2VudGxlQmFuayIsInNpZCI6Ijc0ZDBmNTRmLTgzYmYtNGU3MC1hNDQyLTNlOTNhNGI2YmUwMyIsInNjb3BlIjoib3BlbmlkIHJvbGVzIGFjciBwcm9maWxlIGVtYWlsIHdlYi1vcmlnaW5zIGJhc2ljIn0.TaZagbcQniogJsyxFqLS1uGc_tSJyI44Aj0B9UMaqaFpSe_Ty5j7baUUGG4Q2KJKXMexY9QhB4UX7_30qutRbg",
+    "token_type": "Bearer",
+    "not-before-policy": 0,
+    "session_state": "74d0f54f-83bf-4e70-a442-3e93a4b6be03",
+    "id_token": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJtWEN0VklybmtuWHJpSXNSdkw1ZEpad0xPLWlFQlVTazVTVmZ0bDVfdWJBIn0.eyJleHAiOjE3MjQ2MDU1NzMsImlhdCI6MTcyNDYwMzc3MywianRpIjoiNDI5ZDdmY2YtOTk4Zi00NzRkLWEyNDctN2I3Y2IzYjBmMTU1IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4ODgwL3JlYWxtcy9HZW50bGVDb3JwLUVjb3N5c3RlbSIsImF1ZCI6IkdlbnRsZUJhbmsiLCJzdWIiOiJkOGJkZWRjZS05NDg4LTQ4NjItOWY3Ni00YjU5NTE1NTlmMGYiLCJ0eXAiOiJJRCIsImF6cCI6IkdlbnRsZUJhbmsiLCJzaWQiOiI3NGQwZjU0Zi04M2JmLTRlNzAtYTQ0Mi0zZTkzYTRiNmJlMDMiLCJhdF9oYXNoIjoicEd1R21IOFc3ZGowUGh3NzczVVBTZyIsImFjciI6IjEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsIm5hbWUiOiJDYWxlYiBBZG1pbiIsInByZWZlcnJlZF91c2VybmFtZSI6ImFkbWluIiwiZ2l2ZW5fbmFtZSI6IkNhbGViIiwiZmFtaWx5X25hbWUiOiJBZG1pbiIsImVtYWlsIjoiYWRtaW5AZ2VudGxlY29ycC5jb20ifQ.DFXrHyei9vGxkIFxIvbDyQhjUSzj1mh2L468nEILav_MHl6ik1O4LEOIESsA9Y1kJRR18vd9D8ISQ4xfNsCaVyY5ix8RjU6o8Kf_d7XicXBXNfoXLd5HOEi2xTHq61o2RMjnzSjyCUSg4rERJPOMvBM-yiBJ95sKhY8EAPx5nHhzTNQqh1VooiPuE3XZYtWzNGwNTzBGXGnallGL93IaHM3f_UMtnoZysSTUjjvxj7_MWoO1jx3cgsnowKhtffbt6BGcYOMXKa187tInLW4W4LeOL_MktRVACm5unhRjgDJJi5wLRdAYN34nFIusUxTyjwGE6WWqSYhu78befHK5mw",
+    "scope": null
+}
+----
+
+==== Fehlerbehandlung
+
+* UnauthorizedException – Gibt eine 401 Unauthorized-Antwort zurück, wenn die Anmeldeinformationen nicht korrekt sind.
+
+=== Kunden API
+
+==== CustomerReadController
+
+Der `CustomerReadController` ermöglicht das Abrufen von Kundeninformationen durch ID und Suchkriterien.
+
+[cols="1,2", options="header"]
+|===
+| Pfad | `/customers`, `/customers{id}`
+|===
+
+==== Endpunkte
+
+* GET /customers/{id}
+
+* Beschreibung: Ruft Kundeninformationen anhand der eindeutigen ID ab. Unterstützt ETag-basierte Validierung.
+* Antwort: Kundenobjekt im JSON-Format.
+* Status Codes:
+- 200 OK – Erfolgreich, wenn der Kunde gefunden wird.
+- 404 Not Found – Wenn der Kunde nicht gefunden wird.
+- 412 Precondition Failed – Wenn der ETag nicht übereinstimmt.
+* Beispiel:
+[source,json]
+----
+{
+    "username": "admin",
+    "lastName": "Admin",
+    "firstName": "Caleb",
+    "email": "admin@gentlecorp.com",
+    "contactOptionsType": [
+        "Email",
+        "Phone",
+        "Mail",
+        "SMS"
+    ],
+    "birthDate": "1990-05-03",
+    "gender": "M",
+    "maritalStatus": "M",
+    "address": {
+        "id": "10000000-0000-0000-0000-000000000000",
+        "street": "Namurstraße",
+        "houseNumber": "4",
+        "zipCode": "70374",
+        "city": "Stuttgart",
+        "state": "Baden Württemberg",
+        "country": "Deutschland"
+    },
+    "elite": true,
+    "_links": {
+        "self": {
+            "href": "http://localhost:8080/customer/00000000-0000-0000-0000-000000000000"
+        },
+        "list": {
+            "href": "http://localhost:8080/customer"
+        },
+        "add": {
+            "href": "http://localhost:8080/customer"
+        },
+        "update": {
+            "href": "http://localhost:8080/customer/00000000-0000-0000-0000-000000000000"
+        },
+        "remove": {
+            "href": "http://localhost:8080/customer/00000000-0000-0000-0000-000000000000"
+        }
+    }
+}
+----
+
+* GET /customers
+
+* Beschreibung: Sucht nach Kunden basierend auf verschiedenen Kriterien wie Nachname, Vorname oder E-Mail-Adresse.
+* Anfragetyp: `application/json`
+* Antwort: Eine Liste von Kunden, die den Suchkriterien entsprechen.
+* Status Codes:
+- 200 OK – Erfolgreich, wenn Kunden gefunden werden.
+- 401 Unauthorized, wenn ohne Admin oder User Rechten auf die Resource zugreifen möchte.
+- 404 Not Found – Wenn keine Kunden gefunden werden.
+* Beispiel:
+[source,json]
+----
+[
+  {
+    "id": "12345",
+    "lastName": "Doe",
+    "firstName": "John",
+    "email": "john.doe@example.com"
+  },
+{
+    "id": "12346",
+    "lastName": "Does",
+    "firstName": "Johny",
+    "email": "johny.does@example.com"
+  }
+]
+----
+
+==== Fehlerbehandlung
+
+* CustomerNotFoundException – Wird bei nicht gefundenen Kunden ausgelöst.
+* InvalidCriteriaException – Wird ausgelöst, wenn die Suchkriterien ungültig sind.
+
+==== CustomerWriteController
+
+Der `CustomerWriteController` ermöglicht das Erstellen, Aktualisieren und Löschen von Kunden.
+
+[cols="1,2", options="header"]
+|===
+| Pfad | `/customers`
+|===
+
+==== Endpunkte
+
+* POST /customers
+
+* Beschreibung: Erstellt einen neuen Kunden im System.
+* Anfragetyp: `application/json`
+* Antwort: Eine Location-Header zeigt auf die neu erstellte Ressource.
+* Status Codes:
+- 201 Created – Erfolgreich erstellt.
+- 400 Bad Request – Fehlerhafte Anforderung.
+- 422 Unprocessable Entity – Ungültige Werte oder E-Mail bereits vorhanden.
+* Beispiel:
+[source,json]
+----
+{
+    "customer":
+    {
+    "lastName": "Gyamfi",
+    "firstName": "Caleb",
+    "email": "asd@ok.de",
+    "isElite": true,
+    "birthDate": "1999-05-03",
+    "gender": "M",
+    "maritalStatus": "S",
+    "contactOptions": ["SMS"],
+    "address": {
+        "street": "Namurstraße",
+        "houseNumber": "4",
+        "zipCode": "70374",
+        "state": "Baden-Württemberg",
+        "city": "Stuttgart",
+        "country": "Germany"
+    },
+    "username": "gentlecg99"
+    },
+    "password":
+    {
+        "password": "p"
+    }
+}
+----
+
+* PUT /customers/{id}
+
+* Beschreibung: Aktualisiert die Details eines bestehenden Kunden.
+* Anfragetyp: `application/json`
+* Antwort: Keine Inhalte bei erfolgreicher Aktualisierung.
+* Status Codes:
+- 204 No Content – Erfolgreich aktualisiert.
+- 400 Bad Request – Fehlerhafte Anforderung.
+- 404 Not Found – Wenn der Kunde nicht gefunden wird.
+- 412 Precondition Failed – Wenn die Version nicht übereinstimmt.
+- 422 Unprocessable Entity – Ungültige Werte oder E-Mail bereits vorhanden.
+* Beispiel:
+[source,json]
+----
+{
+    "lastName": "Mustermann",
+    "firstName": "Max",
+    "email": "max@ok.de",
+    "isElite": false,
+    "birthDate": "1999-05-03",
+    "gender": "M",
+    "maritalStatus": "S",
+    "contactOptions": ["SMS"],
+    "address": {
+        "street": "Namurstraße",
+        "houseNumber": "4",
+        "zipCode": "70374",
+        "state": "Baden-Württemberg",
+        "city": "Stuttgart",
+        "country": "Germany"
+    },
+    "username": "max",
+    "password": "p"
+}
+----
+
+* PUT /customers/{id}/password
+
+* Beschreibung: Ändert das Passwort eines bestehenden Kunden.
+* Anfragetyp: `application/json`
+* Antwort: Keine Inhalte bei erfolgreicher Aktualisierung.
+* Status Codes:
+- 204 No Content – Erfolgreich aktualisiert.
+- 400 Bad Request – Fehlerhafte Anforderung.
+- 404 Not Found – Wenn der Kunde nicht gefunden wird.
+- 422 Unprocessable Entity – Ungültiges Passwort.
+* Beispiel:
+[source,json]
+----
+{
+  "password": "newpassword123"
+}
+----
+
+* DELETE /customers/{id}
+
+* Beschreibung: Löscht einen Kunden nach der angegebenen ID.
+* Antwort: Keine Inhalte bei erfolgreicher Löschung.
+* Status Codes:
+- 204 No Content – Erfolgreich gelöscht.
+- 401 Unauthorized, wenn ohne Admin Rechten den Kunden löschen möchte.
+- 404 Not Found – Wenn der Kunde nicht gefunden wird.
+
+==== Fehlerbehandlung
+
+* ConstraintViolationsException – Bei Validierungsfehlern.
+* EmailExistsException – Wenn die E-Mail-Adresse bereits existiert.
+* VersionInvalidException – Bei ungültigen Versionsangaben.
+* VersionOutdatedException – Wenn die Version veraltet ist.
+* InvalidPatchOperationException – Bei ungültigen Patch-Operationen.
+
+== Fehlerbehebung
+
+Hier sind einige häufige Probleme und deren Lösungen:
+
+- **Problem**: Fehler beim Starten der Anwendung.
+- **Lösung**: Überprüfen Sie die Konfiguration der Datenbankverbindung in `application.properties`. Stellen Sie sicher, dass die Datenbank läuft und erreichbar ist.
+
+- **Problem**: Kunden nicht gefunden.
+- **Lösung**: Überprüfen Sie, ob die angegebene ID korrekt ist und ob der Kunde in der Datenbank vorhanden ist.
+
+== Beitragen
+
+Fühlen Sie sich frei, zur Verbesserung des Customer-Services beizutragen. Erstellen Sie Issues, melden Sie Fehler oder reichen Sie Pull-Requests über unser [GitHub-Repository](https://github.com/Caleb-Script/GentleCorp-Ecosystem).
 
 == Lizenz
 
-Dieses Projekt ist lizenziert unter der [MIT License](https://opensource.org/licenses/MIT).
+-
 
 == Kontakt
 

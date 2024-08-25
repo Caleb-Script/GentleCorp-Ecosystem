@@ -1,0 +1,59 @@
+@startuml CustomerModel
+
+skinparam classAttributeIconSize 0
+
+package java {
+    package util {
+        interface List<T>
+    }
+
+    package time {
+        class LocalDate
+    }
+}
+
+package org.springframework.hateoas {
+    class RepresentationModel<T>
+    class Relation
+}
+
+package com.gentle.bank.customer.entity {
+    class Address
+    class Customer
+
+    enum ContactOptionsType
+    enum GenderType
+    enum MaritalStatusType
+}
+
+package com.gentle.bank.customer.model {
+    class CustomerModel << entity >> {
+        readonly lastName : String
+        readonly firstName : String
+        readonly email : String
+        readonly username : String
+        readonly isElite : boolean
+        readonly birthDate : LocalDate
+        readonly gender : GenderType
+        readonly maritalStatus : MaritalStatusType
+        readonly address : Address
+        readonly contactOptionsType : List<ContactOptionsType>
+
+        CustomerModel(customer: Customer)
+    }
+
+    CustomerModel -up-|> RepresentationModel
+    CustomerModel *--> "1" Address : address
+    CustomerModel ..> GenderType
+    CustomerModel ..> MaritalStatusType
+    CustomerModel ..> ContactOptionsType
+    CustomerModel ..> List
+    CustomerModel ..> LocalDate
+    CustomerModel ..> Customer
+}
+
+hide empty members
+
+footer (c) Caleb Gyamfi
+
+@enduml

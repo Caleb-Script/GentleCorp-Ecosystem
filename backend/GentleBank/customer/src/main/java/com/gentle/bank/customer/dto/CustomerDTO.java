@@ -1,7 +1,5 @@
 package com.gentle.bank.customer.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gentle.bank.customer.entity.Customer;
 import com.gentle.bank.customer.entity.enums.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;

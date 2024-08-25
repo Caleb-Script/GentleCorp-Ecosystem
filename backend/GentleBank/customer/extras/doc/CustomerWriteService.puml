@@ -1,0 +1,64 @@
+@startuml CustomerWriteService
+
+skinparam classAttributeIconSize 0
+
+package java.util {
+    class UUID
+}
+
+package org.springframework {
+    package stereotype {
+        interface Service
+    }
+
+    package transaction.annotation {
+        interface Transactional
+    }
+
+    package security.core.userdetails {
+        interface UserDetails
+    }
+
+    UUID .right[hidden].> UserDetails
+}
+
+package com.gentle.bank.customer {
+    package entity {
+        class Customer << entity >>
+        Customer .up[hidden].> UUID
+        Customer .up[hidden].> UserDetails
+    }
+
+    package repository {
+        interface CustomerRepository << control >>
+    }
+
+    package service  {
+    class MailService << control >> << @Service >>
+    class KeycloakService << control >> << @Service >>
+        class CustomerWriteService << control >> << @Service >> << @Transactional >> #DDDDDD {
+            + create(customer: entity.Customer, password: String, jwt: org.springframework.security.oauth2.jwt.Jwt): entity.Customer
+            + update(customer: entity.Customer, id: java.util.UUID, version: int, role: String, username: String, jwt: org.springframework.security.oauth2.jwt.Jwt): entity.Customer
+            + updatePassword(jwt: org.springframework.security.oauth2.jwt.Jwt, password: String)
+            + deleteById(id: java.util.UUID)
+        }
+
+        CustomerWriteService o--> "1" CustomerRepository : customerRepository
+        CustomerWriteService o--> "1" MailService : mailService
+        CustomerWriteService o--> "1" KeycloakService : keycloakService
+
+        CustomerWriteService .right.> Customer
+
+        CustomerWriteService .up.> UUID
+        CustomerWriteService .up.> UserDetails
+        CustomerWriteService .up.> Service
+        CustomerWriteService .up.> Transactional
+    }
+
+}
+
+hide empty members
+
+footer (c) Caleb Gyamfi
+
+@enduml

@@ -1,0 +1,101 @@
+@startuml CustomerReadController
+
+skinparam classAttributeIconSize 0
+
+package "javax.servlet.http" {
+    class HttpServletRequest
+}
+
+package "org.springframework" {
+    package "web.bind.annotation" {
+        interface "@RestController" as RestController
+        interface "@RequestMapping" as RequestMapping
+        interface "@GetMapping" as GetMapping
+        interface "@RequestParam" as RequestParam
+        interface "@RequestHeader" as RequestHeader
+        interface "@PathVariable" as PathVariable
+        interface "@AuthenticationPrincipal" as AuthenticationPrincipal
+    }
+
+    package "security.oauth2.jwt" {
+        class Jwt
+    }
+
+    package "hateoas" {
+        class CollectionModel<E>
+        class Link
+        class LinkRelation
+    }
+
+    package "http" {
+        class ResponseEntity<T>
+    }
+
+    package "util" {
+        class MultiValueMap<K,V>
+    }
+}
+
+package "java.util" {
+    class UUID
+    class Optional<T>
+}
+
+
+package "com.gentle.bank.customer" {
+    package "controller" {
+        class CustomerReadController << @RestController >> << @RequestMapping >> << @RequiredArgsConstructor >> << @Slf4j >> {
+            + @GetMapping getById(@PathVariable id: UUID, @RequestHeader version: Optional<String>, request: HttpServletRequest, @AuthenticationPrincipal jwt: Jwt): ResponseEntity<CustomerModel>
+            + @GetMapping get(@RequestParam searchCriteria: MultiValueMap<String, String>, request: HttpServletRequest): CollectionModel<CustomerModel>
+        }
+    }
+
+    package "entity" {
+        class Customer << entity >>
+    }
+
+    package "model" {
+        class CustomerModel << entity >>
+    }
+
+    package "service" {
+        class CustomerReadService
+        class JwtService
+    }
+
+    package "util" {
+        class UriHelper
+    }
+}
+
+' Relations
+CustomerReadController .up.> RestController
+CustomerReadController .up.> RequestMapping
+CustomerReadController .up.> GetMapping
+CustomerReadController .up.> RequestParam
+CustomerReadController .up.> RequestHeader
+CustomerReadController .up.> PathVariable
+CustomerReadController .up.> AuthenticationPrincipal
+CustomerReadController .up.> ResponseEntity
+
+CustomerReadController o-right-> CustomerReadService : customerReadService
+CustomerReadController o-right-> JwtService : jwtService
+CustomerReadController o-right-> UriHelper : uriHelper
+CustomerReadController ..> CustomerModel
+CustomerReadController ..> Customer
+CustomerReadController ..> HttpServletRequest
+CustomerReadController ..> Jwt
+CustomerReadController ..> MultiValueMap
+CustomerReadController ..> UUID
+CustomerReadController ..> Optional
+
+CustomerModel ..> Customer
+CustomerModel ..> Link
+CustomerModel ..> LinkRelation
+CustomerModel ..> CollectionModel
+
+hide empty members
+
+footer (c) Caleb Gyamfi
+
+@enduml
