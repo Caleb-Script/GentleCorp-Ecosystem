@@ -13,8 +13,8 @@ plugins {
   id("io.spring.dependency-management") version "1.1.6"
 }
 
-group = "com.gentle.bank"
-version = "21.08.2024"
+group = "com.gentlecorp"
+version = "26.08.2024"
 val imageTag = project.properties["imageTag"] ?: project.version.toString()
 
 java {
@@ -34,15 +34,13 @@ repositories {
 }
 
 dependencies {
-
   /**--------------------------------------------------------------------------------------------------------------------
    * SECURITY
    * --------------------------------------------------------------------------------------------------------------------*/
   runtimeOnly("org.bouncycastle:bcpkix-jdk18on:${libs.versions.bouncycastle.get()}") // Argon2
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("com.c4-soft.springaddons:spring-addons-starter-oidc:${libs.versions.springAddonsStarterOidc.get()}")
-
-
+  implementation("org.springframework.boot:spring-boot-starter-security")
   /**------------------------------------------------------------------------------------------------------------------------
    * SWAGGER
    * --------------------------------------------------------------------------------------------------------------------*/
@@ -60,9 +58,9 @@ dependencies {
    * TEST
    * --------------------------------------------------------------------------------------------------------------------*/
   testImplementation("io.projectreactor:reactor-test")
-  testImplementation("org.springframework.graphql:spring-graphql-test")
   testImplementation("org.springframework.security:spring-security-test")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
   /**----------------------------------------------------------------
    * SPRING BOOT STARTER
@@ -72,8 +70,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-graphql")
   implementation("org.springframework.boot:spring-boot-starter-hateoas")
   implementation("org.springframework.boot:spring-boot-starter-mail")
-  implementation("org.springframework.boot:spring-boot-starter-security")
-  implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -81,7 +78,6 @@ dependencies {
   /**--------------------------------------------------------------------------------------------------------------------
    * DATENBANK
    * --------------------------------------------------------------------------------------------------------------------*/
-  runtimeOnly("org.postgresql:postgresql")
   runtimeOnly("com.mysql:mysql-connector-j")
   implementation("org.flywaydb:flyway-core")
   implementation("org.flywaydb:flyway-mysql")
@@ -99,8 +95,12 @@ dependencies {
    * --------------------------------------------------------------------------------------------------------------------*/
   implementation("com.google.guava:guava:30.1-jre") //für Splitt-operation in FlightRepository
   developmentOnly("org.springframework.boot:spring-boot-devtools")
-  implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
   runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+  /**------------------------------------------------------------------------------------------------------------------------
+   * OBSERVABILITY
+   * --------------------------------------------------------------------------------------------------------------------*/
+  implementation("io.micrometer:micrometer-tracing-bridge-brave")
+  implementation("io.zipkin.reporter2:zipkin-reporter-brave")
 }
 
 tasks.withType<Test> {
@@ -151,8 +151,8 @@ tasks.named("bootBuildImage", org.springframework.boot.gradle.tasks.bundling.Boo
     "BPE_DELIM_JAVA_TOOL_OPTIONS" to " ",
     "BPE_APPEND_JAVA_TOOL_OPTIONS" to enablePreview,
   )
-      imageName = imageName.get()
-      println("")
-      println("Buildpacks: JVM durch   B e l l s o f t   L i b e r i c a   (default)")
-      println("")
-    }
+  imageName = imageName.get()
+  println("")
+  println("Buildpacks: JVM durch   B e l l s o f t   L i b e r i c a   (default)")
+  println("")
+}

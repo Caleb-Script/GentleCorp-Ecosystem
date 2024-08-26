@@ -87,7 +87,7 @@ sealed interface SecurityConfig permits ApplicationConfig {
     return httpSecurity
       .authorizeHttpRequests(authorize -> {
         authorize
-          .requestMatchers(POST, "/login").permitAll()
+          .requestMatchers(POST, "/auth/login").permitAll()
 
           .requestMatchers(GET, CUSTOMER_PATH).hasAnyRole(GENTLECORP_USER.getRole(), GENTLECORP_ADMIN.getRole())
           .requestMatchers(GET, CUSTOMER_PATH + "/**").permitAll()
