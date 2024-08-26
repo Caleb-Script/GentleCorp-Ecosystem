@@ -1,0 +1,93 @@
+@startuml GentleCorp-Ecosystem
+
+
+package com.gentlecorp {
+    package GentleBank {
+        [GentleBankCustomer] as Customer
+        [GentleBankAccount] as Account
+        [GentleBankTransaction] as Transaction
+        [MySQL_Bank] as BankDB <<Database>>
+
+        Customer --> Account : "Manages"
+        Account --> Transaction : "Tracks"
+        Transaction --> BankDB : "Stores"
+    }
+
+    package GentleAnalytics {
+        [GentleAnalyticsCustomer] as AnalyticsCustomer
+        [GentleAnalyticsGewinn] as Gewinn
+        [MySQL_Analytics] as AnalyticsDB <<Database>>
+
+        AnalyticsCustomer --> Gewinn : "Generates"
+        Gewinn --> AnalyticsDB : "Stores"
+    }
+
+    package GentleTravel {
+        [GentleTravelCustomer] as TravelCustomer
+        [GentleTravelHotel] as Hotel
+        [GentleTravelFlug] as Flug
+        [GentleTravelBuchung] as Buchung
+        [GentleTravelAktivity] as Aktivity
+        [PostgreSQL_Travel] as TravelDB <<Database>>
+
+        TravelCustomer --> Buchung : "Books"
+        Buchung --> Hotel : "Includes"
+        Buchung --> Flug : "Includes"
+        Buchung --> Aktivity : "Includes"
+        Buchung --> TravelDB : "Stores"
+    }
+
+    package GentleShop {
+        [GentleShopCustomer] as ShopCustomer
+        [GentleShopWarenkorb] as Warenkorb
+        [GentleShopInventory] as Inventory
+        [GentleShopProduct] as Product
+        [GentleShopWishlist] as Wishlist
+        [GentleShopNotification] as Notification
+        [GentleShopOrder] as Order
+        [GentleShopPayment] as Payment
+        [MySQL_Shop] as ShopDB <<Database>>
+
+        ShopCustomer --> Warenkorb : "Manages"
+        Warenkorb --> Order : "Triggers"
+        Order --> Payment : "Processes"
+        Payment --> ShopDB : "Stores"
+    }
+
+    package GentleChat {
+        [GentleChatUser] as ChatUser
+        [GentleChatHistory] as ChatHistory
+        [Kafka_Chat] as ChatKafka <<Database>>
+
+        ChatUser --> ChatHistory : "Sends"
+        ChatHistory --> ChatKafka : "Queues"
+    }
+
+    package GentleFood {
+        [GentleFoodCustomer] as FoodCustomer
+        [GentleFoodOrder] as FoodOrder
+        [GentleFoodDelivery] as Delivery
+        [MySQL_Food] as FoodDB <<Database>>
+
+        FoodCustomer --> FoodOrder : "Places"
+        FoodOrder --> Delivery : "Schedules"
+        FoodOrder --> FoodDB : "Stores"
+    }
+
+    package GentleMarket {
+        [GentleMarketCustomer] as MarketCustomer
+        [GentleMarketOrder] as MarketOrder
+        [GentleMarketPayment] as MarketPayment
+        [PostgreSQL_Market] as MarketDB <<Database>>
+
+        MarketCustomer --> MarketOrder : "Places"
+        MarketOrder --> MarketPayment : "Processes"
+        MarketPayment --> MarketDB : "Stores"
+    }
+
+    package GentleNetwork {
+        [GentleNetworkUser] as NetworkUser
+        NetworkUser --> ChatUser : "Synchronizes"
+    }
+}
+@enduml

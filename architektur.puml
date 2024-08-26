@@ -1,0 +1,78 @@
+@startuml Architektur
+
+package com.gentlecorp {
+    package gentlebank {
+        [Service\nCustomer] as GentleBankCustomer
+        [Service\nAccount] as GentleBankAccount
+        [Service\nTransaction] as GentleBankTransaction
+    }
+
+    package GentleAnalytics {
+        [Service\nCustomer] as GentleAnalyticsCustomer
+        [Service\nGewinn] as GentleAnalyticsGewinn
+    }
+
+    package GentleTravel {
+        [Service\nCustomer] as GentleTravelCustomer
+        [Service\nHotel] as GentleTravelHotel
+        [Service\nFlug] as GentleTravelFlug
+        [Service\nBuchung] as GentleTravelBuchung
+        [Service\nAktivity] as GentleTravelAktivity
+    }
+
+    package GentleEstate {
+        [Service\nCustomer] as GentleEstateCustomer
+        [Service\nEstate] as GentleEstateEstate
+    }
+
+    package GentleMaps {
+
+    }
+
+    package GentleShop {
+        [Service\nCustomer] as GentleShopCustomer
+        [Service\nWarenkorb] as GentleShopWarenkorb
+        [Service\nInventory] as GentleShopInventory
+        [Service\nProduct] as GentleShopProduct
+        [Service\nWishlist] as GentleShopWishlist
+        [Service\nNotification] as GentleShopNotification
+        [Service\nOrder] as GentleShopOrder
+        [Service\nPayment] as GentleShopPayment
+    }
+
+    package GentleChat {
+        [Service\nUser] as GentleChatUser
+        [Service\nChatHistory] as GentleChatChatHistory
+    }
+
+    package GentleFood {
+        [Service\nCustomer] as GentleFoodCustomer
+        [Service\nFood] as GentleFoodFood
+        [Service\nWarenkorb] as GentleFoodWarenkorb
+        [Service\nOrder] as GentleFoodOrder
+        [Service\nPayment] as GentleFoodPayment
+        [Service\nDelivery] as GentleFoodDelivery
+    }
+
+    package GentleDating {
+        [Service\nUser] as GentleDatingUser
+    }
+
+    package GentleMarket {
+        [Service\nCustomer] as GentleMarketCustomer
+        [Service\nBuyer] as GentleMarketBuyer
+        [Service\nAuction] as GentleMarketAuction
+        [Service\nWarenkorb] as GentleMarketWarenkorb
+        [Service\nInventory] as GentleMarketInventory
+        [Service\nProduct] as GentleMarketProduct
+        [Service\nWishlist] as GentleMarketWishlist
+        [Service\nNotification] as GentleMarketNotification
+        [Service\nOrder] as GentleMarketOrder
+        [Service\nPayment] as GentleMarketPayment
+    }
+
+    package GentleNetwork {
+        [Service\nUser] as GentleNetworkUser
+    }
+}
+@enduml

@@ -1,0 +1,121 @@
+@startuml GentleCorp-Ecosystem
+
+
+package com.gentlecorp {
+    package GentleBank {
+        [Service\nCustomer] as GentleBankCustomer
+        [Service\nAccount] as Account
+        [Service\nTransaction] as Transaction
+        [Service\nLoan] as Loan
+    }
+
+    package GentleAnalytics {
+        [Service\nCustomer] as Customer
+        [Service\nGewinn] as Gewinn
+        [Service\nDataAggregation] as DataAggregation
+        [Service\nReportGeneration] as ReportGeneration
+        [Service\nCustomerInsights] as CustomerInsights
+    }
+
+    package GentleTravel {
+        [Service\nCustomer] as Customer
+        [Service\nHotel] as Hotel
+        [Service\nFlug] as Flug
+        [Service\nBuchung] as Buchung
+        [Service\nAktivity] as Aktivity
+        [Service\nCarRental] as CarRental
+        [Service\nTravelInsurance] as TravelInsurance
+        [Service\nTourPackage] as TourPackage
+        [Service\nReviewManagement] as ReviewManagement
+    }
+
+    package GentleEstate {
+        [Service\nCustomer] as Customer
+        [Service\nEstate] as Estate
+        [Service\nPropertyManagement] as PropertyManagement
+        [Service\nRealEstateListing] as RealEstateListing
+        [Service\nTenantManagement] as TenantManagement
+        [Service\nMaintenanceRequest] as MaintenanceRequest
+    }
+
+    package GentleMaps {
+        [Service\nGeolocation] as Geolocation
+        [Service\nRoutePlanning] as RoutePlanning
+        [Service\nMapRendering] as MapRendering
+        [Service\nTrafficAnalysis] as TrafficAnalysis
+        [Service\nPOIManagement] as POIManagement
+    }
+
+    package GentleShop {
+        [Service\nCustomer] as Customer
+        [Service\nWarenkorb] as Warenkorb
+        [Service\nInventory] as Inventory
+        [Service\nProduct] as Product
+        [Service\nWishlist] as Wishlist
+        [Service\nNotification] as Notification
+        [Service\nOrder] as Order
+        [Service\nPayment] as Payment
+        [Service\nShipping] as Shipping
+        [Service\nDiscounts] as Discounts
+        [Service\nReturnManagement] as ReturnManagement
+        [Service\nLoyaltyProgram] as LoyaltyProgram
+    }
+
+    package GentleChat {
+        [Service\nUser] as User
+        [Service\nChatHistory] as ChatHistory
+        [Service\nGroupChat] as GroupChat
+        [Service\nMessageEncryption] as MessageEncryption
+        [Service\nPushNotification] as PushNotification
+        [Service\nFileSharing] as FileSharing
+    }
+
+    package GentleFood {
+        [Service\nCustomer] as Customer
+        [Service\nFood] as Food
+        [Service\nWarenkorb] as Warenkorb
+        [Service\nOrder] as Order
+        [Service\nPayment] as Payment
+        [Service\nDelivery] as Delivery
+        [Service\nMenuManagement] as MenuManagement
+        [Service\nRecipeRecommendation] as RecipeRecommendation
+        [Service\nSubscription] as Subscription
+        [Service\nFoodReview] as FoodReview
+    }
+
+    package GentleDating {
+        [Service\nUser] as User
+        [Service\nProfileMatching] as ProfileMatching
+        [Service\nChat] as Chat
+        [Service\nEventManagement] as EventManagement
+        [Service\nPrivacySettings] as PrivacySettings
+        [Service\nUserVerification] as UserVerification
+    }
+
+    package GentleMarket {
+        [Service\nCustomer] as Customer
+        [Service\nBuyer] as Buyer
+        [Service\nAuction] as Auction
+        [Service\nWarenkorb] as Warenkorb
+        [Service\nInventory] as Inventory
+        [Service\nProduct] as Product
+        [Service\nWishlist] as Wishlist
+        [Service\nNotification] as Notification
+        [Service\nOrder] as Order
+        [Service\nPayment] as Payment
+        [Service\nBidding] as Bidding
+        [Service\nSeller] as Seller
+        [Service\nMarketAnalytics] as MarketAnalytics
+    }
+
+    package GentleNetwork {
+        [Service\nUser] as User
+        [Service\nFriendRequest] as FriendRequest
+        [Service\nMessage] as Message
+        [Service\nGroupManagement] as GroupManagement
+        [Service\nNewsFeed] as NewsFeed
+        [Service\nPrivacyControl] as PrivacyControl
+        [Service\nProfileManagement] as ProfileManagement
+    }
+}
+@enduml
