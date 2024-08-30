@@ -17,42 +17,6 @@ VALUES
         'Stuttgart',
         'Baden Württemberg',
         'Deutschland'
-    ),
-    (
-        UUID_TO_BIN('10000000-0000-0000-0000-000000000001'),
-        'Namurstraße',
-        '4',
-        '70374',
-        'Stuttgart',
-        'Baden Württemberg',
-        'Deutschland'
-    ),
-    (
-        UUID_TO_BIN('10000000-0000-0000-0000-000000000002'),
-        'Namurstraße',
-        '4',
-        '70374',
-        'Stuttgart',
-        'Baden Württemberg',
-        'Deutschland'
-    ),
-    (
-        UUID_TO_BIN('10000000-0000-0000-0000-000000000003'),
-        'Namurstraße',
-        '4',
-        '70374',
-        'Stuttgart',
-        'Baden Württemberg',
-        'Deutschland'
-    ),
-    (
-        UUID_TO_BIN('10000000-0000-0000-0000-000000000004'),
-        'Namurstraße',
-        '4',
-        '70374',
-        'Stuttgart',
-        'Baden-Württemberg',
-        'Deutschland'
     );
 
 -- Beispiele für Customer
@@ -63,15 +27,19 @@ INSERT INTO
         last_name,
         first_name,
         email,
-        is_elite,
+        phone_number,
+        tier_level,
+        is_Subscribed,
         birth_date,
-        contact_options,
         gender,
         marital_status,
+        customer_state,
         address_id,
         created,
         updated,
-        username
+        username,
+        contact_options,
+        interests
     )
 VALUES
     (
@@ -80,77 +48,80 @@ VALUES
         'Admin',
         'Caleb',
         'admin@gentlecorp.com',
+        '0000/0000000',
+        3,
         1,
         '1990-05-03',
-        'EMAIL,PHONE,MAIL,SMS',
         'MALE',
         'MARRIED',
+        'ACTIVE',
         UUID_TO_BIN('10000000-0000-0000-0000-000000000000'),
         NOW(),
         NOW(),
-        'admin'
-    ),
-    (
-        UUID_TO_BIN('00000000-0000-0000-0000-000000000001'),
-        0,
-        'User',
-        'Caleb',
-        'user@gentlecorp.com',
-        1,
-        '1990-05-03',
+        'admin',
         'EMAIL,PHONE,MAIL,SMS',
-        'MALE',
-        'SINGLE',
-        UUID_TO_BIN('10000000-0000-0000-0000-000000000001'),
-        NOW(),
-        NOW(),
-        'user'
-    ),
-    (
-        UUID_TO_BIN('00000000-0000-0000-0000-000000000002'),
-        0,
-        'Jefferson',
-        'Leroy',
-        'leroy135@icloud.com',
-        1,
-        '1990-05-03',
-        'EMAIL',
-        'MALE',
-        'SINGLE',
-        UUID_TO_BIN('10000000-0000-0000-0000-000000000002'),
-        NOW(),
-        NOW(),
-        'leroy135'
-    ),
-    (
-        UUID_TO_BIN('00000000-0000-0000-0000-000000000003'),
-        0,
-        'Admin',
-        'Rachel',
-        'rae98@gentlecorp.com',
-        1,
-        '1990-05-03',
-        'EMAIL,PHONE,MAIL,SMS',
-        'FEMALE',
-        'MARRIED',
-        UUID_TO_BIN('10000000-0000-0000-0000-000000000003'),
-        NOW(),
-        NOW(),
-        'admin2'
-    ),
-    (
-        UUID_TO_BIN('00000000-0000-0000-0000-000000000004'),
-        0,
-        'Mustermannn',
-        'Max',
-        'leroy135 @icloud.com',
-        0,
-        '1990-05-03',
-        'EMAIL,MAIL',
-        'DIVERSE',
-        'DIVORCED',
-        UUID_TO_BIN('10000000-0000-0000-0000-000000000004'),
-        NOW(),
-        NOW(),
-        'max'
+        null
     );
+
+INSERT INTO
+    contact (
+        id,
+        version,
+        last_name,
+        first_name,
+        relationship,
+        withdrawal_limit,
+        is_emergency_contact,
+        start_date,
+        end_date,
+        created,
+        updated,
+        customer_id,
+        idx
+    )
+VALUES
+    (
+        UUID_TO_BIN('30000000-0000-0000-0000-000000000000'),
+        0,
+        'Gyamfi',
+        'Rachel',
+        'PARTNER',
+        1000,
+        1,
+        '2020-01-01',
+        NULL,
+        NOW(),
+        NOW(),
+        UUID_TO_BIN('00000000-0000-0000-0000-000000000000'),
+        0
+    ),
+    (
+        UUID_TO_BIN('30000000-0000-0000-0000-000000000001'),
+        0,
+        'Gyamfi',
+        'Nevaeh Ember Okorie',
+        'CHILD',
+        1000,
+        0,
+        '2020-01-01',
+        NULL,
+        NOW(),
+        NOW(),
+        UUID_TO_BIN('00000000-0000-0000-0000-000000000000'),
+        1
+    ),
+    (
+    UUID_TO_BIN('30000000-0000-0000-0000-000000000002'),
+    0,
+    'Gyamfi',
+    'Neriah',
+    'CHILD',
+    1000,
+    0,
+    '2020-01-01',
+    NULL,
+    NOW(),
+    NOW(),
+    UUID_TO_BIN('00000000-0000-0000-0000-000000000000'),
+    2
+);

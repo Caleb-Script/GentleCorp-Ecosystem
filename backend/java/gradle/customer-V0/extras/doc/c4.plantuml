@@ -1,0 +1,117 @@
+@startuml C4
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' Importieren von Icons
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define DEVICONS2 https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons2
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+
+!include DEVICONS/angular.puml
+!include DEVICONS2/docker.puml
+!include DEVICONS2/kubernetes.puml
+!include DEVICONS2/spring.puml
+!include DEVICONS/postgresql.puml
+!include DEVICONS2/mysql.puml
+!include FONTAWESOME/users.puml
+
+' Define Actors
+Person(customer, "Kunde", "Registrierte Kunden", $sprite="users")
+Person(employee, "Mitarbeiter", "Kundenbetreuung", $sprite="users")
+
+' Define Systems
+System_Boundary(gentlecorp, "GentleCorp-Ecosystem") {
+    Container(frontend, "Frontend", "Next.js", "Web-Anwendung", $sprite="angular")
+    Container(gateway, "Gateway", "nginx", "API Gateway", $sprite="docker")
+    Container(shop, "GentleShop", "NestJS", "Online-Shop", $sprite="spring")
+    Container(travel, "GentleTravel", "Spring Boot", "Reisebuchung", $sprite="spring")
+    Container(bank, "GentleBank", "Spring Boot", "Banking", $sprite="spring")
+    Container(analytics, "GentleAnalytics", "Spring Boot", "Analyse", $sprite="spring")
+    Container(food, "GentleFood", "NestJS", "Lebensmittel-Lieferung", $sprite="spring")
+    Container(chat, "GentleChat", "NestJS", "Chat", $sprite="spring")
+    Container(dating, "GentleDating", "NestJS", "Dating", $sprite="spring")
+    Container(market, "GentleMarket", "NestJS", "Marktplatz", $sprite="spring")
+    Container(network, "GentleNetwork", "NestJS", "Soziales Netzwerk", $sprite="spring")
+
+    ContainerDb(mysql, "MySQL", "MySQL", "Datenbank für Shop, Dating, etc.", $sprite="mysql")
+    ContainerDb(postgres, "PostgreSQL", "PostgreSQL", "Datenbank für Bank, Reisen, etc.", $sprite="postgresql")
+
+    Container(queue, "Kafka", "Apache Kafka", "Nachrichtenbroker", $sprite="docker")
+    Container(auth, "Keycloak", "Keycloak", "Authentifizierung", $sprite="docker")
+    Container(tracing, "Zipkin", "Zipkin", "Distributed Tracing", $sprite="docker")
+
+    ' Docker Boundary
+    System_Boundary(docker, "Docker Environment") {
+        Container(docker_gateway, "Docker Ingress", "nginx", "Zugangssteuerung für Container", $sprite="docker")
+        Container(docker_monitoring, "Docker Monitoring", "Prometheus", "Überwachung und Alarmierung", $sprite="docker")
+        Container(docker_logging, "Docker Logging", "ELK Stack", "Protokollierung", $sprite="docker")
+    }
+
+    ' Kubernetes Boundary
+    System_Boundary(kubernetes, "Kubernetes Cluster") {
+        Container(k8s_api, "Kubernetes API Server", "Kubernetes", "Verwaltet Cluster-Ressourcen", $sprite="kubernetes")
+        Container(k8s_scheduler, "Kubernetes Scheduler", "Kubernetes", "Planung von Container-Ressourcen", $sprite="kubernetes")
+        Container(k8s_controller, "Kubernetes Controller", "Kubernetes", "Verwaltet den Zustand des Clusters", $sprite="kubernetes")
+    }
+}
+
+' Define Relationships
+Rel(customer, frontend, "Verwendet", "https")
+Rel(employee, frontend, "Verwendet", "https")
+Rel(frontend, gateway, "Leitet Anfragen weiter", "https")
+Rel(gateway, shop, "API-Anfragen", "http")
+Rel(gateway, travel, "API-Anfragen", "http")
+Rel(gateway, bank, "API-Anfragen", "http")
+Rel(gateway, analytics, "API-Anfragen", "http")
+Rel(gateway, food, "API-Anfragen", "http")
+Rel(gateway, chat, "API-Anfragen", "http")
+Rel(gateway, dating, "API-Anfragen", "http")
+Rel(gateway, market, "API-Anfragen", "http")
+Rel(gateway, network, "API-Anfragen", "http")
+Rel(shop, mysql, "Liest/Schreibt Daten")
+Rel(travel, postgres, "Liest/Schreibt Daten")
+Rel(bank, postgres, "Liest/Schreibt Daten")
+Rel(analytics, postgres, "Liest Daten")
+Rel(food, mysql, "Liest/Schreibt Daten")
+Rel(chat, mysql, "Liest/Schreibt Daten")
+Rel(dating, mysql, "Liest/Schreibt Daten")
+Rel(market, mysql, "Liest/Schreibt Daten")
+Rel(network, mysql, "Liest/Schreibt Daten")
+Rel(frontend, auth, "Authentifiziert Benutzer", "https")
+Rel(frontend, tracing, "Sende Tracing-Daten", "https")
+Rel(shop, queue, "Sendet Nachrichten")
+Rel(travel, queue, "Sendet Nachrichten")
+Rel(bank, queue, "Sendet Nachrichten")
+Rel(food, queue, "Sendet Nachrichten")
+Rel(chat, queue, "Sendet Nachrichten")
+Rel(dating, queue, "Sendet Nachrichten")
+Rel(market, queue, "Sendet Nachrichten")
+Rel(network, queue, "Sendet Nachrichten")
+
+' Docker Relationships
+Rel(gateway, docker_gateway, "Verwendet", "http")
+Rel(shop, docker_gateway, "Verwendet", "http")
+Rel(travel, docker_gateway, "Verwendet", "http")
+Rel(bank, docker_gateway, "Verwendet", "http")
+Rel(analytics, docker_gateway, "Verwendet", "http")
+Rel(food, docker_gateway, "Verwendet", "http")
+Rel(chat, docker_gateway, "Verwendet", "http")
+Rel(dating, docker_gateway, "Verwendet", "http")
+Rel(market, docker_gateway, "Verwendet", "http")
+Rel(network, docker_gateway, "Verwendet", "http")
+Rel(docker_gateway, docker_monitoring, "Überwacht", "http")
+Rel(docker_gateway, docker_logging, "Protokolliert", "http")
+
+' Kubernetes Relationships
+Rel(docker_gateway, k8s_api, "Verwaltet durch", "http")
+Rel(shop, k8s_api, "Verwaltet durch", "http")
+Rel(travel, k8s_api, "Verwaltet durch", "http")
+Rel(bank, k8s_api, "Verwaltet durch", "http")
+Rel(analytics, k8s_api, "Verwaltet durch", "http")
+Rel(food, k8s_api, "Verwaltet durch", "http")
+Rel(chat, k8s_api, "Verwaltet durch", "http")
+Rel(dating, k8s_api, "Verwaltet durch", "http")
+Rel(market, k8s_api, "Verwaltet durch", "http")
+Rel(network, k8s_api, "Verwaltet durch", "http")
+
+footer (c) Jürgen Zimmermann
+@enduml

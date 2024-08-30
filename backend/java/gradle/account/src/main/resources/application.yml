@@ -31,14 +31,11 @@ com:
 
 app:
   keycloak:
-    client-secret: 6J3uzo8E8jbCUbiraQIAOKuPRA4xKO7S
+    client-secret: FiAT2ma40CGVmctDNOOG9h1XtlAqA7Vb
     #schema: http
     host: ${KEYCLOAK_HOST}
     port: ${KEYCLOAK_PORT}
-    client-id: GentleBank
-  #mail:
-  #  from: Theo Test <theo@test.de>
-  #  sales: Maxi Musterfrau <maxi.musterfrau@test.de>
+    client-id: gentlecorp-client
   #logfile: ./build/log/application.log
   password: p
   #password-falsch: FALSCH

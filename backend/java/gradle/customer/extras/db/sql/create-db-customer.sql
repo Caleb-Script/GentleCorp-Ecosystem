@@ -42,5 +42,5 @@ CREATE TABLESPACE customer_tablespace ADD DATAFILE 'customer_tablespace.ibd' ENG
 
 
 CREATE TABLESPACE customerspace OWNER customer_db_user LOCATION '/var/lib/postgresql/tablespace/customer';
-CREATE TABLESPACE customer_tablespace OWNER customer_db_user LOCATION '/Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/volumes/GentleBank/Tablespace/Customer';
+CREATE TABLESPACE customer_tablespace OWNER customer_db_user LOCATION '/Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/volumes/Tablespace/Customer';
 

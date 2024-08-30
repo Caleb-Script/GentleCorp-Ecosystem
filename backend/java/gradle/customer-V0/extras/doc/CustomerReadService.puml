@@ -1,0 +1,57 @@
+@startuml CustomerService
+
+skinparam classAttributeIconSize 0
+
+package java.util {
+    interface List<T>
+    interface Map<K, V>
+    class UUID
+}
+
+package org.springframework {
+    package stereotype {
+        interface Service
+    }
+
+    package transaction.annotation {
+        interface Transactional
+    }
+}
+
+package com.gentle.bank.customer.entity {
+    class Customer << entity >>
+}
+
+package com.gentle.bank.customer.repository {
+    interface CustomerRepository << control >>
+    class SpecificationBuilder
+}
+
+package com.gentle.bank.customer.exception {
+    class AccessForbiddenException
+    class NotFoundException
+}
+
+package com.gentle.bank.customer.service #DDDDDD {
+    class CustomerReadService << control >> << @Service >> << @Transactional(readOnly = true) >> {
+        + findById(id: UUID, username: String, role: String): Customer
+        + find(searchCriteria: Map<String, List<String>>): Collection<Customer>
+    }
+
+    CustomerReadService o--> "1" CustomerRepository : repo
+    CustomerReadService o--> "1" SpecificationBuilder : specBuilder
+    CustomerReadService ..> Customer
+    CustomerReadService ..> UUID
+    CustomerReadService ..> List
+    CustomerReadService ..> Map
+    CustomerReadService ..> Service
+    CustomerReadService ..> Transactional
+    CustomerReadService ..> AccessForbiddenException
+    CustomerReadService ..> NotFoundException
+}
+
+hide empty members
+
+footer (c) Caleb Gyamfi
+
+@enduml

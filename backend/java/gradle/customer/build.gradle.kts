@@ -1,4 +1,3 @@
-
 val javaLanguageVersion = project.properties["javaLanguageVersion"] as String? ?: JavaVersion.VERSION_22.majorVersion
 val javaVersion = project.properties["javaVersion"] ?: libs.versions.javaVersion.get()
 
@@ -33,6 +32,9 @@ repositories {
   mavenCentral()
 }
 
+
+//extra["springCloudVersion"] = "2023.0.3"
+
 dependencies {
 
   /**--------------------------------------------------------------------------------------------------------------------
@@ -48,6 +50,7 @@ dependencies {
    * --------------------------------------------------------------------------------------------------------------------*/
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui")
   implementation(platform("org.springdoc:springdoc-openapi:${libs.versions.springdocOpenapi.get()}"))
+  implementation("org.springframework.boot:spring-boot-starter-security")
 
   /**--------------------------------------------------------------------------------------------------------------------
    * für MAPPER
@@ -68,11 +71,8 @@ dependencies {
    * SPRING BOOT STARTER
    **-------------------------------------------------------------*/
   implementation("org.springframework.boot:spring-boot-starter-actuator")//bei SecurityConfig
-  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("org.springframework.boot:spring-boot-starter-graphql")
   implementation("org.springframework.boot:spring-boot-starter-hateoas")
   implementation("org.springframework.boot:spring-boot-starter-mail")
-  implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.springframework.boot:spring-boot-starter-web")
@@ -81,10 +81,10 @@ dependencies {
   /**--------------------------------------------------------------------------------------------------------------------
    * DATENBANK
    * --------------------------------------------------------------------------------------------------------------------*/
-  runtimeOnly("org.postgresql:postgresql")
   runtimeOnly("com.mysql:mysql-connector-j")
   implementation("org.flywaydb:flyway-core")
   implementation("org.flywaydb:flyway-mysql")
+  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   /**------------------------------------------------------------------------------------------------------------------------
    * WICHTIGE EXTRAS
@@ -99,15 +99,22 @@ dependencies {
    * --------------------------------------------------------------------------------------------------------------------*/
   implementation("com.google.guava:guava:30.1-jre") //für Splitt-operation in FlightRepository
   developmentOnly("org.springframework.boot:spring-boot-devtools")
-  implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
-  runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+//  implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
+//  implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
+
+  /**------------------------------------------------------------------------------------------------------------------------
+   * OBSERVABILITY
+   * --------------------------------------------------------------------------------------------------------------------*/
+//  implementation("io.micrometer:micrometer-tracing-bridge-brave")
+//  implementation("io.zipkin.reporter2:zipkin-reporter-brave")
+//  runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 }
 
-tasks.withType<Test> {
-  useJUnitPlatform()
-}
-
-
+//dependencyManagement {
+//	imports {
+//		mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+//	}
+//}
 
 tasks.withType<Test> {
   useJUnitPlatform()
@@ -151,8 +158,8 @@ tasks.named("bootBuildImage", org.springframework.boot.gradle.tasks.bundling.Boo
     "BPE_DELIM_JAVA_TOOL_OPTIONS" to " ",
     "BPE_APPEND_JAVA_TOOL_OPTIONS" to enablePreview,
   )
-      imageName = imageName.get()
-      println("")
-      println("Buildpacks: JVM durch   B e l l s o f t   L i b e r i c a   (default)")
-      println("")
-    }
+  imageName = imageName.get()
+  println("")
+  println("Buildpacks: JVM durch   B e l l s o f t   L i b e r i c a   (default)")
+  println("")
+}

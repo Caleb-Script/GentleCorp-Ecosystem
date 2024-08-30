@@ -1,20 +1,3 @@
-# Copyright (C) 2021 - present Juergen Zimmermann, Hochschule Karlsruhe
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-# https://docs.gradle.org/8.4/userguide/platforms.html#sub:central-declaration-of-dependencies
-# https://toml.io   TOML = Tom's Obvious Minimal Language   (Tom Preston-Werner)
 
 # table = Schluessel/Wert-Paare
 [versions]
@@ -27,8 +10,6 @@ lombokMapstructBinding = "0.2.0"
 mapstruct = "1.6.0.Beta1"
 springdocOpenapi = "2.3.0"
 springAddonsStarterOidc = "7.8.1"
-
-
 
 # -----------------------------------------------------------------------------------------
 # B O M s   u n d   s p e z i f i s c h e   V e r s i o n e n   u e b e r s c h r e i b e n

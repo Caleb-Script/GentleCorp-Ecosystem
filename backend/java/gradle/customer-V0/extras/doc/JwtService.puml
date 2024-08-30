@@ -1,0 +1,49 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package "java.util" {
+    class List<T>
+    class Map<K,V>
+    class Objects
+}
+
+package "org.springframework.security.oauth2.jwt" {
+    class Jwt
+}
+
+package "com.gentle.bank.customer" {
+    package "entity.enums" {
+        class RoleType
+    }
+
+    package "exception" {
+        class NotFoundException
+    }
+}
+
+package "com.gentle.bank.customer.service" {
+    class JwtService << Service >> << @Slf4j >> {
+        + String getUsername(final Jwt jwt)
+        + String getUserID(final Jwt jwt)
+        + String getRole(final Jwt jwt)
+        + List<RoleType> getRealmRole(final Jwt jwt)
+        + List<RoleType> getClientRole(final Jwt jwt)
+    }
+}
+
+' Relations
+JwtService ..> Jwt
+JwtService ..> RoleType
+JwtService ..> NotFoundException
+JwtService ..> Map
+JwtService ..> List
+JwtService ..> Objects
+
+JwtService ..> RoleType : of()
+JwtService ..> List : stream()
+JwtService ..> Map : get()
+
+hide empty members
+
+footer (c) Caleb Gyamfi
+@enduml

@@ -1,4 +1,3 @@
-
 val javaLanguageVersion = project.properties["javaLanguageVersion"] as String? ?: JavaVersion.VERSION_22.majorVersion
 val javaVersion = project.properties["javaVersion"] ?: libs.versions.javaVersion.get()
 
@@ -13,8 +12,8 @@ plugins {
   id("io.spring.dependency-management") version "1.1.6"
 }
 
-group = "com.gentlecorp"
-version = "26.08.2024"
+group = "com.gentle.bank"
+version = "30.08.2024"
 val imageTag = project.properties["imageTag"] ?: project.version.toString()
 
 java {
@@ -33,19 +32,25 @@ repositories {
   mavenCentral()
 }
 
+
+//extra["springCloudVersion"] = "2023.0.3"
+
 dependencies {
+
   /**--------------------------------------------------------------------------------------------------------------------
    * SECURITY
    * --------------------------------------------------------------------------------------------------------------------*/
   runtimeOnly("org.bouncycastle:bcpkix-jdk18on:${libs.versions.bouncycastle.get()}") // Argon2
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("com.c4-soft.springaddons:spring-addons-starter-oidc:${libs.versions.springAddonsStarterOidc.get()}")
-  implementation("org.springframework.boot:spring-boot-starter-security")
+
+
   /**------------------------------------------------------------------------------------------------------------------------
    * SWAGGER
    * --------------------------------------------------------------------------------------------------------------------*/
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui")
   implementation(platform("org.springdoc:springdoc-openapi:${libs.versions.springdocOpenapi.get()}"))
+  implementation("org.springframework.boot:spring-boot-starter-security")
 
   /**--------------------------------------------------------------------------------------------------------------------
    * für MAPPER
@@ -58,19 +63,17 @@ dependencies {
    * TEST
    * --------------------------------------------------------------------------------------------------------------------*/
   testImplementation("io.projectreactor:reactor-test")
+  testImplementation("org.springframework.graphql:spring-graphql-test")
   testImplementation("org.springframework.security:spring-security-test")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
   /**----------------------------------------------------------------
    * SPRING BOOT STARTER
    **-------------------------------------------------------------*/
   implementation("org.springframework.boot:spring-boot-starter-actuator")//bei SecurityConfig
-  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("org.springframework.boot:spring-boot-starter-graphql")
   implementation("org.springframework.boot:spring-boot-starter-hateoas")
   implementation("org.springframework.boot:spring-boot-starter-mail")
-
+  implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -81,6 +84,7 @@ dependencies {
   runtimeOnly("com.mysql:mysql-connector-j")
   implementation("org.flywaydb:flyway-core")
   implementation("org.flywaydb:flyway-mysql")
+  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   /**------------------------------------------------------------------------------------------------------------------------
    * WICHTIGE EXTRAS
@@ -95,19 +99,22 @@ dependencies {
    * --------------------------------------------------------------------------------------------------------------------*/
   implementation("com.google.guava:guava:30.1-jre") //für Splitt-operation in FlightRepository
   developmentOnly("org.springframework.boot:spring-boot-devtools")
-  runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+//  implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
+//  implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
+
   /**------------------------------------------------------------------------------------------------------------------------
    * OBSERVABILITY
    * --------------------------------------------------------------------------------------------------------------------*/
-  implementation("io.micrometer:micrometer-tracing-bridge-brave")
-  implementation("io.zipkin.reporter2:zipkin-reporter-brave")
+//  implementation("io.micrometer:micrometer-tracing-bridge-brave")
+//  implementation("io.zipkin.reporter2:zipkin-reporter-brave")
+//  runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 }
 
-tasks.withType<Test> {
-  useJUnitPlatform()
-}
-
-
+//dependencyManagement {
+//	imports {
+//		mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+//	}
+//}
 
 tasks.withType<Test> {
   useJUnitPlatform()

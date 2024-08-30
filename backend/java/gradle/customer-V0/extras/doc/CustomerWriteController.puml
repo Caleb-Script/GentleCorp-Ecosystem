@@ -1,0 +1,137 @@
+@startuml CustomerWriteController
+
+skinparam classAttributeIconSize 0
+
+package jakarta.servlet.http {
+    class HttpServletRequest
+}
+
+package org.springframework {
+    package stereotype {
+        interface "@Controller" as Controller
+    }
+
+    package web.bind.annotation {
+        interface "@RequestMapping" as RequestMapping
+        interface "@PathVariable" as PathVariable
+        interface "@RequestBody" as RequestBody
+        interface "@ExceptionHandler" as ExceptionHandler
+
+        RequestBody .left[hidden].> Controller
+        ExceptionHandler .left[hidden].> Controller
+    }
+
+    package http {
+        class ResponseEntity<T>
+        class ProblemDetail
+
+        package converter {
+            class HttpMessageNotReadableException
+        }
+
+        ResponseEntity .[hidden].> ProblemDetail
+        ResponseEntity .left[hidden].> Controller
+        ProblemDetail .[hidden].> HttpMessageNotReadableException
+    }
+
+    package security.core {
+        class Authentication
+        class Jwt
+        ProblemDetail .right[hidden].> Authentication
+    }
+}
+
+package java.util {
+    interface Collection<T>
+    class UUID
+    class Optional<T>
+
+    Collection .[hidden].> Optional
+    Optional .[hidden].> UUID
+    HttpServletRequest .up[hidden].> UUID
+}
+
+package com.gentle.bank.customer {
+    package dto {
+        class CustomerCreateDTO
+        class CustomerDTO
+        class PasswordDTO
+    }
+
+    package mapper {
+        class CustomerInputMapper
+    }
+
+    package service {
+        class JwtService
+        class CustomerWriteService
+    }
+
+    package exception {
+        class ConstraintViolationsException
+        class EmailExistsException
+        class VersionInvalidException
+        class VersionOutdatedException
+    }
+
+    package service.patch {
+        class InvalidPatchOperationException
+    }
+
+    package util {
+        class UriHelper
+    }
+
+    package controller {
+        class CustomerWriteController << boundary >> << @Controller >> << @RequestMapping(CUSTOMER_PATH) >> {
+            + @PostMapping post(@RequestBody customerCreateDTO: dto.CustomerCreateDTO, request: HttpServletRequest, @AuthenticationPrincipal jwt: security.core.Jwt): ResponseEntity<Void>
+            + @PutMapping(path = "{id:" + ID_PATTERN + "}", consumes = APPLICATION_JSON_VALUE) put(@PathVariable id: java.util.UUID, @RequestBody customerDTO: dto.CustomerDTO, @RequestHeader("If-Match") version: java.util.Optional<String>, request: HttpServletRequest, @AuthenticationPrincipal jwt: security.core.Jwt): ResponseEntity<Void>
+            + @PutMapping(path = "{id:" + ID_PATTERN + "}/password", consumes = APPLICATION_JSON_VALUE) updatePassword(@PathVariable id: java.util.UUID, @RequestBody passwordDTO: dto.PasswordDTO, @AuthenticationPrincipal jwt: security.core.Jwt): ResponseEntity<Void>
+            + @DeleteMapping(path = "{id:" + ID_PATTERN + "}") delete(@PathVariable id: java.util.UUID, @AuthenticationPrincipal jwt: security.core.Jwt): ResponseEntity<Void>
+            + @ExceptionHandler handleException(e: Exception): ResponseEntity<org.springframework.http.ProblemDetail>
+        }
+
+
+        CustomerWriteController o-right-> "1" CustomerWriteService : service
+        CustomerWriteController o-right-> "1" JwtService : jwt
+        CustomerWriteController o-down-> "1" CustomerInputMapper : mapper
+        CustomerWriteController o-down-> "1" UriHelper : uriHelper
+        CustomerWriteController .down.> CustomerCreateDTO
+        CustomerWriteController .down.> CustomerDTO
+        CustomerWriteController .down.> PasswordDTO
+        CustomerWriteController .down.> ConstraintViolationsException
+        CustomerWriteController .down.> EmailExistsException
+        CustomerWriteController .down.> VersionInvalidException
+        CustomerWriteController .down.> VersionOutdatedException
+        CustomerWriteController .down.> InvalidPatchOperationException
+
+        CustomerWriteController .up.> HttpServletRequest
+        CustomerWriteController .up.> ResponseEntity
+
+
+        CustomerWriteController .up.> Jwt
+        CustomerWriteController .up.> Collection
+        CustomerWriteController .up.> Optional
+        CustomerWriteController .up.> UUID
+        CustomerWriteController .up.> RequestMapping
+        CustomerWriteController .up.> PathVariable
+        CustomerWriteController .up.> RequestBody
+        CustomerWriteController .up.> ExceptionHandler
+
+        CustomerWriteController .up.> Controller
+        CustomerWriteController .up.> Controller
+        CustomerWriteController .up.> Authentication
+        CustomerWriteController .up.> org.springframework.http.converter.HttpMessageNotReadableException
+        CustomerWriteController .up.> ProblemDetail
+
+        ProblemDetail .right[hidden].> Authentication
+        HttpServletRequest .up[hidden].> UUID
+
+    }
+}
+
+hide empty members
+
+footer (c) Caleb Gyamfi
+
+@enduml
