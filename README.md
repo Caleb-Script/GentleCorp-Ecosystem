@@ -7,16 +7,17 @@ Welcome to the GentleCorp-Ecosystem! This project is a comprehensive suite of mi
 1. [Overview](#overview)
 2. [Dienste](#dienste)
 3. [Microservices](#microservices)
-3. [Tech Stack](#tech-stack)
+4. [Datenbanktechnologie für Microservice](#datenbanktechnologie-für-microservices)
+5. [Tech Stack](#tech-stack)
    - [Frontend](#frontend)
    - [Backend](#backend)
    - [Technologies Used](#technologies-used)
-4. [Repository Structure](#repository-structure)
-5. [Getting Started](#getting-started)
+6. [Repository Structure](#repository-structure)
+7. [Getting Started](#getting-started)
    - [Using Docker](#Starting with Docker)
    - [Starting Individually](#Starting Individual Services)
-6. [Contributing](#contributing)
-7. [License](#license)
+8. [Contributing](#contributing)
+9. [License](#license)
 
 ---
 
@@ -278,6 +279,90 @@ Das GentleCorp-Ecosystem setzt auf eine Reihe spezialisierter Microservices, die
 - **Exclusive**: Erweiteter Zugriff mit zusätzlichen Funktionen und personalisiertem Support.
 - **Supreme**: Vollständiger Zugriff auf alle Dienste, einschließlich exklusiver Funktionen und Zugang zu GentleAnalytics.
 
+## Datenbanktechnologie für Microservices
+
+Die Auswahl der Datenbanktechnologie für die verschiedenen Microservices im GentleCorp-Ecosystem ist entscheidend für die Performance, Skalierbarkeit und Zuverlässigkeit des Systems. Nachfolgend sind die empfohlenen Datenbanktechnologien für jeden Microservice aufgelistet:
+
+1. **Auction Service**
+   - **Technologie**: PostgreSQL
+   - **Begründung**: Bietet starke Unterstützung für Transaktionen, ideal für Gebotsmanagement.
+
+2. **Property Service**
+   - **Technologie**: MySQL
+   - **Begründung**: Hohe Leistung bei der Verarbeitung von strukturierten Daten, ideal für Immobilieninformationen.
+
+3. **Notification Service**
+   - **Technologie**: Redis
+   - **Begründung**: Geeignet für schnelle, temporäre In-Memory-Datenverarbeitung, ideal für Echtzeit-Benachrichtigungen.
+
+4. **Order Service**
+   - **Technologie**: PostgreSQL
+   - **Begründung**: Robuste Unterstützung für ACID-Transaktionen, erforderlich für die Verwaltung von Bestellungen.
+
+5. **Inventory Service**
+   - **Technologie**: MySQL
+   - **Begründung**: Leistungsstark und stabil, ideal für die Verwaltung von Lagerbeständen.
+
+6. **Menu Service**
+   - **Technologie**: MySQL
+   - **Begründung**: Effizient für die Verwaltung von strukturierten Daten wie Menüs und Speisekarten.
+
+7. **Payment Service**
+   - **Technologie**: PostgreSQL
+   - **Begründung**: Hohe Zuverlässigkeit und Unterstützung für Transaktionen, ideal für Finanztransaktionen.
+
+8. **Customer Service**
+   - **Technologie**: MySQL
+
+9. **Account Service**
+   - **Technologie**: MySQL
+
+10. **Invoice Service**
+    - **Technologie**: PostgreSQL
+    - **Begründung**: Präzise Datenverfolgung und Speicherung sind erforderlich, was PostgreSQL gut erfüllt.
+
+11. **Activity Log Service**
+    - **Technologie**: MongoDB
+    - **Begründung**: Eignet sich für die Speicherung großer Mengen an Protokolldaten, die flexibel und schnell zugänglich sein müssen.
+
+12. **Recommendation Service**
+    - **Technologie**: Neo4j
+    - **Begründung**: Optimal für die Darstellung und Analyse von Netzwerken und Beziehungen zwischen Entitäten.
+
+13. **Product Service**
+    - **Technologie**: MySQL
+    - **Begründung**: Bewährte Lösung für die Verwaltung eines umfangreichen Produktkatalogs.
+
+14. **Transaction Service**
+    - **Technologie**: PostgreSQL
+    - **Begründung**: Stabile Wahl für Finanztransaktionen mit Unterstützung für Transaktionen.
+
+15. **Booking Service**
+    - **Technologie**: PostgreSQL
+    - **Begründung**: Benötigt eine relationale Datenbank mit starker Unterstützung für Transaktionen und Datenintegrität.
+
+16. **Reviews Service**
+    - **Technologie**: MongoDB
+    - **Begründung**: Flexibel für das Speichern unstrukturierter Benutzerbewertungen.
+
+17. **ShoppingCart Service**
+    - **Technologie**: Redis
+    - **Begründung**: Optimal für die schnelle, temporäre Speicherung von Warenkorbdaten.
+
+18. **Transport Service**
+    - **Technologie**: MySQL
+    - **Begründung**: Effiziente Verwaltung von Transportoptionen durch eine relationale Datenbank.
+
+19. **Entertainment Service**
+    - **Technologie**: MongoDB
+    - **Begründung**: Geeignet für unstrukturierte Unterhaltungselemente wie Filme und Musik.
+
+20. **Activity Service**
+    - **Technologie**: PostgreSQL
+    - **Begründung**: Zuverlässig für die Planung und Buchung von Aktivitäten durch die Unterstützung von relationalen Daten.
+
+Diese Empfehlungen basieren auf den spezifischen Anforderungen der jeweiligen Microservices und den Stärken der vorgeschlagenen Datenbanktechnologien.
+
 ## Tech Stack
 
 Das GentleCorp-Ecosystem basiert auf einer Vielzahl spezialisierter Microservices, die jeweils spezifische Funktionen erfüllen, um die nahtlose Integration und den reibungslosen Betrieb der Dienste zu gewährleisten. Hier ist eine Übersicht der relevanten Microservices:
@@ -291,6 +376,7 @@ Das GentleCorp-Ecosystem basiert auf einer Vielzahl spezialisierter Microservice
 ### Backend
 
 - **Python (FastAPI)**:
+
   - Notification Service
   - Recommendation Service
   - Activity Log Service
@@ -298,6 +384,7 @@ Das GentleCorp-Ecosystem basiert auf einer Vielzahl spezialisierter Microservice
   - Transport Service
 
 - **TypeScript (NestJS)**:
+
   - Order Service
   - Inventory Service
   - Menu Service
@@ -309,6 +396,7 @@ Das GentleCorp-Ecosystem basiert auf einer Vielzahl spezialisierter Microservice
 - **Java (Spring Boot)**:
 
   - **Gradle**:
+
     - Customer Service
     - Account Service
     - Transaction Service
@@ -492,6 +580,30 @@ For Java-based services, you can start them individually. The commands depend on
 
    ```bash
    npm run dev
+   ```
+
+**Python (FastAPI):**
+
+1. Navigate to the specific backend service directory:
+
+   ```bash
+   cd backend/python/notification
+   cd backend/python/recommendation
+   cd backend/python/activity-log
+   cd backend/python/reviews
+   cd backend/python/transport
+   ```
+
+2. Install dependencies (preferably in a virtual environment):
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Start the FastAPI service:
+
+   ```bash
+   uvicorn main:app --reload
    ```
 
 ## Contributing
