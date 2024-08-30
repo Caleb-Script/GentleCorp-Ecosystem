@@ -62,7 +62,15 @@ public class AccountReadService {
     log.debug("find: searchCriteria={}", searchCriteria);
 
     if (searchCriteria.isEmpty()) {
-      return accountRepository.findAll();
+      final var accounts = accountRepository.findAll();
+
+      accounts.forEach(account -> {
+        final var customer = findCustomerById(account.getCustomerId(), token);
+        final var customerUsername = customer.username();
+        account.setCustomerUsername(customerUsername);
+      });
+
+      return accounts;
     }
 
     final var specification = specificationBuilder
