@@ -1,8 +1,6 @@
 package com.gentlecorp.transaction.repository;
 
 import com.gentlecorp.transaction.model.entity.Transaction;
-import com.gentlecorp.transaction.model.entity.Transaction;
-import com.gentlecorp.transaction.model.entity.Transaction;
 import com.gentlecorp.transaction.model.entity.Transaction_;
 import com.gentlecorp.transaction.model.enums.TransactionType;
 import lombok.extern.slf4j.Slf4j;

@@ -3,9 +3,9 @@ package com.gentlecorp.transaction.exception;
 import lombok.Getter;
 
 /**
- * Exception thrown when an attempt is made to create a user with a username that already exists.
+ * Exception thrown when an attempt is made to create a user with a customerUsername that already exists.
  * <p>
- * This exception is used to indicate that the username provided during user registration
+ * This exception is used to indicate that the customerUsername provided during user registration
  * or update is already taken by another user. This prevents duplicate usernames in the system.
  * </p>
  *
@@ -16,14 +16,14 @@ import lombok.Getter;
 @Getter
 public class UsernameExistsException extends RuntimeException {
   /**
-   * The username that already exists.
+   * The customerUsername that already exists.
    */
   private final String username;
 
   /**
-   * Constructs a new {@code UsernameExistsException} with the specified username.
+   * Constructs a new {@code UsernameExistsException} with the specified customerUsername.
    *
-   * @param username The username that already exists.
+   * @param username The customerUsername that already exists.
    */
   public UsernameExistsException(final String username) {
     super("Der Benutzername " + username + " existiert bereits.");

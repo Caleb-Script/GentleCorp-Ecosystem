@@ -21,7 +21,7 @@ public class JwtService {
       throw new NotFoundException();
     }
     final var username = (String) jwt.getClaims().get("preferred_username");
-    log.debug("JwtService: username={}", username);
+    log.debug("JwtService: customerUsername={}", username);
     return username;
   }
 

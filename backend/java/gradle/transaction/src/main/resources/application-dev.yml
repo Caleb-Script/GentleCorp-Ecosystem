@@ -14,7 +14,7 @@ MYSQL_PORT: 3306
 MYSQL_CLASS_NAME: com.mysql.cj.jdbc.Driver
 
 #Server
-SERVER_PORT: 8081
+SERVER_PORT: 8082
 ACTIVE_PROFILE: dev
 
 #keycloak

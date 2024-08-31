@@ -11,6 +11,7 @@ public enum TransactionType {
   WITHDRAWAL("Withdrawal"),
   TRANSFER("Transfer"),
     INCOME("Income"),
+  REFUND("Refund"),
   PAYMENT("Payment");
 
     private final String type;

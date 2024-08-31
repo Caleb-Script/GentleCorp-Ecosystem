@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @JsonPropertyOrder({
-  "balance", "rateOfInterest", "withdrawalLimit", "category", "state", "username"
+  "balance", "rateOfInterest", "withdrawalLimit", "category", "state", "customerUsername"
 })
 @Relation(collectionRelation = "accounts", itemRelation = "account")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
@@ -27,7 +27,7 @@ public class AccountModel extends RepresentationModel<AccountModel> {
   private final UUID customerId;
   private final AccountType category;
   private final StatusType state;
-  private final String username;
+  private final String customerUsername;
 
   public AccountModel(final Account account) {
     this.balance = account.getBalance();
@@ -36,6 +36,6 @@ public class AccountModel extends RepresentationModel<AccountModel> {
     this.customerId = account.getCustomerId();
     this.category = account.getCategory();
     this.state = account.getState();
-    this.username = account.getCustomerUsername();
+    this.customerUsername = account.getCustomerUsername();
   }
 }

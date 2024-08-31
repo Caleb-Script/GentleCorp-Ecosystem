@@ -15,12 +15,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 
-import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+
+import static com.gentlecorp.transaction.model.enums.TransactionType.DEPOSIT;
+import static com.gentlecorp.transaction.model.enums.TransactionType.INCOME;
+import static com.gentlecorp.transaction.model.enums.TransactionType.PAYMENT;
+import static com.gentlecorp.transaction.model.enums.TransactionType.REFUND;
+import static com.gentlecorp.transaction.model.enums.TransactionType.TRANSFER;
+import static com.gentlecorp.transaction.model.enums.TransactionType.WITHDRAWAL;
 
 @Service
 @Transactional(readOnly = true)
@@ -37,16 +43,16 @@ public class TransactionReadService {
     final String role,
     final String token
     ) {
-    log.debug("findById: id={}, username={}, role={}", id, username, role);
+    log.debug("findById: id={}, customerUsername={}, role={}", id, username, role);
     final var transaction = transactionRepository.findById(id).orElseThrow(NotFoundException::new);
 
     if (transaction == null) {
       throw new NotFoundException(id);
     }
 //    final var account = findAccountById(transaction.getAccountId(), token);
-//    transaction.setAccountUsername(account.username());
+//    transaction.setAccountUsername(account.customerUsername());
 //
-//    if (transaction.getAccountUsername().contentEquals(username)) {
+//    if (transaction.getAccountUsername().contentEquals(customerUsername)) {
 //      return transaction;
 //    }
 
@@ -65,7 +71,7 @@ public class TransactionReadService {
 
 //      transactions.forEach(transaction -> {
 //        final var account = findAccountById(transaction.getAccountId(), token);
-//        final var accountUsername = account.username();
+//        final var accountUsername = account.customerUsername();
 //        transaction.setAccountUsername(accountUsername);
 //      });
 
@@ -82,7 +88,7 @@ public class TransactionReadService {
 
 //    transactions.forEach(transaction -> {
 //      final var account = findAccountById(transaction.getAccountId(), token);
-//      final var accountUsername = account.username();
+//      final var accountUsername = account.customerUsername();
 //      transaction.setAccountUsername(accountUsername);
 //    });
 
@@ -99,12 +105,42 @@ public class TransactionReadService {
     }
 
     final var account = findAccountById(accountId, token);
-    final var accountUsername = account.username();
+    final var accountUsername = account.customerUsername();
     log.trace("findByAccountId: accountUsername={}", accountUsername);
+
+//    if(!accountUsername.equals(username) && !Objects.equals(role, "ADMIN") && !Objects.equals(role, "USER")) {
+//      throw new AccessForbiddenException(accountUsername);
+//    }
 
     if(!accountUsername.equals(username)) {
       throw new AccessForbiddenException(accountUsername);
     }
+
+    transactions.forEach(transaction -> {
+        if(accountId.equals(transaction.getSender())) {
+          if(transaction.getReceiver() == null) {
+            transaction.setType(DEPOSIT);
+          } else {
+            transaction.setType(TRANSFER);
+          }
+        }
+
+      if(accountId.equals(transaction.getReceiver())) {
+        if (transaction.getSender() == null) {
+          transaction.setType(WITHDRAWAL);
+        } else {
+          transaction.setType(INCOME);
+        }
+      }
+
+      if(transaction.getReceiver().equals(UUID.fromString("00000000-0000-0000-0000-000000000000"))) {
+        transaction.setType(PAYMENT);
+      }
+
+      if(transaction.getSender().equals(UUID.fromString("00000000-0000-0000-0000-000000000000"))) {
+        transaction.setType(REFUND);
+      }
+      });
 
     log.debug("findByAccountId: transactions={}", transactions);
     return transactions;

@@ -23,12 +23,12 @@ public class TransactionModel extends RepresentationModel<TransactionModel> {
   private final BigDecimal amount;
   private final UUID sender;
   private final UUID receiver;
-//  private final TransactionType type;
+  private final TransactionType type;
 
   public TransactionModel(final Transaction transaction) {
     this.amount = transaction.getAmount();
     this.sender = transaction.getSender();
     this.receiver = transaction.getReceiver();
-//    this.type = transaction.getType();
+    this.type = transaction.getType();
   }
 }

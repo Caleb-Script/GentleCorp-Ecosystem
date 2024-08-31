@@ -55,10 +55,10 @@ public class TransactionReadController {
     @AuthenticationPrincipal final Jwt jwt
   ) {
     final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, version={}, username={}", id, version, username);
+    log.debug("getById: id={}, version={}, customerUsername={}", id, version, username);
 
     if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a username in the JWT");
+      log.error("Despite Spring Security, getById() was called without a customerUsername in the JWT");
       return status(UNAUTHORIZED).build();
     }
     final var role = jwtService.getRole(jwt);
@@ -123,10 +123,10 @@ public class TransactionReadController {
     @AuthenticationPrincipal final Jwt jwt
   ) {
     final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, username={}", id, username);
+    log.debug("getById: id={}, customerUsername={}", id, username);
 
     if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a username in the JWT");
+      log.error("Despite Spring Security, getById() was called without a customerUsername in the JWT");
       return status(UNAUTHORIZED).build();
     }
     final var role = jwtService.getRole(jwt);

@@ -39,9 +39,8 @@ public class Transaction {
   @Version
   private int version;
 
-//  @Enumerated(EnumType.STRING)
-//  @Transient
-//  private TransactionType type;
+  @Transient
+  private TransactionType type;
 
   private BigDecimal amount;
 
