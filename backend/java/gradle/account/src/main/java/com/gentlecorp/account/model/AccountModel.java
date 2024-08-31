@@ -16,7 +16,7 @@ import java.util.UUID;
 @JsonPropertyOrder({
   "balance", "rateOfInterest", "withdrawalLimit", "category", "state", "username"
 })
-@Relation(collectionRelation = "addresses", itemRelation = "address")
+@Relation(collectionRelation = "accounts", itemRelation = "account")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Getter
 @ToString(callSuper = true)

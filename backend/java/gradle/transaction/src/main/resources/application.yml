@@ -1,0 +1,45 @@
+
+spring:
+  application:
+    name: transaction
+
+  profiles:
+    active: ${ACTIVE_PROFILE:dev}
+
+  datasource:
+    url: jdbc:${POSTGRESQL_URL:}://${DATABASE_HOST:}:${POSTGRESQL_PORT}/${DATABASE_DB}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+#    driver-class-name: ${DRIVER_CLASS_NAME}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://${KEYCLOAK_HOST}:${KEYCLOAK_PORT}/realms/GentleCorp-Ecosystem
+
+com:
+  c4-soft:
+    springaddons:
+      oidc:
+        ops:
+          - iss: http://${KEYCLOAK_HOST}:${KEYCLOAK_PORT}/realms/GentleCorp-Ecosystem
+            authorities:
+            # Pfad zu den Rollen innerhalb vom "JWT Claim" und zusaetzlicher Praefix "ROLE_" fuer Spring Security
+            - path: $.realm_access.roles
+              prefix: ROLE_
+
+app:
+  keycloak:
+    client-secret: FiAT2ma40CGVmctDNOOG9h1XtlAqA7Vb
+    #schema: http
+    host: ${KEYCLOAK_HOST}
+    port: ${KEYCLOAK_PORT}
+    client-id: gentlecorp-client
+  #logfile: ./build/log/application.log
+  password: p
+  #password-falsch: FALSCH
+
+
+server:
+  port: ${SERVER_PORT}

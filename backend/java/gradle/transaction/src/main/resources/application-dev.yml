@@ -1,0 +1,113 @@
+#Database
+DATABASE_USERNAME: transaction_db_user
+DATABASE_PASSWORD: GentleCorp21.08.2024
+DATABASE_HOST: localhost
+DATABASE_DB: transaction_db
+
+#Postgres
+POSTGRESQL_URL: postgresql
+POSTGRESQL_PORT: 5432
+
+#MySQL
+MYSQL_URL: mysql
+MYSQL_PORT: 3306
+MYSQL_CLASS_NAME: com.mysql.cj.jdbc.Driver
+
+#Server
+SERVER_PORT: 8081
+ACTIVE_PROFILE: dev
+
+#keycloak
+KEYCLOAK_HOST: localhost
+KEYCLOAK_PORT: 8880
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  flyway:
+    clean-disabled: false
+    #clean-on-validation-error: true # Tabellen werden beim Validierungsfehler gelöscht
+    create-schemas: false
+    #tablespace: customer_tablespace
+
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+      properties:
+        hibernate:
+          jdbc:
+            time_zone: UTC
+          globally_quoted_identifiers: true
+          format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  mvc.log-request-details: true
+  output.ansi.enabled: ALWAYS
+
+# --------------------------------------------------------
+# E i g e n e   P r o p e r t i e s
+# --------------------------------------------------------
+#app:
+#  keycloak:
+#    #client-secret: ${keycloak.client-secret}
+#    #schema: http
+#    host: localhost
+#    port: 8880
+#    client-secret: 6J3uzo8E8jbCUbiraQIAOKuPRA4xKO7S
+#    client-id: GentleBank
+  #mail:
+  #  from: Theo Test <theo@test.de>
+  #  sales: Maxi Musterfrau <maxi.musterfrau@test.de>
+
+
+logging:
+  file.name: ./logs/application.log
+  logback.rollingpolicy:
+    file-name-pattern: ${logging.file.name}.%d{yyyy-MM-dd}.%i.gz
+    max-file-size: 100KB
+    max-history: 3
+  pattern:
+    console: "%clr(%date{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}){faint} %clr(%5level) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15thread]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %msg%n%wEx"
+    file: "%date{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5level ${PID:- } --- [%thread] %-40.40logger{39} : %m%n%wEx"
+  threshold:
+    console: trace
+    file: trace
+  level:
+    com.gentlecorp: trace
+    org.apache.catalina.loader.WebappClassLoaderBase: info
+    org.springframework.boot.availability.ApplicationAvailabilityBean: debug
+    org.springframework.boot.devtools.autoconfigure.ConditionEvaluationDeltaLoggingListener: warn
+    #org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean: debug
+    org.springframework.security.core.userdetails.User: error
+    org.springframework.security.web.server.authorization.AuthorizationWebFilter: trace
+    org.springframework.web.reactive.function.client.ExchangeFunctions: trace
+    org.springframework.web.service.invoker.PathVariableArgumentResolver: trace
+    org.springframework.web.service.invoker.RequestHeaderArgumentResolver: trace
+    org.springframework.web.servlet.DispatcherServlet: debug
+    org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor: debug
+    org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: debug
+    org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver: error
+    io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor: error
+
+#    org.springframework.security: debug
+#    org.springframework.security.oauth2: debug
+
+#    org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider: debug
+#    org.springframework.security.web.access.intercept.RequestMatcherDelegatingAuthorizationManager: debug
+#    org.springframework.security.web.FilterChainProxy: debug
+
+    org.hibernate.SQL: debug
+#    org.hibernate.orm.jdbc.bind: debug
+    org.hibernate.orm.jdbc.bind: trace
+    org.hibernate.SQL_SLOW: warn
+    org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor: debug
+
+    io.qameta.allure.AllureLifecycle: fatal
+    org.junit.jupiter.engine.descriptor.TestInstanceLifecycleUtils: warn
+    org.springframework.boot.test.context.SpringBootTestContextBootstrapper: warn
+    org.springframework.test.context.support.AbstractContextLoader: warn
+    org.springframework.test.context.support.AnnotationConfigContextLoaderUtils: warn
+    org.springframework.test.context.support.DefaultTestContextBootstrapper: warn
