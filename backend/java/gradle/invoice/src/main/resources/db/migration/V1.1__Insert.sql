@@ -1,0 +1,6 @@
+
+INSERT INTO invoice (id, version, amount, due_date, type, account_Id, created, modified)
+VALUES ('40000000-0000-0000-0000-000000000000', 0, 50, '2024-09-30', 'PENDING', '20000000-0000-0000-0000-000000000000', '2024-08-31 00:00:00', '2024-08-31 00:00:00');
+
+INSERT INTO payment (id, amount, invoice_id, idx, created)
+VALUES ('50000000-0000-0000-0000-000000000000', 10, '40000000-0000-0000-0000-000000000000', 0, '2024-08-31 00:00:00')
