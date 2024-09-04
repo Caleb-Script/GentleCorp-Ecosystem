@@ -1,6 +1,9 @@
 package com.gentlecorp.customer.util;
 
+import com.gentlecorp.customer.exception.VersionAheadException;
 import com.gentlecorp.customer.exception.VersionInvalidException;
+import com.gentlecorp.customer.exception.VersionOutdatedException;
+import com.gentlecorp.customer.model.interfaces.VersionedEntity;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,5 +40,16 @@ public class VersionUtils {
     return versionStr.length() >= 3 &&
       versionStr.charAt(0) == '"' &&
       versionStr.charAt(versionStr.length() - 1) == '"';
+  }
+
+  public static void validateVersion(int version, VersionedEntity entity) {
+    if (version < entity.getVersion()) {
+      log.error("Version is outdated");
+      throw new VersionOutdatedException(version);
+    }
+    if (version > entity.getVersion()) {
+      log.error("Version is ahead of the current version");
+      throw new VersionAheadException(version);
+    }
   }
 }

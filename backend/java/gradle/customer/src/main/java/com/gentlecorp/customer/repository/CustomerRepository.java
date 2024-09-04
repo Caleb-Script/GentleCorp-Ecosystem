@@ -43,4 +43,5 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID>, JpaSp
   Optional<Customer> findByIdFetchAll(UUID id);
 
   boolean existsByEmail(String email);
+  boolean existsByUsername(String username);
 }

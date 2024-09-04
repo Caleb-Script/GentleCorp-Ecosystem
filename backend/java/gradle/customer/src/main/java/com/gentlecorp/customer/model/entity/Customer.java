@@ -5,6 +5,7 @@ import com.gentlecorp.customer.model.enums.StatusType;
 import com.gentlecorp.customer.model.enums.GenderType;
 import com.gentlecorp.customer.model.enums.InterestType;
 import com.gentlecorp.customer.model.enums.MaritalStatusType;
+import com.gentlecorp.customer.model.interfaces.VersionedEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -35,7 +36,7 @@ import static java.util.Collections.emptyList;
 @Setter
 @ToString
 @Builder
-public class Customer {
+public class Customer implements VersionedEntity {
 
   public static final String ADDRESS_GRAPH = "Customer.address";
   public static final String ALL_GRAPH = "Customer.all";

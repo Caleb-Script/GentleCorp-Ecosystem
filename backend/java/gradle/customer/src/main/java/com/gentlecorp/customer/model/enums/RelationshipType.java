@@ -7,13 +7,13 @@ import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 public enum RelationshipType {
-  PARTNER("Partner"),
-  BUSINESS_PARTNER("Business Partner"),
-  RELATIVE("Relative"),
-  COLLEAGUE("Colleague"),
-  PARENT("Parent"),
-  SIBLING("Sibling"),
-  CHILD("Child");
+  PARTNER("PN"),
+  BUSINESS_PARTNER("BP"),
+  RELATIVE("R"),
+  COLLEAGUE("C"),
+  PARENT("P"),
+  SIBLING("S"),
+  CHILD("CH");
 
   private final String relationship;
 

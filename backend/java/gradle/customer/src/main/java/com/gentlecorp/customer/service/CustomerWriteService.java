@@ -5,9 +5,13 @@ import com.gentlecorp.customer.exception.AccessForbiddenException;
 import com.gentlecorp.customer.exception.EmailExistsException;
 import com.gentlecorp.customer.exception.IllegalArgumentException;
 import com.gentlecorp.customer.exception.NotFoundException;
+import com.gentlecorp.customer.exception.PasswordInvalidException;
+import com.gentlecorp.customer.exception.UsernameExistsException;
+import com.gentlecorp.customer.exception.VersionInvalidException;
 import com.gentlecorp.customer.exception.VersionOutdatedException;
 import com.gentlecorp.customer.model.entity.Contact;
 import com.gentlecorp.customer.model.entity.Customer;
+import com.gentlecorp.customer.model.interfaces.VersionedEntity;
 import com.gentlecorp.customer.repository.ContactRepository;
 import com.gentlecorp.customer.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +25,13 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static com.gentlecorp.customer.model.enums.StatusType.ACTIVE;
+import static com.gentlecorp.customer.util.Constants.LOWERCASE;
+import static com.gentlecorp.customer.util.Constants.MIN_LENGTH;
+import static com.gentlecorp.customer.util.Constants.NUMBERS;
+import static com.gentlecorp.customer.util.Constants.SYMBOLS;
+import static com.gentlecorp.customer.util.Constants.UPPERCASE;
+import static com.gentlecorp.customer.util.VersionUtils.validateVersion;
+import static java.util.Locale.GERMAN;
 
 @Service
 @Transactional
@@ -34,7 +45,6 @@ public class CustomerWriteService {
   private final MailService mailService;
   private final MailProps props;
   private final KeycloakService keycloakService;
-  private final JwtService jwtService;
 
   public Customer create(final Customer customer, final String password) {
     customer.setCustomer_state(ACTIVE);
@@ -43,6 +53,16 @@ public class CustomerWriteService {
 
     if (customerRepository.existsByEmail(customer.getEmail()))
       throw new EmailExistsException(customer.getEmail());
+
+    final var username = customer.getUsername();
+    customer.setUsername(username.toLowerCase(GERMAN));
+    final var isUsernameExisting = customerRepository.existsByUsername(username);
+    if (isUsernameExisting)
+      throw new UsernameExistsException(username);
+
+    if (!checkPassword(password)) {
+      throw new PasswordInvalidException(password);
+    }
 
     log.warn("create: customer={}", customer);
     final var customerDb = customerRepository.save(customer);
@@ -72,50 +92,51 @@ public class CustomerWriteService {
 
     customer.setCustomer_state(ACTIVE);
     final var customerDb = customerRepository.findById(id).orElseThrow(() -> new NotFoundException(id));
-
     final var userAndRole = customerReadService.validateJwtAndGetUsernameAndRole(jwt);
-    final var username = userAndRole.getLeft();
-    final var role = userAndRole.getRight();
+    final var validatedUsername = userAndRole.getLeft();
+    final var validatedRole = userAndRole.getRight();
 
-    if (!Objects.equals(customerDb.getUsername(), username) && !Objects.equals(role, "ADMIN")) {
-      throw new AccessForbiddenException(role);
+    if (!Objects.equals(customerDb.getUsername(), validatedUsername) && !Objects.equals(validatedRole, "ADMIN")) {
+      throw new AccessForbiddenException(validatedRole);
     }
-
-    if (version != customerDb.getVersion()) {
-      log.error("Version is not the current version");
-      throw new VersionOutdatedException(version);
-    }
-
+    validateVersion(version, customerDb);
     final var email = customer.getEmail();
     if (!Objects.equals(email, customerDb.getEmail()) && customerRepository.existsByEmail(email)) {
       log.error("update: email {} already exists", email);
       throw new EmailExistsException(email);
     }
-    log.trace("update: No conflict with the email address");
 
+    final var username = customer.getUsername();
+    customer.setUsername(username.toLowerCase(GERMAN));
+    final var isUsernameExisting = customerRepository.existsByUsername(username);
+    if (isUsernameExisting && !username.equals(validatedUsername)) {
+      log.error("update: username {} already exists", email);
+      throw new UsernameExistsException(username);
+    }
+
+    log.trace("update: No conflict with the email address");
     customerDb.set(customer);
     customerDb.setContactOptionsString(customer.getContactOptions());
     log.debug("NEW contactOptionsString: {}", customerDb.getContactOptionsString());
-
     final var updatedCustomerDb = customerRepository.save(customerDb);
-
     log.debug("update: updatedCustomerDB={}", customerDb);
     log.debug("update: updatedCustomer={}", customerDb);
-
     keycloakService.update(updatedCustomerDb, jwt);
-
     return updatedCustomerDb;
   }
 
   public void updatePassword(final Jwt jwt, final String password) {
     log.debug("updatePassword: jwt={}", jwt);
-
+    if (!checkPassword(password)) {
+      throw new PasswordInvalidException(password);
+    }
     keycloakService.updatePassword(password, jwt);
   }
 
-  public List<Contact> addContact(final UUID customerId, final Contact contact, final Jwt jwt) {
+  public List<Contact> addContact(final UUID customerId, final Contact contact, final int version, final Jwt jwt) {
     log.debug("create: customerId={}, contact={}", customerId, contact);
     final var customerDb = customerReadService.findById(customerId, jwt, true);
+    validateVersion(version, customerDb);
     customerDb.getContacts().add(contact);
     return customerDb.getContacts();
   }
@@ -124,27 +145,36 @@ public class CustomerWriteService {
     log.debug("updateContact: customerId={}, contactId={}", customerId, contactId);
     final var customerDb = customerReadService.findById(customerId, jwt, true);
 
+
     final var contactDb = customerDb.getContacts()
       .stream()
       .filter(foundContact -> foundContact.getId().equals(contactId))
       .findFirst()
       .orElseThrow(() -> new NotFoundException(contactId));
 
+    validateVersion(version, contactDb);
     contactDb.set(contact);
     return contactRepository.save(contactDb);
   }
 
-  public void deleteById(final UUID id, final String token) {
+  public void deleteById(final UUID id, final int version, final String token) {
     log.debug("deleteById: id={}", id);
-
-    final var customer = customerRepository.findById(id).orElseThrow(NotFoundException::new);
-    keycloakService.delete(token, customer.getUsername());
-    customerRepository.delete(customer);
+    final var customerDb = customerRepository.findById(id).orElseThrow(NotFoundException::new);
+    validateVersion(version, customerDb);
+    keycloakService.delete(token, customerDb.getUsername());
+    customerRepository.delete(customerDb);
   }
 
-  public void removeContact(final UUID customerId, final UUID contactId,final int version, final Jwt jwt) {
+  public void removeContact(final UUID customerId, final UUID contactId, final int version, final Jwt jwt) {
     log.debug("removeContact: customerId={}, contactId={}, version={}", customerId, contactId, version);
     final var customerDb = customerReadService.findById(customerId, jwt, true);
+
+    final var contactDb = customerDb.getContacts().stream()
+        .filter(contact -> contact.getId().equals(contactId))
+          .findFirst()
+            .orElseThrow(() -> new NotFoundException(contactId));
+
+    validateVersion(version, contactDb);
 
     customerDb.getContacts()
       .stream()
@@ -153,4 +183,20 @@ public class CustomerWriteService {
       .forEach(contact -> customerDb.getContacts().remove(contact));
   }
 
+  @SuppressWarnings("ReturnCount")
+  private boolean checkPassword(final CharSequence password) {
+    if (password.length() < MIN_LENGTH) {
+      return false;
+    }
+    if (!UPPERCASE.matcher(password).matches()) {
+      return false;
+    }
+    if (!LOWERCASE.matcher(password).matches()) {
+      return false;
+    }
+    if (!NUMBERS.matcher(password).matches()) {
+      return false;
+    }
+    return SYMBOLS.matcher(password).matches();
+  }
 }

@@ -1,6 +1,7 @@
 package com.gentlecorp.customer.model.entity;
 
 import com.gentlecorp.customer.model.enums.RelationshipType;
+import com.gentlecorp.customer.model.interfaces.VersionedEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -31,7 +32,7 @@ import java.util.UUID;
 @Setter
 @ToString
 @Builder
-public class Contact {
+public class Contact implements VersionedEntity {
   @Id
   @GeneratedValue
   @EqualsAndHashCode.Include
