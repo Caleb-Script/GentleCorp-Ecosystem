@@ -108,13 +108,14 @@ public class TransactionReadService {
     final var accountUsername = account.customerUsername();
     log.trace("findByAccountId: accountUsername={}", accountUsername);
 
+    //TODO Security
 //    if(!accountUsername.equals(username) && !Objects.equals(role, "ADMIN") && !Objects.equals(role, "USER")) {
 //      throw new AccessForbiddenException(accountUsername);
 //    }
 
-    if(!accountUsername.equals(username)) {
-      throw new AccessForbiddenException(accountUsername);
-    }
+//    if(!accountUsername.equals(username)) {
+//      throw new AccessForbiddenException(accountUsername);
+//    }
 
     transactions.forEach(transaction -> {
         if(accountId.equals(transaction.getSender())) {

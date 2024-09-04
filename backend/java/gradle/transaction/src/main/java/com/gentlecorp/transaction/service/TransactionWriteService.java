@@ -18,6 +18,7 @@ public class TransactionWriteService {
   public Transaction create(final Transaction transaction) {
     log.debug("create: transaction={}", transaction);
 
+    //TODO mit account balannce
     final var transactionDb = transactionRepository.save(transaction);
     log.trace("create: Thread-ID={}", Thread.currentThread().threadId());
 

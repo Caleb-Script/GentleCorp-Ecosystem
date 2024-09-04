@@ -2,6 +2,7 @@ package com.gentlecorp.invoice.controller;
 
 import com.gentlecorp.invoice.model.InvoiceModel;
 import com.gentlecorp.invoice.model.entity.Invoice;
+import com.gentlecorp.invoice.model.entity.Payment;
 import com.gentlecorp.invoice.service.InvoiceReadService;
 import com.gentlecorp.invoice.service.JwtService;
 import com.gentlecorp.invoice.util.UriHelper;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -148,5 +150,29 @@ public class InvoiceReadController {
 
     log.debug("get: models={}", models);
     return ok().body(CollectionModel.of(models));
+  }
+
+  @GetMapping(path = "{invoiceId:" + ID_PATTERN + "}/payments", produces = HAL_JSON_VALUE)
+  public ResponseEntity<Collection<Payment>> getPaymentsByInvoice(
+    @PathVariable final UUID invoiceId,
+    @AuthenticationPrincipal final Jwt jwt
+  ) {
+    final var username = jwtService.getUsername(jwt);
+    log.debug("getById: id={}, customerUsername={}", invoiceId, username);
+
+    if (username == null) {
+      log.error("Despite Spring Security, getById() was called without a customerUsername in the JWT");
+      return status(UNAUTHORIZED).build();
+    }
+    final var role = jwtService.getRole(jwt);
+    if (role == null) {
+      log.error("Despite Spring Security, getRole() was called without a Role in the JWT");
+      return status(UNAUTHORIZED).build();
+    }
+    final var token = "Bearer " + jwt.getTokenValue();
+    final var invoice = invoiceReadService.findById(invoiceId,role, username, token);
+    final var payments = invoice.getPayments();
+
+    return ok().body(payments);
   }
 }

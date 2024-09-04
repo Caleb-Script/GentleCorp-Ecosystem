@@ -8,6 +8,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.UUID;
+
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface InvoiceMapper {
   Invoice toInvoice(InvoiceDTO invoiceDTO);

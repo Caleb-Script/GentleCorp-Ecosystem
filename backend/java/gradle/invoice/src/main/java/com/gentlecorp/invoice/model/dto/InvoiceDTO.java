@@ -6,7 +6,6 @@ import java.util.UUID;
 
 public record InvoiceDTO(
   BigDecimal amount,
-  UUID accountId,
   LocalDate dueDate) {
   public interface OnCreate { }
 }

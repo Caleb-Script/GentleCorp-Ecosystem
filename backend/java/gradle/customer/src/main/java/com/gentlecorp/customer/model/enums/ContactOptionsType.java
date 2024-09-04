@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 public enum ContactOptionsType {
   EMAIL("Email"),
   PHONE("Phone"),
-  MAIL("Mail"),
+  LETTER("Letter"),
   SMS("SMS");
 
   private final String option;

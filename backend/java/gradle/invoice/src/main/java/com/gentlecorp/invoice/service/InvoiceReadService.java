@@ -52,9 +52,9 @@ public class InvoiceReadService {
       return invoice;
     }
 
-    if (!Objects.equals(role, "ADMIN") && !Objects.equals(role, "USER")) {
-      throw new AccessForbiddenException(role);
-    }
+//    if (!Objects.equals(role, "ADMIN") && !Objects.equals(role, "USER")) {
+//      throw new AccessForbiddenException(role);
+//    }
     log.debug("findById: invoice={}", invoice);
     return invoice;
   }
@@ -141,7 +141,7 @@ public class InvoiceReadService {
 
   public BigDecimal findCurrentBalanceByAccountId(final UUID accountId, final String token) {
     log.debug("findCurrentBalanceByAccountId: accountId={}", accountId);
-    final var currentBalance = accountRepository.getBalanceById(accountId.toString(), token);
+    final var currentBalance = accountRepository.getBalanceById(accountId.toString(),"\"1\"", token);
     log.debug("findCurrentBalanceByAccountId: currentBalance={}", currentBalance);
     return currentBalance.getBody();
   }

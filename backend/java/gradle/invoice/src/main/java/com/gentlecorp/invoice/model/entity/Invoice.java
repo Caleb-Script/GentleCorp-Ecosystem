@@ -51,6 +51,7 @@ public class Invoice {
   @Enumerated(EnumType.STRING)
   private StatusType type;
 
+  //TODO invoice type Loan, invoice, ...
   private LocalDate dueDate;
 
   private BigDecimal amount;

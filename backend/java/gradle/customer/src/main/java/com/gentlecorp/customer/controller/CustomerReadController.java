@@ -1,9 +1,11 @@
 package com.gentlecorp.customer.controller;
 
+import com.gentlecorp.customer.model.BaseCustomerModel;
 import com.gentlecorp.customer.model.CustomerModel;
+import com.gentlecorp.customer.model.FullCustomerModel;
 import com.gentlecorp.customer.model.entity.Customer;
 import com.gentlecorp.customer.service.CustomerReadService;
-import com.gentlecorp.customer.service.JwtService;
+import com.gentlecorp.customer.util.ControllerUtils;
 import com.gentlecorp.customer.util.UriHelper;
 import io.micrometer.observation.annotation.Observed;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -16,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.LinkRelation;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -28,17 +30,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 import static com.gentlecorp.customer.util.Constants.CUSTOMER_PATH;
 import static com.gentlecorp.customer.util.Constants.ID_PATTERN;
-import static com.gentlecorp.customer.util.VersionUtils.getVersion;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 import static org.springframework.http.HttpStatus.NOT_MODIFIED;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
@@ -50,8 +49,8 @@ import static org.springframework.http.ResponseEntity.status;
 public class CustomerReadController {
 
   private final CustomerReadService customerReadService;
-  private final JwtService jwtService;
   private final UriHelper uriHelper;
+  private final ControllerUtils controllerUtils;
 
   @GetMapping(path = "{id:" + ID_PATTERN + "}", produces = HAL_JSON_VALUE)
   @Observed(name = "get-by-id")
@@ -60,47 +59,21 @@ public class CustomerReadController {
   @ApiResponse(responseCode = "404", description = "Customer not found")
   public ResponseEntity<CustomerModel> getById(
     @PathVariable final UUID id,
-    @RequestHeader("If-None-Match") final Optional<String> version,
+    @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) final String version,
     final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
   ) {
-    final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, version={}, username={}", id, version, username);
+    log.info("getById: id={}", id);
+    final var customer = customerReadService.findById(id, jwt, false);
+    final var currentVersion = controllerUtils.createETag(customer.getVersion());
 
-    if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a username in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var role = jwtService.getRole(jwt);
-    if (role == null) {
-      log.error("Despite Spring Security, getById() was called without a username in the JWT");
-      return status(UNAUTHORIZED).build();
+    if (controllerUtils.isETagMatching(Optional.ofNullable(version), currentVersion)) {
+      return ResponseEntity.status(NOT_MODIFIED).build();
     }
 
-    final var customer = customerReadService.findById(id, username, role, false);
-    final var currentVersion = String.format("\"%s\"", customer.getVersion());
-
-    if (Objects.equals(version.orElse(null), currentVersion)) {
-      return status(NOT_MODIFIED).build();
-    }
-
-    final var model = customerToModel(customer, request);
-    log.debug("getById: model={}", model);
-    return ok().eTag(currentVersion).body(model);
-  }
-
-  private CustomerModel customerToModel(final Customer customer, final HttpServletRequest request) {
     final var model = new CustomerModel(customer);
-    final var baseUri = uriHelper.getBaseUri(request).toString();
-    final var idUri = String.format("%s/%s", baseUri, customer.getId());
-
-    final var selfLink = Link.of(idUri);
-    final var listLink = Link.of(baseUri, LinkRelation.of("list"));
-    final var addLink = Link.of(baseUri, LinkRelation.of("add"));
-    final var updateLink = Link.of(idUri, LinkRelation.of("update"));
-    final var removeLink = Link.of(idUri, LinkRelation.of("remove"));
-    model.add(selfLink, listLink, addLink, updateLink, removeLink);
-    return model;
+    addLinksToModel(model, request, customer.getId());
+    return ok().eTag(currentVersion).body(model);
   }
 
   @GetMapping(produces = HAL_JSON_VALUE)
@@ -112,8 +85,8 @@ public class CustomerReadController {
     final HttpServletRequest request
   ) {
     log.debug("get: searchCriteria={}", searchCriteria);
-
     final var baseUri = uriHelper.getBaseUri(request).toString();
+
     final var models = customerReadService.find(searchCriteria)
       .stream()
       .map(customer -> {
@@ -127,31 +100,35 @@ public class CustomerReadController {
     return CollectionModel.of(models);
   }
 
-  @GetMapping(path = "{id:" + ID_PATTERN + "}/all", produces = HAL_JSON_VALUE)
-  public ResponseEntity<Customer> getByIdAll(
+  @GetMapping(path = "all/{id:" + ID_PATTERN + "}", produces = HAL_JSON_VALUE)
+  public ResponseEntity<FullCustomerModel> getAllById(
     @PathVariable final UUID id,
-    @RequestHeader("If-None-Match") final Optional<String> version,
     final HttpServletRequest request,
+    @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) final String version,
     @AuthenticationPrincipal final Jwt jwt
   ) {
-    final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, version={}, username={}", id, version, username);
+    log.info("getAllById: id={}", id);
+    final var customer = customerReadService.findById(id,jwt, true);
+    final var currentVersion = controllerUtils.createETag(customer.getVersion());
 
-    if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a username in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-
-    final var role = jwtService.getRole(jwt);
-    log.debug("getById: role={}", role);
-    final var customer = customerReadService.findById(id, username, role, true);
-    final var currentVersion = String.format("\"%s\"", customer.getVersion());
-
-    if (Objects.equals(version.orElse(null), currentVersion)) {
+    if (controllerUtils.isETagMatching(Optional.ofNullable(version), currentVersion)) {
       return status(NOT_MODIFIED).build();
     }
-
-    return ok().eTag(currentVersion).body(customer);
+    final var model = new FullCustomerModel(customer);
+    addLinksToModel(model, request, customer.getId());
+    return ok().eTag(currentVersion).body(model);
   }
 
+  private void addLinksToModel(BaseCustomerModel<?> model, HttpServletRequest request, UUID id) {
+    final var baseUri = uriHelper.getBaseUri(request).toString();
+    final var idUri = String.format("%s/%s", baseUri, id);
+
+    model.add(
+      Link.of(idUri).withSelfRel(),
+      Link.of(baseUri).withRel("list"),
+      Link.of(baseUri).withRel("add"),
+      Link.of(idUri).withRel("update"),
+      Link.of(idUri).withRel("remove")
+    );
+  }
 }

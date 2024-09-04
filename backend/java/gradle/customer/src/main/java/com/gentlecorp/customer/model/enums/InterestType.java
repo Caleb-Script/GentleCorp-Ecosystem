@@ -7,16 +7,16 @@ import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 public enum InterestType {
-    INVESTMENTS("Investments"),
-    SAVING_AND_FINANCE("Savings and Finances"),
-    CREDIT_AND_DEBT("Credit and Debts"),
-    BANK_PRODUCTS_AND_SERVICES("Bank Products and Services"),
-    FINANCIAL_EDUCATION_AND_COUNSELING("Financial Education and Counseling"),
-    REAL_ESTATE("Real Estate"),
-    INSURANCE("Insurance"),
-    SUSTAINABLE_FINANCE("Sustainable Finance"),
-    TECHNOLOGY_AND_INNOVATION("Technology and Innovation"),
-    TRAVEL("Travel");
+    INVESTMENTS("I"),
+    SAVING_AND_FINANCE("SF"),
+    CREDIT_AND_DEBT("CD"),
+    BANK_PRODUCTS_AND_SERVICES("BPS"),
+    FINANCIAL_EDUCATION_AND_COUNSELING("FEC"),
+    REAL_ESTATE("RE"),
+    INSURANCE("IN"),
+    SUSTAINABLE_FINANCE("SUF"),
+    TECHNOLOGY_AND_INNOVATION("IT"),
+    TRAVEL("T");
 
     private final String interest;
 

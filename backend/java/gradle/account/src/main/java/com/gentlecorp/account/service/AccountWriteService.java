@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static com.gentlecorp.account.model.enums.StatusType.ACTIVE;
+import static com.gentlecorp.account.model.enums.StatusType.CLOSED;
 
 @Service
 @Transactional
@@ -63,5 +64,16 @@ public class AccountWriteService {
     log.debug("deleteById: id={}", id);
     final var account = accountRepository.findById(id).orElseThrow(NotFoundException::new);
     accountRepository.delete(account);
+  }
+
+  public void close(final UUID accountId, final int versionInt) {
+    log.debug("close: accountId={}, versionInt={}", accountId, versionInt);
+    final var account = accountRepository.findById(accountId).orElseThrow(NotFoundException::new);
+
+    if (versionInt != account.getVersion()) {
+      log.error("Version is not the current version");
+      throw new VersionOutdatedException(versionInt);
+    }
+    account.setState(CLOSED);
   }
 }

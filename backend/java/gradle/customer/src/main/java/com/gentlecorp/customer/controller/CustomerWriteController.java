@@ -8,9 +8,11 @@ import com.gentlecorp.customer.model.dto.ContactDTO;
 import com.gentlecorp.customer.model.dto.CustomerCreateDTO;
 import com.gentlecorp.customer.model.dto.CustomerDTO;
 import com.gentlecorp.customer.model.dto.PasswordDTO;
+import com.gentlecorp.customer.model.enums.ProblemType;
 import com.gentlecorp.customer.model.mapper.ContactMapper;
 import com.gentlecorp.customer.model.mapper.CustomerMapper;
 import com.gentlecorp.customer.service.CustomerWriteService;
+import com.gentlecorp.customer.util.ControllerUtils;
 import com.gentlecorp.customer.util.UriHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,6 +27,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -37,7 +40,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,7 +64,16 @@ public class CustomerWriteController {
   private final CustomerMapper customerMapper;
   private final ContactMapper contactMapper;
   private final UriHelper uriHelper;
+  private final ControllerUtils controllerUtils;
 
+  private void validateCustomerDTO(CustomerDTO customerDTO) {
+    final var violations = validator.validate(customerDTO, Default.class, CustomerDTO.OnCreate.class);
+
+    if (!violations.isEmpty()) {
+      log.debug("create: violations={}", violations);
+      throw new ConstraintViolationsException(violations);
+    }
+  }
 
   @PostMapping(consumes = APPLICATION_JSON_VALUE)
   @Operation(summary = "Create a new customer", tags = "Create")
@@ -73,15 +84,10 @@ public class CustomerWriteController {
     @RequestBody final CustomerCreateDTO customerCreateDTO,
     final HttpServletRequest request
   ) throws URISyntaxException {
+    log.debug("POST: customerDTO={}", customerCreateDTO.customerDTO());
     final var customerDTO = customerCreateDTO.customerDTO();
     final var password = customerCreateDTO.passwordDTO().password();
-    log.debug("POST: customerDTO={}", customerDTO);
-    final var violations = validator.validate(customerDTO, Default.class, CustomerDTO.OnCreate.class);
-
-    if (!violations.isEmpty()) {
-      log.debug("create: violations={}", violations);
-      throw new ConstraintViolationsException(violations);
-    }
+    validateCustomerDTO(customerDTO);
 
     if (customerDTO.username() == null || password == null) {
       return badRequest().build();
@@ -89,8 +95,7 @@ public class CustomerWriteController {
 
     final var customerInput = customerMapper.toCustomer(customerDTO);
     final var customer = customerWriteService.create(customerInput, password);
-    final var baseUri = uriHelper.getBaseUri(request);
-    final var location = new URI(String.format("%s/%s", baseUri.toString(), customer.getId()));
+    final var location = uriHelper.createUri(request, customer.getId());
     return created(location).build();
   }
 
@@ -109,16 +114,16 @@ public class CustomerWriteController {
     final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
   ) {
-
     log.debug("put: id={}, customerUpdateDTO={}", customerId, customerDTO);
-
     final int versionInt = getVersion(version, request);
+    validateCustomerDTO(customerDTO);
     final var customerInput = customerMapper.toCustomer(customerDTO);
     final var updatedCustomer = customerWriteService.update(customerInput, customerId, versionInt, jwt);
-
-    log.debug("put: updatedCustomer={}", updatedCustomer);
-    return noContent().eTag(String.format("\"%d\"", updatedCustomer.getVersion())).build();
+    final var etag = controllerUtils.createETag(updatedCustomer.getVersion());
+    return noContent().eTag(etag).build();
   }
+
+
 
   @PutMapping(path = "{customerId:" + ID_PATTERN + "}/password", consumes = APPLICATION_JSON_VALUE)
   @Operation(summary = "Update customer password", tags = "Password Update")
@@ -146,9 +151,7 @@ public class CustomerWriteController {
     log.debug("createContact: customerId={}, contactDTO={}", customerId, contactDTO);
     final var contactInput = contactMapper.toContact(contactDTO);
     final var contact = customerWriteService.addContact(customerId, contactInput, jwt).getLast();
-    log.debug("createContact: contact={}", contact);
-    final var baseUri = uriHelper.getBaseUri(request);
-    final var location = new URI(String.format("%s/%s", baseUri.toString(), contact.getId()));
+    final var location =  uriHelper.createUri(request, contact.getId());
     return created(location).build();
   }
 
@@ -163,11 +166,11 @@ public class CustomerWriteController {
   ) {
     log.debug("updateContact: customerId={}, contactId={}, version={}", customerId, contactId, version);
     log.debug("updateContact: contactDTO={}", contactDTO);
-
     final int versionInt = getVersion(version, request);
     final var contactInput = contactMapper.toContact(contactDTO);
     final var updatedContact = customerWriteService.updateContact(customerId, contactId, versionInt, contactInput, jwt);
-    return noContent().eTag(String.format("\"%d\"", updatedContact.getVersion())).build();
+    final var etag = controllerUtils.createETag(updatedContact.getVersion());
+    return noContent().eTag(etag).build();
   }
 
   @PatchMapping(path = "{customerId:" + ID_PATTERN + "}/contact/{contactId:" + ID_PATTERN + "}")
@@ -193,9 +196,29 @@ public class CustomerWriteController {
     @AuthenticationPrincipal final Jwt jwt
   ) {
     log.debug("delete: id={}", id);
-    customerWriteService.deleteById(id);
+    final var token = String.format("Bearer %s", jwt.getTokenValue());
+    customerWriteService.deleteById(id, token);
     return noContent().build();
   }
+
+//  @ExceptionHandler
+//  public ResponseEntity<ProblemDetail> onConstraintViolations(
+//    final ConstraintViolationsException ex,
+//    final HttpServletRequest request
+//  ) {
+//    log.debug("onConstraintViolations: {}", ex.getMessage());
+//
+//    // Format the detail message with each violation on a new line
+//    String formattedDetail = ex.getViolationsDTO().stream()
+//      .map(violation -> String.format("Field '%s': %s", violation.getPropertyPath(), violation.getMessage()))
+//      .collect(Collectors.joining("\n"));  // Using "\n" to separate each violation message
+//
+//    ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(BAD_REQUEST, formattedDetail);
+//    problemDetail.setInstance(URI.create(request.getRequestURI()));
+//
+//    return ResponseEntity.status(BAD_REQUEST).body(problemDetail);
+//  }
+
 
   @ExceptionHandler({
     HttpMessageNotReadableException.class,

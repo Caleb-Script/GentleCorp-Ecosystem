@@ -1,8 +1,10 @@
 package com.gentlecorp.customer.service;
 
 import com.gentlecorp.customer.KeycloakProps;
+import com.gentlecorp.customer.exception.NotFoundException;
 import com.gentlecorp.customer.exception.SignUpException;
 import com.gentlecorp.customer.model.dto.TokenDTO;
+import com.gentlecorp.customer.model.dto.UserRepresentation;
 import com.gentlecorp.customer.model.entity.Customer;
 import com.gentlecorp.customer.repository.KeycloakRepository;
 import jakarta.annotation.PostConstruct;
@@ -216,5 +218,15 @@ public class KeycloakService {
       log.error("Error updating password for user {}: ", userId, e);
       throw new RuntimeException("Failed to update password for user: " + e.getMessage());
     }
+  }
+
+  public void delete(final String token, final String username) {
+    log.debug("delete: username={}", username);
+    final var userList = keycloakRepository.getUserByUsername(token, username);
+    final var userId = userList.stream()
+      .map(UserRepresentation::id)
+      .findFirst().orElseThrow(() -> new NotFoundException(username));
+
+    keycloakRepository.deleteUser(token, userId);
   }
 }

@@ -1,7 +1,7 @@
 package com.gentlecorp.invoice.service;
 
 import com.gentlecorp.invoice.exception.NotFoundException;
-import com.gentlecorp.invoice.model.dto.BalanceDTO;
+import com.gentlecorp.invoice.model.dto.PaymentDTO;
 import com.gentlecorp.invoice.model.entity.Invoice;
 import com.gentlecorp.invoice.model.entity.Payment;
 import com.gentlecorp.invoice.repository.AccountRepository;
@@ -60,14 +60,14 @@ public class InvoiceWriteService {
       //TODO zuviel
       payment.setAmount(amountLeft);
     }
-
+//TODO customize accountId
     final var currentBalance = invoiceReadService.findCurrentBalanceByAccountId(invoice.getAccountId(), token);
     if (currentBalance.compareTo(payment.getAmount()) < 0) {
       //TODO zu wenig geld vorhanden
       payment.setAmount(currentBalance);
     }
 
-    deductFromCurrentBalance(invoice.getAccountId(),payment.getAmount(), token);
+    deductFromCurrentBalance(invoice.getAccountId(),payment.getAmount().multiply(BigDecimal.valueOf(-1)), token);
 
     //TODO cuurent balance abziehen
     invoice.getPayments().add(payment);
@@ -77,6 +77,7 @@ public class InvoiceWriteService {
 
   public void deductFromCurrentBalance(final UUID id, final BigDecimal amount, final String token) {
     log.debug("deductFromCurrentBalance:id={} amount={}",id, amount);
-    accountRepository.updateBalance(id.toString(), new BalanceDTO(amount), token);
+    final var balanceDTO = new PaymentDTO(amount);
+    accountRepository.updateBalance(id.toString(), balanceDTO, token, "\"0\"");
   }
 }

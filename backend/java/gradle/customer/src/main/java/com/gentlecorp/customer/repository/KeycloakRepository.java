@@ -3,9 +3,11 @@ package com.gentlecorp.customer.repository;
 import com.gentlecorp.customer.model.dto.RoleDTO;
 import com.gentlecorp.customer.model.dto.TokenDTO;
 import com.gentlecorp.customer.model.dto.UserInfoDTO;
+import com.gentlecorp.customer.model.dto.UserRepresentation;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.service.annotation.DeleteExchange;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
@@ -13,6 +15,7 @@ import org.springframework.web.service.annotation.PutExchange;
 
 import java.net.http.HttpResponse;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -72,4 +75,17 @@ public interface KeycloakRepository {
     @RequestHeader(CONTENT_TYPE) String contentType,
     @PathVariable("userId") String userId
   );
+
+  @DeleteExchange("/admin/realms/GentleCorp-Ecosystem/users/{userId}")
+  void deleteUser(
+    @RequestHeader(AUTHORIZATION) String authorization,
+    @PathVariable("userId") String userId
+  );
+
+  @GetExchange("/admin/realms/GentleCorp-Ecosystem/users?username={username}")
+  List<UserRepresentation> getUserByUsername(
+    @RequestHeader(AUTHORIZATION) String authorization,
+    @PathVariable("username") String username
+  );
+
 }

@@ -4,8 +4,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record PaymentDTO(
-  BigDecimal amount,
-  UUID invoiceId
+  BigDecimal amount
 ) {
   public interface OnCreate { }
 }

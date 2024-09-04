@@ -81,6 +81,17 @@ public class AccountWriteController {
     return created(location).build();
   }
 
+  @PostMapping(path = "{accountId:" + ID_PATTERN + "}", consumes = APPLICATION_JSON_VALUE)
+  public ResponseEntity<Void> closeAccount(
+    @PathVariable final UUID accountId,
+    @RequestHeader("If-Match") final Optional<String> version,
+    final HttpServletRequest request
+  ) {
+    final int versionInt = getVersion(version, request);
+    accountWriteService.close(accountId, versionInt);
+    return noContent().build();
+  }
+
   @PutMapping(path = "{accountId:" + ID_PATTERN + "}", consumes = APPLICATION_JSON_VALUE)
   public ResponseEntity<Void> put(
     @PathVariable final UUID accountId,
@@ -99,7 +110,7 @@ public class AccountWriteController {
     return noContent().eTag(String.format("\"%d\"", updatedAccount.getVersion())).build();
   }
 
-  @PatchMapping(path = "{id:" + ID_PATTERN + "}/balance")
+  @PutMapping(path = "{id:" + ID_PATTERN + "}/balance")
   public ResponseEntity<Void> updateBalance(
     @PathVariable final UUID id,
     @RequestBody final BalanceDTO balanceDTO,
@@ -121,7 +132,7 @@ public class AccountWriteController {
     }
     log.debug("updateBalance: id={}}", id);
     final int versionInt = getVersion(version, request);
-    final var balance = balanceDTO.newValue();
+    final var balance = balanceDTO.amount();
     final var token = "Bearer " + jwt.getTokenValue();
     final var updatedAccount = accountWriteService.updateBalance(id, versionInt, balance, username, role, token);
     return noContent().eTag(String.format("\"%d\"", updatedAccount.getVersion())).build();

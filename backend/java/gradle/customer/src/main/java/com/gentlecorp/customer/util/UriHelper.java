@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.UUID;
 
 import static com.gentlecorp.customer.util.Constants.CUSTOMER_PATH;
 
@@ -51,5 +53,10 @@ public class UriHelper {
     final var baseUri = STR."\{forwardedProto}://\{forwardedHost}\{forwardedPrefix}\{CUSTOMER_PATH}";
     log.debug("getBaseUriForwarded: baseUri={}", baseUri);
     return URI.create(baseUri);
+  }
+
+  public URI createUri(HttpServletRequest request, UUID id) throws URISyntaxException {
+    final var baseUri = getBaseUri(request);
+    return new URI(String.format("%s/%s", baseUri.toString(), id));
   }
 }

@@ -3,6 +3,7 @@ package com.gentlecorp.customer.service;
 import com.gentlecorp.customer.MailProps;
 import com.gentlecorp.customer.exception.AccessForbiddenException;
 import com.gentlecorp.customer.exception.EmailExistsException;
+import com.gentlecorp.customer.exception.IllegalArgumentException;
 import com.gentlecorp.customer.exception.NotFoundException;
 import com.gentlecorp.customer.exception.VersionOutdatedException;
 import com.gentlecorp.customer.model.entity.Contact;
@@ -15,7 +16,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -40,12 +40,13 @@ public class CustomerWriteService {
     customer.setCustomer_state(ACTIVE);
     log.debug("create: customer={}", customer);
     log.debug("create: address={}", customer.getAddress());
-    log.debug("create: contacts={}", customer.getContacts());
 
     if (customerRepository.existsByEmail(customer.getEmail()))
       throw new EmailExistsException(customer.getEmail());
 
+    log.warn("create: customer={}", customer);
     final var customerDb = customerRepository.save(customer);
+    log.warn("create: customerDb={}", customerDb);
     log.trace("create: Thread-ID={}", Thread.currentThread().threadId());
 
     props.setTo(customerDb.getEmail());
@@ -55,7 +56,7 @@ public class CustomerWriteService {
       case 1 -> "BASIC";
       case 2 -> "ELITE";
       case 3 -> "SUPREME";
-      default -> throw new IllegalArgumentException("Invalid tier level: " + customer.getTierLevel());
+      default -> throw new IllegalArgumentException(customer.getTierLevel());
     };
 
     keycloakService.signIn(customer, password, role);
@@ -70,14 +71,14 @@ public class CustomerWriteService {
     log.trace("update: No constraints violated");
 
     customer.setCustomer_state(ACTIVE);
-    final var username = jwtService.getUsername(jwt);
     final var customerDb = customerRepository.findById(id).orElseThrow(() -> new NotFoundException(id));
 
-    final var role = jwtService.getRole(jwt);
-    log.trace("getById: role={}", role);
+    final var userAndRole = customerReadService.validateJwtAndGetUsernameAndRole(jwt);
+    final var username = userAndRole.getLeft();
+    final var role = userAndRole.getRight();
 
     if (!Objects.equals(customerDb.getUsername(), username) && !Objects.equals(role, "ADMIN")) {
-      throw new AccessForbiddenException("YOU ARE NOT THE USER");
+      throw new AccessForbiddenException(role);
     }
 
     if (version != customerDb.getVersion()) {
@@ -114,18 +115,14 @@ public class CustomerWriteService {
 
   public List<Contact> addContact(final UUID customerId, final Contact contact, final Jwt jwt) {
     log.debug("create: customerId={}, contact={}", customerId, contact);
-    final var username = jwtService.getUsername(jwt);
-    final var role = jwtService.getRole(jwt);
-    final var customerDb = customerReadService.findById(customerId, username, role, true);
+    final var customerDb = customerReadService.findById(customerId, jwt, true);
     customerDb.getContacts().add(contact);
     return customerDb.getContacts();
   }
 
   public Contact updateContact(final UUID customerId, final UUID contactId, final int version, final Contact contact, final Jwt jwt) {
     log.debug("updateContact: customerId={}, contactId={}", customerId, contactId);
-    final var username = jwtService.getUsername(jwt);
-    final var role = jwtService.getRole(jwt);
-    final var customerDb = customerReadService.findById(customerId, username, role, true);
+    final var customerDb = customerReadService.findById(customerId, jwt, true);
 
     final var contactDb = customerDb.getContacts()
       .stream()
@@ -137,18 +134,17 @@ public class CustomerWriteService {
     return contactRepository.save(contactDb);
   }
 
-  public void deleteById(final UUID id) {
+  public void deleteById(final UUID id, final String token) {
     log.debug("deleteById: id={}", id);
 
     final var customer = customerRepository.findById(id).orElseThrow(NotFoundException::new);
+    keycloakService.delete(token, customer.getUsername());
     customerRepository.delete(customer);
   }
 
   public void removeContact(final UUID customerId, final UUID contactId,final int version, final Jwt jwt) {
     log.debug("removeContact: customerId={}, contactId={}, version={}", customerId, contactId, version);
-    final var username = jwtService.getUsername(jwt);
-    final var role = jwtService.getRole(jwt);
-    final var customerDb = customerReadService.findById(customerId, username, role, true);
+    final var customerDb = customerReadService.findById(customerId, jwt, true);
 
     customerDb.getContacts()
       .stream()
@@ -156,6 +152,5 @@ public class CustomerWriteService {
       .toList()
       .forEach(contact -> customerDb.getContacts().remove(contact));
   }
-
 
 }

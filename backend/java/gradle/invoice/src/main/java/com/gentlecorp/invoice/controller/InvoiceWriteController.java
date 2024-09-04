@@ -16,13 +16,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.UUID;
 
+import static com.gentlecorp.invoice.util.Constants.ID_PATTERN;
 import static com.gentlecorp.invoice.util.Constants.INVOICE_PATH;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -42,8 +45,9 @@ public class InvoiceWriteController {
   private final UriHelper uriHelper;
 
 
-  @PostMapping(consumes = APPLICATION_JSON_VALUE)
+  @PostMapping(path = "{accountId:" + ID_PATTERN + "}", consumes = APPLICATION_JSON_VALUE)
   public ResponseEntity<Void> post(
+    @PathVariable UUID accountId,
     @RequestBody final InvoiceDTO invoiceDTO,
     final HttpServletRequest request
   ) throws URISyntaxException {
@@ -56,14 +60,16 @@ public class InvoiceWriteController {
     }
 
     final var invoiceInput = invoiceMapper.toInvoice(invoiceDTO);
+    invoiceInput.setAccountId(accountId);
     final var invoice = invoiceWriteService.create(invoiceInput);
     final var baseUri = uriHelper.getBaseUri(request);
     final var location = new URI(String.format("%s/%s", baseUri.toString(), invoice.getId()));
     return created(location).build();
   }
 
-  @PostMapping(path = "pay")
+  @PostMapping(path = "{invoiceId:" + ID_PATTERN + "}/pay")
   public ResponseEntity<Void> pay(
+    @PathVariable final UUID invoiceId,
     @RequestBody final PaymentDTO paymentDTO,
     final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
@@ -84,7 +90,7 @@ public class InvoiceWriteController {
     final var token = "Bearer " + jwt.getTokenValue();
     final var payment = invoiceMapper.toPayment(paymentDTO);
     log.debug("pay: payment={}", payment);
-    final var payments = invoiceWriteService.pay(paymentDTO.invoiceId(), payment, username, role, token);
+    final var payments = invoiceWriteService.pay(invoiceId, payment, username, role, token);
     final var recentPayment = payments.getLast();
     final var baseUri = uriHelper.getBaseUri(request);
     final var location = new URI(String.format("%s/%s", baseUri.toString(), recentPayment.getId()));

@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS address
     id           BINARY(16)   NOT NULL PRIMARY KEY,
     street       VARCHAR(100) NOT NULL,
     house_number VARCHAR(5)   NOT NULL,
-    zip_code     VARCHAR(6)   NOT NULL,
+    zip_code     VARCHAR(10)   NOT NULL,
     city         VARCHAR(50) NOT NULL,
     state        VARCHAR(20)  NOT NULL,
     country      VARCHAR(20) NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS customer
     updated              DATETIME     NOT NULL,
     username             VARCHAR(40)  NOT NULL UNIQUE,
     contact_options      VARCHAR(255) NOT NULL,
-    interests            VARCHAR(20),
+    interests            VARCHAR(255),
 
     INDEX     customer_last_name_idx(last_name)
 );

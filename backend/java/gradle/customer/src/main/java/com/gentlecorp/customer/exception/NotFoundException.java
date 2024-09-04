@@ -35,6 +35,8 @@ public final class NotFoundException extends RuntimeException {
    */
   private final Map<String, List<String>> searchCriteria;
 
+  private final String message;
+
   /**
    * Constructs a new {@code NotFoundException} with a message indicating the specified customer ID was not found.
    *
@@ -44,6 +46,8 @@ public final class NotFoundException extends RuntimeException {
     super(String.format("No customer found with ID: %s", id));
     this.id = id;
     this.searchCriteria = null;
+    this.message = null;
+
   }
 
   /**
@@ -55,6 +59,14 @@ public final class NotFoundException extends RuntimeException {
     super(String.format("No customers found with these search criteria: %s", searchCriteria));
     this.id = null;
     this.searchCriteria = searchCriteria;
+    this.message = null;
+  }
+
+  public NotFoundException(final String message) {
+    super("No customers found. with username: " + message);
+    this.id = null;
+    this.searchCriteria = null;
+    this.message = message;
   }
 
   /**
@@ -64,5 +76,6 @@ public final class NotFoundException extends RuntimeException {
     super("No customers found.");
     this.id = null;
     this.searchCriteria = null;
+    this.message = null;
   }
 }

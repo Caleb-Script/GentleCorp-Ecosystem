@@ -2,12 +2,15 @@ package com.gentlecorp.customer.service;
 
 import com.gentlecorp.customer.exception.AccessForbiddenException;
 import com.gentlecorp.customer.exception.NotFoundException;
+import com.gentlecorp.customer.exception.UnauthorizedException;
 import com.gentlecorp.customer.model.entity.Customer;
 import com.gentlecorp.customer.repository.CustomerRepository;
 import com.gentlecorp.customer.repository.SpecificationBuilder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,16 +26,34 @@ import java.util.UUID;
 @Slf4j
 public class CustomerReadService {
   private final CustomerRepository customerRepository;
+  private final JwtService jwtService;
   private final SpecificationBuilder specificationBuilder;
+
+
+  Pair<String, String> validateJwtAndGetUsernameAndRole(Jwt jwt) {
+    final var username = jwtService.getUsername(jwt);
+    if (username == null) {
+      throw new UnauthorizedException("Missing username in token");
+    }
+
+    final var role = jwtService.getRole(jwt);
+    if (role == null) {
+      throw new UnauthorizedException("Missing role in token");
+    }
+
+    return Pair.of(username, role);
+  }
 
   public @NonNull Customer findById(
     final UUID id,
-    final String username,
-    final String role,
+    final Jwt jwt,
     final boolean fetchAll
   ) {
-    log.debug("findById: id={}, username={}, role={}, fetchAll={}", id, username, role, fetchAll);
+    log.debug("findById: id={}, fetchAll={}", id, fetchAll);
 
+    final var userAndRole = validateJwtAndGetUsernameAndRole(jwt);
+    final var username = userAndRole.getLeft();
+    final var role = userAndRole.getRight();
 
     final var customer = fetchAll
       ? customerRepository.findByIdFetchAll(id).orElseThrow(NotFoundException::new)

@@ -19,6 +19,7 @@ import org.springframework.security.web.authentication.password.HaveIBeenPwnedRe
 import static com.gentlecorp.customer.model.enums.RoleType.ADMIN;
 import static com.gentlecorp.customer.model.enums.RoleType.BASIC;
 import static com.gentlecorp.customer.model.enums.RoleType.ELITE;
+import static com.gentlecorp.customer.model.enums.RoleType.SUPREME;
 import static com.gentlecorp.customer.model.enums.RoleType.USER;
 import static com.gentlecorp.customer.util.Constants.AUTH_PATH;
 import static com.gentlecorp.customer.util.Constants.CUSTOMER_PATH;
@@ -34,8 +35,8 @@ sealed interface SecurityConfig permits ApplicationConfig {
   @Bean
   default ResourceServerExpressionInterceptUrlRegistryPostProcessor authorizePostProcessor() {
     return registry -> registry
-      .requestMatchers(OPTIONS, "/rest/**").permitAll()
-      .requestMatchers("/rest/**").authenticated()
+      .requestMatchers(OPTIONS, CUSTOMER_PATH+"/**").permitAll()
+      .requestMatchers(CUSTOMER_PATH+"/**").authenticated()
       .anyRequest().authenticated();
   }
 
@@ -47,16 +48,14 @@ sealed interface SecurityConfig permits ApplicationConfig {
     return httpSecurity
       .authorizeHttpRequests(authorize -> {
         authorize
-          .requestMatchers(POST, "/auth/login").permitAll()
-
           .requestMatchers(GET, CUSTOMER_PATH).hasAnyRole(USER.name(), ADMIN.name())
-          .requestMatchers(GET, CUSTOMER_PATH + "/**").permitAll()
+          .requestMatchers(GET, CUSTOMER_PATH + "/all/**").hasAnyRole(ADMIN.name(), USER.name())
+          .requestMatchers(GET, CUSTOMER_PATH + "/**").hasAnyRole(ADMIN.name(), USER.name(),SUPREME.name(), ELITE.name(), BASIC.name())
           .requestMatchers(POST, CUSTOMER_PATH).permitAll()
-          .requestMatchers(PUT, CUSTOMER_PATH + "**").hasAnyRole(ADMIN.name(), ELITE.name(), BASIC.name())
+          .requestMatchers(PUT, CUSTOMER_PATH + "**").hasAnyRole(ADMIN.name(),SUPREME.name(), ELITE.name(), BASIC.name())
           .requestMatchers(DELETE, CUSTOMER_PATH + "/**").hasAnyRole(ADMIN.name())
 
           .requestMatchers(GET, AUTH_PATH + "/me").hasRole(ADMIN.name())
-
           .requestMatchers(POST, AUTH_PATH + "/login").permitAll()
 
           .requestMatchers(

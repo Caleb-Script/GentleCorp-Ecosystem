@@ -1,24 +1,56 @@
 package com.gentlecorp.customer.repository;
 
+import com.gentlecorp.customer.exception.IllegalArgumentException;
+import com.gentlecorp.customer.model.entity.Address;
 import com.gentlecorp.customer.model.entity.Address_;
 import com.gentlecorp.customer.model.entity.Customer;
 import com.gentlecorp.customer.model.entity.Customer_;
 import com.gentlecorp.customer.model.enums.ContactOptionsType;
 import com.gentlecorp.customer.model.enums.GenderType;
+import com.gentlecorp.customer.model.enums.InterestType;
 import com.gentlecorp.customer.model.enums.MaritalStatusType;
+import com.gentlecorp.customer.model.enums.StatusType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Component
 @Slf4j
 public class SpecificationBuilder {
+  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+  private Specification<Customer> getCustomerSpecification(Collection<String> collection, Stream<Specification<Customer>> specificationStream) {
+    return collection == null || collection.isEmpty() ? null :
+      specificationStream.filter(Objects::nonNull)
+        .reduce(Specification::and)
+        .orElse(null);
+  }
+
+  private Specification<Customer> likeIgnoreCase(final SingularAttribute <Customer, String> attributeName, final String value) {
+    return (root, query, builder) -> builder.like(
+      builder.lower(root.get(attributeName)),
+      builder.lower(builder.literal(String.format("%%%s%%", value)))
+    );
+  }
+
+  private Specification<Customer> likeIgnoreCaseInAddress(final SingularAttribute <Address, String> attributeName, final String value) {
+    return (root, query, builder) -> builder.like(
+      builder.lower(root.get(Customer_.address).get(attributeName)),
+      builder.lower(builder.literal(String.format("%%%s%%", value)))
+    );
+  }
+
   public Optional<Specification<Customer>> build(final Map<String, ? extends List<String>> queryParams) {
     log.debug("build: queryParams={}", queryParams);
 
@@ -48,6 +80,10 @@ public class SpecificationBuilder {
       return toSpecificationContactOptions(values);
     }
 
+    if ("interest".contentEquals(key)) {
+      return toSpecificationInterest(values);
+    }
+
     if (values == null || values.size() != 1) {
       return null;
     }
@@ -55,10 +91,15 @@ public class SpecificationBuilder {
     final var value = values.getFirst();
     return switch (key) {
       case "lastName" -> lastName(value);
+      case "prefix" -> prefix(value);
       case "email" -> email(value);
-      case "elite" -> tierLevel(value);
+      case "subscribed" -> isSubscribed(value);
+      case "tier" -> tierLevel(value);
+      case "birthdate" -> birthdate(value);
       case "gender" -> gender(value);
       case "maritalStatus" -> maritalStatus(value);
+      case "customerStatus" -> customerStatus(value);
+      case "username" -> username(value);
       case "zipCode" -> zipCode(value);
       case "city" -> city(value);
       case "state" -> state(value);
@@ -69,45 +110,51 @@ public class SpecificationBuilder {
 
   private Specification<Customer> toSpecificationContactOptions(final Collection<String> options) {
     log.trace("build: contactOptions={}", options);
-    if (options == null || options.isEmpty()) {
-      return null;
-    }
+    return getCustomerSpecification(options, options.stream()
+      .map(this::contactOptions));
+  }
 
-    final var specsImmutable = options.stream()
-      .map(this::contactOptions)
-      .toList();
-    if (specsImmutable.isEmpty() || specsImmutable.contains(null)) {
-      return null;
-    }
-    final List<Specification<Customer>> specs = new ArrayList<>(specsImmutable);
-    final var first = specs.remove(0);
-    return specs.stream().reduce(first, Specification::and);
+  private Specification<Customer> toSpecificationInterest(final Collection<String> interests) {
+    log.trace("build: interest={}", interests);
+    return getCustomerSpecification(interests, interests.stream()
+      .map(this::interests));
+  }
+
+  private Specification<Customer> prefix(final String prefix) {
+    return (root, query, builder) -> builder.like(
+      builder.lower(root.get(Customer_.lastName)),
+      builder.lower(builder.literal(String.format("%s%%", prefix)))
+    );
   }
 
   private Specification<Customer> lastName(final String teil) {
-    return (root, query, builder) -> builder.like(
-      builder.lower(root.get(Customer_.lastName)),
-      builder.lower(builder.literal("%" + teil + "%"))
-    );
+    return likeIgnoreCase(Customer_.lastName, teil);
+  }
+
+  private Specification<Customer> username(final String teil) {
+    return likeIgnoreCase(Customer_.username, teil);
   }
 
   private Specification<Customer> email(final String teil) {
-    return (root, query, builder) -> builder.like(
-      builder.lower(root.get(Customer_.email)),
-      builder.lower(builder.literal("%" + teil + "%"))
-    );
+    return likeIgnoreCase(Customer_.email, teil);
   }
 
   @SuppressWarnings({"CatchParameterName", "LocalFinalVariableName"})
   private Specification<Customer> tierLevel(final String tierLevel) {
-    final int tierLevelInt;
     try {
-      tierLevelInt = Integer.parseInt(tierLevel);
-    } catch (final NumberFormatException _) {
-      //noinspection ReturnOfNull
+      final int tierLevelInt = Integer.parseInt(tierLevel);
+      return (root, _, builder) -> builder.equal(root.get(Customer_.tierLevel), tierLevelInt);
+    } catch (final NumberFormatException ex) {
+      log.warn("Invalid tierLevel format: {}", tierLevel, ex);
       return null;
     }
-    return (root, _, builder) -> builder.equal(root.get(Customer_.tierLevel), tierLevelInt);
+  }
+
+  private Specification<Customer> isSubscribed(final String isSubscribed) {
+    return (root, query, builder) -> builder.equal(
+      root.get(Customer_.isSubscribed),
+      Boolean.parseBoolean(isSubscribed)
+    );
   }
 
   private Specification<Customer> gender(final String geschlecht) {
@@ -124,6 +171,13 @@ public class SpecificationBuilder {
     );
   }
 
+  private Specification<Customer> customerStatus(final String status) {
+    return (root, query, builder) -> builder.equal(
+      root.get(Customer_.customer_state),
+     StatusType.of(status)
+    );
+  }
+
   private Specification<Customer> contactOptions(final String option) {
     final var contactOptionsType = ContactOptionsType.of(option);
     if (contactOptionsType == null) {
@@ -131,35 +185,61 @@ public class SpecificationBuilder {
     }
     return (root, query, builder) -> builder.like(
       root.get(Customer_.contactOptionsString),
-      builder.literal("%" + contactOptionsType.name() + "%")
+      builder.literal(String.format("%%%s%%", contactOptionsType.name()))
+    );
+  }
+
+  private Specification<Customer> interests(final String option) {
+    final var interestsType = InterestType.of(option);
+    if (interestsType == null) {
+      return null;
+    }
+    return (root, query, builder) -> builder.like(
+      root.get(Customer_.interestsString),
+      builder.literal(String.format("%%%s%%", interestsType.name()))
     );
   }
 
   private Specification<Customer> zipCode(final String prefix) {
-    return (root, query, builder) -> builder.like(
-      root.get(Customer_.address)
-        .get(Address_.zipCode), "%" + prefix + "%"
-    );
+    return likeIgnoreCaseInAddress(Address_.zipCode, prefix);
   }
 
   private Specification<Customer> city(final String prefix) {
-    return (root, query, builder) -> builder.like(
-      builder.lower(root.get(Customer_.address).get(Address_.city)),
-      builder.lower(builder.literal("%" + prefix + "%"))
-    );
+    return likeIgnoreCaseInAddress(Address_.city, prefix);
   }
 
   private Specification<Customer> state(final String prefix) {
-    return (root, query, builder) -> builder.like(
-      builder.lower(root.get(Customer_.address).get(Address_.state)),
-      builder.lower(builder.literal("%" + prefix + "%"))
-    );
+    return likeIgnoreCaseInAddress(Address_.state, prefix);
   }
 
   private Specification<Customer> country(final String prefix) {
-    return (root, query, builder) -> builder.like(
-      builder.lower(root.get(Customer_.address).get(Address_.country)),
-      builder.lower(builder.literal("%" + prefix + "%"))
-    );
+    return likeIgnoreCaseInAddress(Address_.country, prefix);
+  }
+
+  private Specification<Customer> birthdate(final String value) {
+    log.trace("birthdate: birthdate={}", value);
+    LocalDate date;
+    String[] parts = value.split(",");
+
+    try {
+      if (parts.length == 3) {
+        // Fall für "between"
+        LocalDate startDate = LocalDate.parse(parts[1].trim(), DATE_FORMATTER);
+        LocalDate endDate = LocalDate.parse(parts[2].trim(), DATE_FORMATTER);
+        return (root, query, builder) -> builder.between(root.get(Customer_.birthDate), startDate, endDate);
+      } else if (parts.length == 2) {
+        date = LocalDate.parse(parts[1].trim(), DATE_FORMATTER);
+        if (value.startsWith("before")) {
+          return (root, query, builder) -> builder.lessThanOrEqualTo(root.get(Customer_.birthDate), date);
+        } else if (value.startsWith("after")) {
+          return (root, query, builder) -> builder.greaterThanOrEqualTo(root.get(Customer_.birthDate), date);
+        }
+      }
+    } catch (Exception ex) {
+      log.warn("Invalid birthdate format: {}", value, ex);
+    }
+
+    // Rückgabe von null für ungültige Filterparameter
+    return null;
   }
 }

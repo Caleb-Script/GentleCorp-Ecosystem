@@ -72,7 +72,7 @@ package com.gentle.bank.customer.entity {
         enum ContactOptionsType {
             EMAIL
             PHONE
-            MAIL
+            LETTER
             SMS
         }
     }

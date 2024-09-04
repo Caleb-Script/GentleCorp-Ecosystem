@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -79,6 +80,37 @@ public class AccountReadController {
     final var model = accountToModel(account, request);
     log.debug("getById: model={}", model);
     return ok().eTag(currentVersion).body(model);
+  }
+
+  @GetMapping(path = "customer/{customerId:" + ID_PATTERN + "}", produces = HAL_JSON_VALUE)
+  @Observed(name = "get-by-id")
+  public ResponseEntity<Collection<AccountModel>> getAccountByCustomer(
+    @PathVariable final UUID customerId,
+    @RequestHeader("If-None-Match") final Optional<String> version,
+    final HttpServletRequest request,
+    @AuthenticationPrincipal final Jwt jwt
+  ) {
+    final var username = jwtService.getUsername(jwt);
+    log.debug("getById: id={}, version={}, username={}", customerId, version, username);
+
+    if (username == null) {
+      log.error("Despite Spring Security, getById() was called without a username in the JWT");
+      return status(UNAUTHORIZED).build();
+    }
+    final var role = jwtService.getRole(jwt);
+    if (role == null) {
+      log.error("Despite Spring Security, getRole() was called without a Role in the JWT");
+      return status(UNAUTHORIZED).build();
+    }
+    final var token = "Bearer " + jwt.getTokenValue();
+    final var accountList = accountReadService.findByCustomerId(customerId, token);
+
+
+    final var modelList = accountList.stream()
+        .map(account -> accountToModel(account, request))
+          .toList();
+
+    return ok().body(modelList);
   }
 
   private AccountModel accountToModel(final Account account, final HttpServletRequest request) {
