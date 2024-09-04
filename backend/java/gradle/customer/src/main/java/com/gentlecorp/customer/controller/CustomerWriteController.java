@@ -17,6 +17,7 @@ import com.gentlecorp.customer.util.UriHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
@@ -41,8 +42,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import static com.gentlecorp.customer.util.Constants.CUSTOMER_PATH;
 import static com.gentlecorp.customer.util.Constants.ID_PATTERN;
@@ -66,14 +69,35 @@ public class CustomerWriteController {
   private final UriHelper uriHelper;
   private final ControllerUtils controllerUtils;
 
-  private void validateCustomerDTO(CustomerDTO customerDTO) {
-    final var violations = validator.validate(customerDTO, Default.class, CustomerDTO.OnCreate.class);
+  private <T> void validateDTO(T dto, Supplier<Collection<ConstraintViolation<T>>> validatorSupplier) {
+    final var violations = validatorSupplier.get();
 
     if (!violations.isEmpty()) {
       log.debug("create: violations={}", violations);
-      throw new ConstraintViolationsException(violations);
+
+      if (dto instanceof CustomerDTO) {
+        @SuppressWarnings("unchecked")
+        var customerViolations = (Collection<ConstraintViolation<CustomerDTO>>) (Collection<?>) violations;
+        throw new ConstraintViolationsException(customerViolations, null);
+      } else if (dto instanceof ContactDTO) {
+        @SuppressWarnings("unchecked")
+        var contactViolations = (Collection<ConstraintViolation<ContactDTO>>) (Collection<?>) violations;
+        throw new ConstraintViolationsException(null, contactViolations);
+      }
     }
   }
+
+
+
+
+  private void validateCustomerDTO(CustomerDTO customerDTO) {
+    validateDTO(customerDTO, () -> validator.validate(customerDTO, Default.class, CustomerDTO.OnCreate.class));
+  }
+
+//  private void validateContactDTO(ContactDTO contactDTO) {
+//    validateDTO(contactDTO, () -> validator.validate(contactDTO, Default.class, ContactDTO.OnCreate.class));
+//  }
+
 
   @PostMapping(consumes = APPLICATION_JSON_VALUE)
   @Operation(summary = "Create a new customer", tags = "Create")
@@ -122,8 +146,6 @@ public class CustomerWriteController {
     final var etag = controllerUtils.createETag(updatedCustomer.getVersion());
     return noContent().eTag(etag).build();
   }
-
-
 
   @PutMapping(path = "{customerId:" + ID_PATTERN + "}/password", consumes = APPLICATION_JSON_VALUE)
   @Operation(summary = "Update customer password", tags = "Password Update")
