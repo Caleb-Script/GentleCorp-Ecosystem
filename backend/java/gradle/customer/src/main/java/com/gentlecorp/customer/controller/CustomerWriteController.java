@@ -94,9 +94,9 @@ public class CustomerWriteController {
     validateDTO(customerDTO, () -> validator.validate(customerDTO, Default.class, CustomerDTO.OnCreate.class));
   }
 
-//  private void validateContactDTO(ContactDTO contactDTO) {
-//    validateDTO(contactDTO, () -> validator.validate(contactDTO, Default.class, ContactDTO.OnCreate.class));
-//  }
+  private void validateContactDTO(ContactDTO contactDTO) {
+    validateDTO(contactDTO, () -> validator.validate(contactDTO, Default.class, CustomerDTO.OnCreate.class));
+  }
 
 
   @PostMapping(consumes = APPLICATION_JSON_VALUE)
@@ -172,6 +172,7 @@ public class CustomerWriteController {
   ) throws URISyntaxException {
     log.debug("createContact: customerId={}, contactDTO={}", customerId, contactDTO);
     final var contactInput = contactMapper.toContact(contactDTO);
+    validateContactDTO(contactDTO);
     final var contact = customerWriteService.addContact(customerId, contactInput, jwt).getLast();
     final var location =  uriHelper.createUri(request, contact.getId());
     return created(location).build();
@@ -189,6 +190,7 @@ public class CustomerWriteController {
     log.debug("updateContact: customerId={}, contactId={}, version={}", customerId, contactId, version);
     log.debug("updateContact: contactDTO={}", contactDTO);
     final int versionInt = getVersion(version, request);
+    validateContactDTO(contactDTO);
     final var contactInput = contactMapper.toContact(contactDTO);
     final var updatedContact = customerWriteService.updateContact(customerId, contactId, versionInt, contactInput, jwt);
     final var etag = controllerUtils.createETag(updatedContact.getVersion());

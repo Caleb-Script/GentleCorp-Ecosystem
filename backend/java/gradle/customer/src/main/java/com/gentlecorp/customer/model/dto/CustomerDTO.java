@@ -4,6 +4,7 @@ import com.gentlecorp.customer.model.enums.ContactOptionsType;
 import com.gentlecorp.customer.model.enums.GenderType;
 import com.gentlecorp.customer.model.enums.InterestType;
 import com.gentlecorp.customer.model.enums.MaritalStatusType;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -12,6 +13,7 @@ import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.UniqueElements;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -64,6 +66,7 @@ public record CustomerDTO(
   List<ContactOptionsType> contactOptions,
 
   @NotNull(groups = OnCreate.class, message = "Please provide your address.")
+    @Valid
   AddressDTO address
 ) {
   public interface OnCreate { }
