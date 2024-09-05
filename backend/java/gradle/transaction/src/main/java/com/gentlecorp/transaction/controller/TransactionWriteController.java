@@ -12,6 +12,7 @@ import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +33,6 @@ import static org.springframework.http.ResponseEntity.created;
 public class TransactionWriteController {
 
   private final TransactionWriteService transactionWriteService;
-  private final JwtService jwtService;
   private final Validator validator;
   private final TransactionMapper transactionMapper;
   private final UriHelper uriHelper;
@@ -41,7 +41,8 @@ public class TransactionWriteController {
   @PostMapping(consumes = APPLICATION_JSON_VALUE)
   public ResponseEntity<Void> post(
     @RequestBody final TransactionDTO transactionDTO,
-    final HttpServletRequest request
+    final HttpServletRequest request,
+    @AuthenticationPrincipal final Jwt jwt
   ) throws URISyntaxException {
     log.debug("POST: transactionDTO={}", transactionDTO);
     final var violations = validator.validate(transactionDTO, Default.class, TransactionDTO.OnCreate.class);
@@ -52,7 +53,7 @@ public class TransactionWriteController {
     }
 
     final var transactionInput = transactionMapper.toTransaction(transactionDTO);
-    final var transaction = transactionWriteService.create(transactionInput);
+    final var transaction = transactionWriteService.create(transactionInput,jwt);
     final var baseUri = uriHelper.getBaseUri(request);
     final var location = new URI(String.format("%s/%s", baseUri.toString(), transaction.getId()));
     return created(location).build();

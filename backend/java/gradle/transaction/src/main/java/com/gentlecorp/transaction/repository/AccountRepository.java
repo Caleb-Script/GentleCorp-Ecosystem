@@ -20,6 +20,6 @@ public interface AccountRepository {
     ResponseEntity<Account> getById(
         @PathVariable String id,
         @RequestHeader(IF_NONE_MATCH) String version,
-        @RequestHeader(AUTHORIZATION) Jwt authorization
+        @RequestHeader(AUTHORIZATION)  String authorization
     );
 }

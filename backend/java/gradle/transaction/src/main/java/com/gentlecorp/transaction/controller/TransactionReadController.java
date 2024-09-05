@@ -32,7 +32,6 @@ import static com.gentlecorp.transaction.util.Constants.TRANSACTION_PATH;
 import static com.gentlecorp.transaction.util.Constants.ID_PATTERN;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 import static org.springframework.http.HttpStatus.NOT_MODIFIED;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
@@ -43,7 +42,7 @@ import static org.springframework.http.ResponseEntity.status;
 public class TransactionReadController {
 
   private final TransactionReadService transactionReadService;
-  private final JwtService jwtService;
+
   private final UriHelper uriHelper;
 
   @GetMapping(path = "{id:" + ID_PATTERN + "}", produces = HAL_JSON_VALUE)
@@ -54,20 +53,7 @@ public class TransactionReadController {
     final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
   ) {
-    final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, version={}, customerUsername={}", id, version, username);
-
-    if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a customerUsername in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var role = jwtService.getRole(jwt);
-    if (role == null) {
-      log.error("Despite Spring Security, getRole() was called without a Role in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var token = "Bearer " + jwt.getTokenValue();
-    final var transaction = transactionReadService.findById(id, username, role, token);
+    final var transaction = transactionReadService.findById(id, jwt);
     final var currentVersion = String.format("\"%s\"", transaction.getVersion());
 
     if (Objects.equals(version.orElse(null), currentVersion)) {
@@ -122,22 +108,8 @@ public class TransactionReadController {
     final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
   ) {
-    final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, customerUsername={}", id, username);
-
-    if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a customerUsername in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var role = jwtService.getRole(jwt);
-    if (role == null) {
-      log.error("Despite Spring Security, getRole() was called without a Role in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-
     final var baseUri = uriHelper.getBaseUri(request).toString();
-    final var token = "Bearer " + jwt.getTokenValue();
-    final var models = transactionReadService.findByAccountId(id,username, token)
+    final var models = transactionReadService.findByAccountId(id,jwt)
       .stream()
       .map(transaction -> {
         final var model = new TransactionModel(transaction);
