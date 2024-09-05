@@ -1,6 +1,9 @@
 package com.gentlecorp.account.config;
 
 import com.c4_soft.springaddons.security.oidc.starter.synchronised.resourceserver.ResourceServerExpressionInterceptUrlRegistryPostProcessor;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.actuate.metrics.export.prometheus.PrometheusScrapeEndpoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -13,7 +16,18 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
 
+import static com.gentlecorp.account.model.enums.RoleType.ADMIN;
+import static com.gentlecorp.account.model.enums.RoleType.BASIC;
+import static com.gentlecorp.account.model.enums.RoleType.ELITE;
+import static com.gentlecorp.account.model.enums.RoleType.SUPREME;
+import static com.gentlecorp.account.model.enums.RoleType.USER;
+import static com.gentlecorp.account.util.Constants.ACCOUNT_PATH;
+import static com.gentlecorp.account.util.Constants.AUTH_PATH;
+import static org.springframework.http.HttpMethod.DELETE;
+import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.OPTIONS;
+import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.PUT;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 import static org.springframework.security.crypto.factory.PasswordEncoderFactories.createDelegatingPasswordEncoder;
 
@@ -34,7 +48,27 @@ sealed interface SecurityConfig permits ApplicationConfig {
     return httpSecurity
       .authorizeHttpRequests(authorize -> {
         authorize
-          .anyRequest().permitAll();
+          .requestMatchers(GET, ACCOUNT_PATH).hasAnyRole(USER.name(), ADMIN.name())
+          .requestMatchers(GET, ACCOUNT_PATH + "/**").hasAnyRole(ADMIN.name(), USER.name(),SUPREME.name(), ELITE.name(), BASIC.name())
+          .requestMatchers(POST, ACCOUNT_PATH).hasAnyRole(ADMIN.name(), USER.name(),SUPREME.name(), ELITE.name(), BASIC.name())
+          .requestMatchers(PUT, ACCOUNT_PATH + "**").hasAnyRole(ADMIN.name(),SUPREME.name(), ELITE.name(), BASIC.name())
+          .requestMatchers(DELETE, ACCOUNT_PATH + "/**").hasAnyRole(ADMIN.name())
+
+          .requestMatchers(GET, AUTH_PATH + "/me").hasRole(ADMIN.name())
+          .requestMatchers(POST, AUTH_PATH + "/login").permitAll()
+
+          .requestMatchers(POST,"dev/db_populate").hasRole(ADMIN.name())
+          .requestMatchers(
+            // Actuator: Health for liveness and readiness for Kubernetes
+            EndpointRequest.to(HealthEndpoint.class),
+            // Actuator: Prometheus for monitoring
+            EndpointRequest.to(PrometheusScrapeEndpoint.class)
+          ).permitAll()
+          // OpenAPI or Swagger UI and GraphiQL
+          .requestMatchers(GET, "/v3/api-docs.yaml", "/v3/api-docs", "/graphiql").permitAll()
+          .requestMatchers("/error", "/error/**").permitAll()
+
+          .anyRequest().authenticated();
       })
 
       .oauth2ResourceServer(resourceServer -> resourceServer

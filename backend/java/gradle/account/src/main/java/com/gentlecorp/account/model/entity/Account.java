@@ -2,6 +2,7 @@ package com.gentlecorp.account.model.entity;
 
 import com.gentlecorp.account.model.enums.AccountType;
 import com.gentlecorp.account.model.enums.StatusType;
+import com.gentlecorp.account.model.interfaces.VersionedEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -32,7 +33,7 @@ import java.util.UUID;
 @Setter
 @ToString
 @Builder
-public class Account {
+public class Account implements VersionedEntity {
   @Id
   @GeneratedValue
   @EqualsAndHashCode.Include

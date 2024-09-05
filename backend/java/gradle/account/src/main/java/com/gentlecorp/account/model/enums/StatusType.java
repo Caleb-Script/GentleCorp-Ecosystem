@@ -7,9 +7,9 @@ import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 public enum StatusType {
-    ACTIVE("Aktiv"),
-    BLOCKED("Blockiert"),
-    CLOSED("Geschlossen");
+    ACTIVE("A"),
+    BLOCKED("B"),
+    CLOSED("C");
 
     private final String status;
 

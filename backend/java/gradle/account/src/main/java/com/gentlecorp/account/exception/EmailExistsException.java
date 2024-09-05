@@ -16,24 +16,8 @@ import lombok.Getter;
  */
 @Getter
 public class EmailExistsException extends RuntimeException {
-
-  /**
-   * The email address that already exists.
-   * <p>
-   * This field contains the email address that caused the exception, indicating the duplicate email
-   * issue in the system.
-   * </p>
-   */
   private final String email;
 
-  /**
-   * Constructs a new {@code EmailExistsException} with a detailed message and the conflicting email address.
-   * <p>
-   * The message indicates that the provided email address already exists in the system.
-   * </p>
-   *
-   * @param email The email address that already exists.
-   */
   public EmailExistsException(final String email) {
     super(String.format("Die Emailadresse %s existiert bereits", email));
     this.email = email;

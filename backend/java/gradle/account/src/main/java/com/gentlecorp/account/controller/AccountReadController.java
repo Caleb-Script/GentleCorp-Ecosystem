@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,6 +34,7 @@ import java.util.UUID;
 import static com.gentlecorp.account.util.Constants.ACCOUNT_PATH;
 import static com.gentlecorp.account.util.Constants.ID_PATTERN;
 import static com.gentlecorp.account.util.VersionUtils.getVersion;
+import static java.util.stream.Collectors.toList;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 import static org.springframework.http.HttpStatus.NOT_MODIFIED;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
@@ -46,8 +48,22 @@ import static org.springframework.http.ResponseEntity.status;
 public class AccountReadController {
 
   private final AccountReadService accountReadService;
-  private final JwtService jwtService;
   private final UriHelper uriHelper;
+
+  private AccountModel accountToModel(final Account account, final HttpServletRequest request) {
+    final var model = new AccountModel(account);
+    final var baseUri = uriHelper.getBaseUri(request).toString();
+    final var idUri = String.format("%s/%s", baseUri, account.getId());
+
+    model.add(
+      Link.of(idUri).withSelfRel(),
+      Link.of(baseUri).withRel("list"),
+      Link.of(baseUri).withRel("add"),
+      Link.of(idUri).withRel("update"),
+      Link.of(idUri).withRel("remove")
+    );
+    return model;
+  }
 
   @GetMapping(path = "{id:" + ID_PATTERN + "}", produces = HAL_JSON_VALUE)
   @Observed(name = "get-by-id")
@@ -57,20 +73,7 @@ public class AccountReadController {
     final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
   ) {
-    final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, version={}, username={}", id, version, username);
-
-    if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a username in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var role = jwtService.getRole(jwt);
-    if (role == null) {
-      log.error("Despite Spring Security, getRole() was called without a Role in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var token = "Bearer " + jwt.getTokenValue();
-    final var account = accountReadService.findById(id, username, role, token);
+    final var account = accountReadService.findById(id, jwt);
     final var currentVersion = String.format("\"%s\"", account.getVersion());
 
     if (Objects.equals(version.orElse(null), currentVersion)) {
@@ -83,48 +86,20 @@ public class AccountReadController {
   }
 
   @GetMapping(path = "customer/{customerId:" + ID_PATTERN + "}", produces = HAL_JSON_VALUE)
-  @Observed(name = "get-by-id")
-  public ResponseEntity<Collection<AccountModel>> getAccountByCustomer(
+  @Observed(name = "get-by-customer")
+  public ResponseEntity<List<AccountModel>> getAccountByCustomer(
     @PathVariable final UUID customerId,
     @RequestHeader("If-None-Match") final Optional<String> version,
     final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
   ) {
-    final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, version={}, username={}", customerId, version, username);
-
-    if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a username in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var role = jwtService.getRole(jwt);
-    if (role == null) {
-      log.error("Despite Spring Security, getRole() was called without a Role in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var token = "Bearer " + jwt.getTokenValue();
-    final var accountList = accountReadService.findByCustomerId(customerId, token);
-
+    final var accountList = accountReadService.findByCustomerId(customerId, jwt);
 
     final var modelList = accountList.stream()
-        .map(account -> accountToModel(account, request))
-          .toList();
+      .map(AccountModel::new)
+      .toList();
 
     return ok().body(modelList);
-  }
-
-  private AccountModel accountToModel(final Account account, final HttpServletRequest request) {
-    final var model = new AccountModel(account);
-    final var baseUri = uriHelper.getBaseUri(request).toString();
-    final var idUri = String.format("%s/%s", baseUri, account.getId());
-
-    final var selfLink = Link.of(idUri);
-    final var listLink = Link.of(baseUri, LinkRelation.of("list"));
-    final var addLink = Link.of(baseUri, LinkRelation.of("add"));
-    final var updateLink = Link.of(idUri, LinkRelation.of("update"));
-    final var removeLink = Link.of(idUri, LinkRelation.of("remove"));
-    model.add(selfLink, listLink, addLink, updateLink, removeLink);
-    return model;
   }
 
   @GetMapping(produces = HAL_JSON_VALUE)
@@ -136,7 +111,7 @@ public class AccountReadController {
     log.debug("get: searchCriteria={}", searchCriteria);
 
     final var baseUri = uriHelper.getBaseUri(request).toString();
-    final var token = "Bearer " + jwt.getTokenValue();
+    final var token = String.format("Bearer %s", jwt.getTokenValue());
     final var models = accountReadService.find(searchCriteria, token)
       .stream()
       .map(account -> {
@@ -154,24 +129,9 @@ public class AccountReadController {
   public ResponseEntity<BigDecimal> getBalanceById(
     @PathVariable final UUID id,
     @RequestHeader("If-None-Match") final Optional<String> version,
-    final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
   ) {
-    final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, version={}, username={}", id, version, username);
-
-    if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a username in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var role = jwtService.getRole(jwt);
-    if (role == null) {
-      log.error("Despite Spring Security, getRole() was called without a Role in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final int versionInt = getVersion(version, request);
-    final var token = "Bearer " + jwt.getTokenValue();
-    final var account = accountReadService.findById(id, username, role, token);
+    final var account = accountReadService.findById(id, jwt);
 
     final var currentVersion = String.format("\"%s\"", account.getVersion());
     if (Objects.equals(version.orElse(null), currentVersion)) {
@@ -184,11 +144,11 @@ public class AccountReadController {
   @GetMapping(path = "/{id:" + ID_PATTERN + "}/total", produces = HAL_JSON_VALUE)
   public ResponseEntity<BigDecimal> getTotalBalance(
     @PathVariable final UUID id,
+    @RequestHeader("If-None-Match") final Optional<String> version,
     @AuthenticationPrincipal final Jwt jwt
   ) {
     log.debug("getBalanceFromAccountById: accountId={}", id);
-    final var token = "Bearer " + jwt.getTokenValue();
-    final var balance = accountReadService.getFullBalance(id, token);
+    final var balance = accountReadService.getFullBalance(id, jwt);
     return ok().body(balance);
   }
 }

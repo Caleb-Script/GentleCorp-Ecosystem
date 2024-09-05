@@ -1,15 +1,20 @@
 package com.gentlecorp.account.controller;
 
+import com.gentlecorp.account.exception.AccountExistsException;
 import com.gentlecorp.account.exception.ConstraintViolationsException;
 import com.gentlecorp.account.exception.EmailExistsException;
+import com.gentlecorp.account.exception.InsufficientFundsException;
+import com.gentlecorp.account.exception.VersionAheadException;
 import com.gentlecorp.account.exception.VersionInvalidException;
 import com.gentlecorp.account.exception.VersionOutdatedException;
 import com.gentlecorp.account.model.dto.AccountDTO;
 import com.gentlecorp.account.model.dto.BalanceDTO;
+import com.gentlecorp.account.model.enums.ProblemType;
 import com.gentlecorp.account.model.mapper.AccountMapper;
 import com.gentlecorp.account.service.AccountWriteService;
 import com.gentlecorp.account.service.JwtService;
 import com.gentlecorp.account.util.UriHelper;
+import com.google.common.base.Splitter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Validator;
 import jakarta.validation.groups.Default;
@@ -40,9 +45,13 @@ import java.util.UUID;
 
 import static com.gentlecorp.account.util.Constants.ACCOUNT_PATH;
 import static com.gentlecorp.account.util.Constants.ID_PATTERN;
+import static com.gentlecorp.account.util.Constants.PROBLEM_PATH;
 import static com.gentlecorp.account.util.VersionUtils.getVersion;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.PRECONDITION_FAILED;
+import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.created;
 import static org.springframework.http.ResponseEntity.noContent;
@@ -55,7 +64,6 @@ import static org.springframework.http.ResponseEntity.status;
 public class AccountWriteController {
 
   private final AccountWriteService accountWriteService;
-  private final JwtService jwtService;
   private final Validator validator;
   private final AccountMapper accountMapper;
   private final UriHelper uriHelper;
@@ -64,6 +72,7 @@ public class AccountWriteController {
   @PostMapping(consumes = APPLICATION_JSON_VALUE)
   public ResponseEntity<Void> post(
     @RequestBody final AccountDTO accountDTO,
+    @AuthenticationPrincipal final Jwt jwt,
     final HttpServletRequest request
   ) throws URISyntaxException {
     log.debug("POST: accountDTO={}", accountDTO);
@@ -75,7 +84,7 @@ public class AccountWriteController {
     }
 
     final var accountInput = accountMapper.toAccount(accountDTO);
-    final var account = accountWriteService.create(accountInput);
+    final var account = accountWriteService.create(accountInput, jwt);
     final var baseUri = uriHelper.getBaseUri(request);
     final var location = new URI(String.format("%s/%s", baseUri.toString(), account.getId()));
     return created(location).build();
@@ -85,80 +94,116 @@ public class AccountWriteController {
   public ResponseEntity<Void> closeAccount(
     @PathVariable final UUID accountId,
     @RequestHeader("If-Match") final Optional<String> version,
+    @AuthenticationPrincipal final Jwt jwt,
     final HttpServletRequest request
   ) {
     final int versionInt = getVersion(version, request);
-    accountWriteService.close(accountId, versionInt);
+    accountWriteService.close(accountId, versionInt, jwt);
     return noContent().build();
   }
 
-  @PutMapping(path = "{accountId:" + ID_PATTERN + "}", consumes = APPLICATION_JSON_VALUE)
-  public ResponseEntity<Void> put(
-    @PathVariable final UUID accountId,
-    @RequestBody final AccountDTO accountDTO,
-    @RequestHeader("If-Match") final Optional<String> version,
-    final HttpServletRequest request
-  ) {
-
-    log.debug("put: id={}, accountUpdateDTO={}", accountId, accountDTO);
-
-    final int versionInt = getVersion(version, request);
-    final var accountInput = accountMapper.toAccount(accountDTO);
-    final var updatedAccount = accountWriteService.update(accountInput, accountId, versionInt);
-
-    log.debug("put: updatedAccount={}", updatedAccount);
-    return noContent().eTag(String.format("\"%d\"", updatedAccount.getVersion())).build();
-  }
-
-  @PutMapping(path = "{id:" + ID_PATTERN + "}/balance")
-  public ResponseEntity<Void> updateBalance(
+  @PutMapping(path = "{id:" + ID_PATTERN + "}/transaction")
+  public ResponseEntity<Void> FundsManagement(
     @PathVariable final UUID id,
     @RequestBody final BalanceDTO balanceDTO,
     final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt,
     @RequestHeader("If-Match") final Optional<String> version
   ) {
-    final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, version={}, username={}", id, version, username);
-
-    if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a username in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var role = jwtService.getRole(jwt);
-    if (role == null) {
-      log.error("Despite Spring Security, getRole() was called without a Role in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
     log.debug("updateBalance: id={}}", id);
     final int versionInt = getVersion(version, request);
     final var balance = balanceDTO.amount();
-    final var token = "Bearer " + jwt.getTokenValue();
-    final var updatedAccount = accountWriteService.updateBalance(id, versionInt, balance, username, role, token);
+    final var updatedAccount = accountWriteService.processTransaction(id, versionInt, balance, jwt);
     return noContent().eTag(String.format("\"%d\"", updatedAccount.getVersion())).build();
   }
 
   @DeleteMapping(path = "{id:" + ID_PATTERN + "}")
   public ResponseEntity<Void> delete(
     @PathVariable final UUID id,
-    @AuthenticationPrincipal final Jwt jwt
+    @AuthenticationPrincipal final Jwt jwt,
+    final HttpServletRequest request,
+    @RequestHeader("If-Match") final Optional<String> version
   ) {
     log.debug("delete: id={}", id);
-    accountWriteService.deleteById(id);
+    final int versionInt = getVersion(version, request);
+    accountWriteService.deleteById(id, versionInt, jwt);
     return noContent().build();
+  }
+
+  @ExceptionHandler
+  ProblemDetail onEmailExists(final EmailExistsException ex, final HttpServletRequest request) {
+    log.error("onEmailExists: {}", ex.getMessage());
+    final var problemDetail = ProblemDetail.forStatusAndDetail(UNPROCESSABLE_ENTITY, ex.getMessage());
+    problemDetail.setType(URI.create(PROBLEM_PATH + ProblemType.CONSTRAINTS.getValue()));
+    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
+    return problemDetail;
+  }
+
+  @ExceptionHandler
+  ProblemDetail onAccountExists(final AccountExistsException ex, final HttpServletRequest request) {
+    log.error("onAccountExists: {}", ex.getMessage());
+    final var problemDetail = ProblemDetail.forStatusAndDetail(UNPROCESSABLE_ENTITY, ex.getMessage());
+    problemDetail.setType(URI.create(PROBLEM_PATH + ProblemType.CONSTRAINTS.getValue()));
+    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
+    return problemDetail;
+  }
+
+  @ExceptionHandler
+  ProblemDetail onInsufficientFunds(final InsufficientFundsException ex, final HttpServletRequest request) {
+    log.error("onInsufficientFunds: {}", ex.getMessage());
+    final var problemDetail = ProblemDetail.forStatusAndDetail(UNPROCESSABLE_ENTITY, ex.getMessage());
+    problemDetail.setType(URI.create(PROBLEM_PATH + ProblemType.CONSTRAINTS.getValue()));
+    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
+    return problemDetail;
+  }
+
+
+  @ExceptionHandler
+  ProblemDetail onVersionOutdated(
+    final VersionOutdatedException ex,
+    final HttpServletRequest request
+  ) {
+    log.error("onVersionOutdated: {}", ex.getMessage());
+    final var problemDetail = ProblemDetail.forStatusAndDetail(PRECONDITION_FAILED, ex.getMessage());
+    problemDetail.setType(URI.create(PROBLEM_PATH + ProblemType.PRECONDITION.getValue()));
+    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
+    return problemDetail;
+  }
+
+  @ExceptionHandler
+  ProblemDetail onVersionAhead(
+    final VersionAheadException ex,
+    final HttpServletRequest request
+  ) {
+    log.error("onVersionAhead: {}", ex.getMessage());
+    final var problemDetail = ProblemDetail.forStatusAndDetail(PRECONDITION_FAILED, ex.getMessage());
+    problemDetail.setType(URI.create(PROBLEM_PATH + ProblemType.PRECONDITION.getValue()));
+    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
+    return problemDetail;
+  }
+
+  @ExceptionHandler
+  ProblemDetail onVersionInvalid(
+    final VersionInvalidException ex,
+    final HttpServletRequest request
+  ) {
+    log.error("onVersionInvalid: {}", ex.getMessage());
+    final var exceptionParts = Splitter.on(",").splitToList(ex.toString());
+    final var problemDetail = ProblemDetail.forStatusAndDetail(PRECONDITION_REQUIRED, ex.getMessage());
+    problemDetail.setType(URI.create(PROBLEM_PATH + ProblemType.PRECONDITION.getValue()));
+    problemDetail.setDetail(exceptionParts.get(4).trim().split("=")[1].replace("'", ""));
+    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
+    return problemDetail;
   }
 
   @ExceptionHandler({
     HttpMessageNotReadableException.class,
     ConstraintViolationsException.class,
-    EmailExistsException.class,
-    VersionOutdatedException.class,
-    VersionInvalidException.class,
   })
   @ResponseStatus(BAD_REQUEST)
   @ResponseBody
   public ResponseEntity<ProblemDetail> handleException(Exception e) {
-    log.error("Exception occurred: ", e);
+    log.error(String.format("Exception occurred: %s", e.getMessage()));
     ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(BAD_REQUEST, e.getMessage());
     return ResponseEntity.status(BAD_REQUEST).body(problemDetail);
   }

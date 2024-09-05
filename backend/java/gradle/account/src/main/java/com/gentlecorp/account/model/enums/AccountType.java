@@ -7,12 +7,12 @@ import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 public enum AccountType {
-    SAVINGS("Savings Account"),
-    CHECKING("Checking Account"),
-    CREDIT("Credit Account"),
-    DEPOSIT("Deposit Account"),
-    INVESTMENT("Investment Account"),
-    LOAN("Loan Account");
+    SAVINGS("S"),
+    CHECKING("CH"),
+    CREDIT("CR"),
+    DEPOSIT("D"),
+    INVESTMENT("I"),
+    LOAN("L");
 
     private final String type;
 

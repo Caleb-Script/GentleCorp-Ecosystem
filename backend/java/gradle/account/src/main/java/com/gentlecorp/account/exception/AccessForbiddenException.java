@@ -17,23 +17,19 @@ import lombok.Getter;
 @Getter
 public class AccessForbiddenException extends RuntimeException {
 
-  /**
-   * The role that was required but not present.
-   */
   private final String role;
+  private final String username;
 
-  /**
-   * Constructs a new {@code AccessForbiddenException} with a detailed message.
-   * <p>
-   * The message indicates that the role provided is insufficient for the requested
-   * access, helping to pinpoint the specific role-related issue.
-   * </p>
-   *
-   * @param role The role that was required but not found.
-   */
   @SuppressWarnings("ParameterHidesMemberVariable")
   public AccessForbiddenException(final String role) {
     super("Unzureichende RoleType als : " + role);
     this.role = role;
+    this.username = null;
+  }
+
+  public AccessForbiddenException(final String username, final String role) {
+    super(String.format("nur für den benutzer %s", username));
+    this.role = role;
+    this.username = username;
   }
 }

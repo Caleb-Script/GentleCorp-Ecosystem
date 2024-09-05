@@ -1,15 +1,18 @@
 package com.gentlecorp.account.service;
 
 import com.gentlecorp.account.exception.AccessForbiddenException;
+import com.gentlecorp.account.exception.UnauthorizedException;
 import com.gentlecorp.account.model.entity.Customer;
 import com.gentlecorp.account.model.entity.Account;
 import com.gentlecorp.account.repository.AccountRepository;
 import com.gentlecorp.account.exception.NotFoundException;
 import com.gentlecorp.account.repository.CustomerRepository;
 import com.gentlecorp.account.repository.SpecificationBuilder;
+import com.gentlecorp.account.util.Validation;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,13 +34,18 @@ public class AccountReadService {
   private final AccountRepository accountRepository;
   private final CustomerRepository customerRepository;
   private final SpecificationBuilder specificationBuilder;
+  private final Validation validation;
 
   public @NonNull Account findById(
     final UUID id,
-    final String username,
-    final String role,
-    final String token
+    final Jwt jwt
     ) {
+    log.debug("Find account by id: {}", id);
+    final var userAndRole = validation.validateJwtAndGetUsernameAndRole(jwt);
+    final var username = userAndRole.getLeft();
+    final var role = userAndRole.getRight();
+    final var token = String.format("Bearer %s", jwt.getTokenValue());
+
     log.debug("findById: id={}, username={}, role={}", id, username, role);
     final var account = accountRepository.findById(id).orElseThrow(NotFoundException::new);
 
@@ -47,7 +55,7 @@ public class AccountReadService {
     final var customer = findCustomerById(account.getCustomerId(), token);
     account.setCustomerUsername(customer.username());
 
-    if (account.getCustomerUsername().contentEquals(username)) {
+    if (customer.username().equals(username)) {
       return account;
     }
 
@@ -91,11 +99,18 @@ public class AccountReadService {
     return accounts;
   }
 
-  public Collection<Account> findByCustomerId(final UUID customerId, final String token) {
+  public Collection<Account> findByCustomerId(final UUID customerId, final Jwt jwt) {
+    log.debug("findByCustomerId: customerId={}", customerId);
+    final var token = String.format("Bearer %s", jwt.getTokenValue());
+    final var userAndRole = validation.validateJwtAndGetUsernameAndRole(jwt);
+    final var username = userAndRole.getLeft();
+    final var role = userAndRole.getRight();
+
     log.debug("findByCustomerId: customerId={}", customerId);
 
     final var accounts = accountRepository.findByCustomerId(customerId);
     if (accounts.isEmpty()) {
+      log.error("findByCustomerId: no accounts found for user={}", username);
       throw new NotFoundException();
     }
 
@@ -107,12 +122,19 @@ public class AccountReadService {
       account.setCustomerUsername(customerUsername);
     });
 
+    if (customer.username().equals(username)) {
+      return accounts;
+    }
+
+    if (!Objects.equals(role, "ADMIN") && !Objects.equals(role, "USER")) {
+      throw new AccessForbiddenException(role);
+    }
     log.debug("findByCustomerId: accounts={}", accounts);
     return accounts;
   }
 
   @SuppressWarnings("ReturnCount")
-  private Customer findCustomerById(final UUID customerId, final String token) {
+  Customer findCustomerById(final UUID customerId, final String token) {
     log.debug("findCustomerById: customerId={}", customerId);
 
     final Customer customer;
@@ -133,9 +155,9 @@ public class AccountReadService {
     return customer;
   }
 
-  public BigDecimal getFullBalance(final UUID customerId, final String token) {
+  public BigDecimal getFullBalance(final UUID customerId, final Jwt jwt) {
     log.debug("getBalanceFromAccountById: customerId={}", customerId);
-    final var accountList = findByCustomerId(customerId, token);
+    final var accountList = findByCustomerId(customerId, jwt);
 
     final var fullBalance = accountList.stream()
       .map(Account::getBalance)
