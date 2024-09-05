@@ -58,6 +58,7 @@ sealed interface SecurityConfig permits ApplicationConfig {
           .requestMatchers(GET, AUTH_PATH + "/me").hasRole(ADMIN.name())
           .requestMatchers(POST, AUTH_PATH + "/login").permitAll()
 
+          .requestMatchers(POST,"dev/db_populate").hasRole(ADMIN.name())
           .requestMatchers(
             // Actuator: Health for liveness and readiness for Kubernetes
             EndpointRequest.to(HealthEndpoint.class),

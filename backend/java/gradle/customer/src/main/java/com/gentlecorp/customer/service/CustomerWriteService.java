@@ -2,6 +2,7 @@ package com.gentlecorp.customer.service;
 
 import com.gentlecorp.customer.MailProps;
 import com.gentlecorp.customer.exception.AccessForbiddenException;
+import com.gentlecorp.customer.exception.ContactExistsException;
 import com.gentlecorp.customer.exception.EmailExistsException;
 import com.gentlecorp.customer.exception.IllegalArgumentException;
 import com.gentlecorp.customer.exception.NotFoundException;
@@ -30,6 +31,7 @@ import static com.gentlecorp.customer.util.Constants.MIN_LENGTH;
 import static com.gentlecorp.customer.util.Constants.NUMBERS;
 import static com.gentlecorp.customer.util.Constants.SYMBOLS;
 import static com.gentlecorp.customer.util.Constants.UPPERCASE;
+import static com.gentlecorp.customer.util.Validation.validateContact;
 import static com.gentlecorp.customer.util.VersionUtils.validateVersion;
 import static java.util.Locale.GERMAN;
 
@@ -137,6 +139,7 @@ public class CustomerWriteService {
     log.debug("create: customerId={}, contact={}", customerId, contact);
     final var customerDb = customerReadService.findById(customerId, jwt, true);
     validateVersion(version, customerDb);
+    validateContact(contact, customerDb);
     customerDb.getContacts().add(contact);
     return customerDb.getContacts();
   }
@@ -144,7 +147,7 @@ public class CustomerWriteService {
   public Contact updateContact(final UUID customerId, final UUID contactId, final int version, final Contact contact, final Jwt jwt) {
     log.debug("updateContact: customerId={}, contactId={}", customerId, contactId);
     final var customerDb = customerReadService.findById(customerId, jwt, true);
-
+    validateContact(contact, customerDb, contactId);
 
     final var contactDb = customerDb.getContacts()
       .stream()

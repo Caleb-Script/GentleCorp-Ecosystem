@@ -1,6 +1,7 @@
 package com.gentlecorp.customer.controller;
 
 import com.gentlecorp.customer.exception.ConstraintViolationsException;
+import com.gentlecorp.customer.exception.ContactExistsException;
 import com.gentlecorp.customer.exception.EmailExistsException;
 import com.gentlecorp.customer.exception.PasswordInvalidException;
 import com.gentlecorp.customer.exception.UsernameExistsException;
@@ -15,8 +16,8 @@ import com.gentlecorp.customer.model.enums.ProblemType;
 import com.gentlecorp.customer.model.mapper.ContactMapper;
 import com.gentlecorp.customer.model.mapper.CustomerMapper;
 import com.gentlecorp.customer.service.CustomerWriteService;
-import com.gentlecorp.customer.util.ControllerUtils;
 import com.gentlecorp.customer.util.UriHelper;
+import com.gentlecorp.customer.util.Validation;
 import com.google.common.base.Splitter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -47,8 +48,10 @@ import java.util.UUID;
 import static com.gentlecorp.customer.util.Constants.CUSTOMER_PATH;
 import static com.gentlecorp.customer.util.Constants.ID_PATTERN;
 import static com.gentlecorp.customer.util.Constants.PROBLEM_PATH;
+import static com.gentlecorp.customer.util.ControllerUtils.createETag;
 import static com.gentlecorp.customer.util.VersionUtils.getVersion;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.PRECONDITION_FAILED;
 import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
@@ -67,7 +70,7 @@ public class CustomerWriteController {
   private final CustomerMapper customerMapper;
   private final ContactMapper contactMapper;
   private final UriHelper uriHelper;
-  private final ControllerUtils controllerUtils;
+  private final Validation validation;
 
   @PostMapping(consumes = APPLICATION_JSON_VALUE)
   @Operation(summary = "Create a new customer", tags = "Create")
@@ -81,7 +84,7 @@ public class CustomerWriteController {
     log.debug("POST: customerDTO={}", customerCreateDTO.customerDTO());
     final var customerDTO = customerCreateDTO.customerDTO();
     final var password = customerCreateDTO.passwordDTO().password();
-    controllerUtils.validateDTO(customerDTO);
+    validation.validateDTO(customerDTO);
 
     if (customerDTO.username() == null || password == null) {
       return badRequest().build();
@@ -110,10 +113,10 @@ public class CustomerWriteController {
   ) {
     log.debug("put: id={}, customerUpdateDTO={}", customerId, customerDTO);
     final int versionInt = getVersion(version, request);
-    controllerUtils.validateDTO(customerDTO);
+    validation.validateDTO(customerDTO);
     final var customerInput = customerMapper.toCustomer(customerDTO);
     final var updatedCustomer = customerWriteService.update(customerInput, customerId, versionInt, jwt);
-    final var etag = controllerUtils.createETag(updatedCustomer.getVersion());
+    final var etag = createETag(updatedCustomer.getVersion());
     return noContent().eTag(etag).build();
   }
 
@@ -143,7 +146,7 @@ public class CustomerWriteController {
     log.debug("createContact: customerId={}, contactDTO={}", customerId, contactDTO);
     final int versionInt = getVersion(version, request);
     final var contactInput = contactMapper.toContact(contactDTO);
-    controllerUtils.validateDTO(contactDTO);
+    validation.validateDTO(contactDTO);
     final var contact = customerWriteService.addContact(customerId, contactInput, versionInt, jwt).getLast();
     final var location =  uriHelper.createUri(request, contact.getId());
     return created(location).build();
@@ -161,10 +164,10 @@ public class CustomerWriteController {
     log.debug("updateContact: customerId={}, contactId={}, version={}", customerId, contactId, version);
     log.debug("updateContact: contactDTO={}", contactDTO);
     final int versionInt = getVersion(version, request);
-    controllerUtils.validateDTO(contactDTO);
+    validation.validateDTO(contactDTO);
     final var contactInput = contactMapper.toContact(contactDTO);
     final var updatedContact = customerWriteService.updateContact(customerId, contactId, versionInt, contactInput, jwt);
-    final var etag = controllerUtils.createETag(updatedContact.getVersion());
+    final var etag = createETag(updatedContact.getVersion());
     return noContent().eTag(etag).build();
   }
 
@@ -303,6 +306,18 @@ public class CustomerWriteController {
     log.debug("onMessageNotReadable: {}", ex.getMessage());
     final var problemDetail = ProblemDetail.forStatusAndDetail(BAD_REQUEST, ex.getMessage());
     problemDetail.setType(URI.create(PROBLEM_PATH + ProblemType.BAD_REQUEST.getValue()));
+    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
+    return problemDetail;
+  }
+
+  @ExceptionHandler
+  ProblemDetail onContactExists(
+    final ContactExistsException ex,
+    final HttpServletRequest request
+  ) {
+    log.debug("onContactExists: {}", ex.getMessage());
+    final var problemDetail = ProblemDetail.forStatusAndDetail(CONFLICT, ex.getMessage());
+    problemDetail.setType(URI.create(PROBLEM_PATH + ProblemType.CONFLICT.getValue()));
     problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
     return problemDetail;
   }

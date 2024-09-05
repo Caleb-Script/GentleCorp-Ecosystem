@@ -9,6 +9,7 @@ public enum ProblemType {
   PRECONDITION("precondition"),
   BAD_REQUEST("badRequest"),
   FORBIDDEN("forbidden"),
+  CONFLICT("conflict"),
   NOT_FOUND("notFound");
 
   private final String value;

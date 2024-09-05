@@ -36,6 +36,8 @@ import java.util.UUID;
 
 import static com.gentlecorp.customer.util.Constants.CUSTOMER_PATH;
 import static com.gentlecorp.customer.util.Constants.ID_PATTERN;
+import static com.gentlecorp.customer.util.ControllerUtils.createETag;
+import static com.gentlecorp.customer.util.ControllerUtils.isETagMatching;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 import static org.springframework.http.HttpStatus.NOT_MODIFIED;
 import static org.springframework.http.ResponseEntity.ok;
@@ -50,7 +52,6 @@ public class CustomerReadController {
 
   private final CustomerReadService customerReadService;
   private final UriHelper uriHelper;
-  private final ControllerUtils controllerUtils;
 
   @GetMapping(path = "{id:" + ID_PATTERN + "}", produces = HAL_JSON_VALUE)
   @Observed(name = "get-by-id")
@@ -65,9 +66,9 @@ public class CustomerReadController {
   ) {
     log.info("getById: id={}", id);
     final var customer = customerReadService.findById(id, jwt, false);
-    final var currentVersion = controllerUtils.createETag(customer.getVersion());
+    final var currentVersion = createETag(customer.getVersion());
 
-    if (controllerUtils.isETagMatching(Optional.ofNullable(version), currentVersion)) {
+    if (isETagMatching(Optional.ofNullable(version), currentVersion)) {
       return ResponseEntity.status(NOT_MODIFIED).build();
     }
 
@@ -109,9 +110,9 @@ public class CustomerReadController {
   ) {
     log.info("getAllById: id={}", id);
     final var customer = customerReadService.findById(id,jwt, true);
-    final var currentVersion = controllerUtils.createETag(customer.getVersion());
+    final var currentVersion = createETag(customer.getVersion());
 
-    if (controllerUtils.isETagMatching(Optional.ofNullable(version), currentVersion)) {
+    if (isETagMatching(Optional.ofNullable(version), currentVersion)) {
       return status(NOT_MODIFIED).build();
     }
     final var model = new FullCustomerModel(customer);
