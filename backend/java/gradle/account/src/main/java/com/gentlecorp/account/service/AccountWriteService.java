@@ -3,11 +3,13 @@ package com.gentlecorp.account.service;
 import com.gentlecorp.account.exception.AccessForbiddenException;
 import com.gentlecorp.account.exception.InsufficientFundsException;
 import com.gentlecorp.account.exception.NotFoundException;
+import com.gentlecorp.account.model.dto.BalanceDTO2;
 import com.gentlecorp.account.model.entity.Account;
 import com.gentlecorp.account.repository.AccountRepository;
 import com.gentlecorp.account.util.Validation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -90,5 +92,13 @@ public class AccountWriteService {
     validateVersion(version, account);
     account.setState(CLOSED);
     log.debug("close: account={}", account);
+  }
+
+  @KafkaListener(topics = "adjustBalance",groupId = "gentlecorp")
+  public void handleBalanceAdjustment(BalanceDTO2 balanceDTO) {
+    log.info("handleBalanceAdjustment: balanceDTO{}", balanceDTO);
+    final var account = accountRepository.findById(balanceDTO.id()).orElseThrow(NotFoundException::new);
+    final var newAccount = adjustBalance(balanceDTO.amount(), account);
+    log.debug("handleBalanceAdjustment: newAccount={}", newAccount);
   }
 }

@@ -95,6 +95,11 @@ dependencies {
   annotationProcessor("org.hibernate:hibernate-jpamodelgen:${libs.versions.hibernateJpamodelgen.get()}")
 
   /**------------------------------------------------------------------------------------------------------------------------
+   * MESSANGER
+   * --------------------------------------------------------------------------------------------------------------------*/
+  implementation("org.springframework.kafka:spring-kafka")
+
+  /**------------------------------------------------------------------------------------------------------------------------
    * WEITERE EXTRAS
    * --------------------------------------------------------------------------------------------------------------------*/
   implementation("com.google.guava:guava:30.1-jre") //für Splitt-operation in FlightRepository

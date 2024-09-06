@@ -20,4 +20,10 @@ public class AccessForbiddenException extends RuntimeException {
     this.role = role;
     this.username = username;
   }
+
+  public AccessForbiddenException(final String message, final int role) {
+    super(message);
+    this.role = null;
+    this.username = null;
+  }
 }

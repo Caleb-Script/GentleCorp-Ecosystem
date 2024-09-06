@@ -44,6 +44,27 @@ spring:
           format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: gentlecorp
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        spring:
+          json:
+            type:
+              mapping: event:com.gentlecorp.transaction.model.dto.TransactionDTO
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      #value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        spring:
+          json:
+            type:
+              mapping: event:com.gentlecorp.transaction.model.dto.BalanceDTO
+
   mvc.log-request-details: true
   output.ansi.enabled: ALWAYS
 

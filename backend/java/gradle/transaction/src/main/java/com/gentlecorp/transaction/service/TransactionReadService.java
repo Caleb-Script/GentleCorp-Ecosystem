@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -115,28 +116,29 @@ public class TransactionReadService {
 
   @SuppressWarnings("ReturnCount")
   public Account findAccountById(final UUID accountId, final String token) {
-    log.debug("findAccountById: accountId={}", accountId);
+    log.debug("findAccountById: accountId={}, token={}", accountId, token);
 
     final Account account;
     try {
-      account = accountRepository.getById(accountId.toString(),"1", token).getBody();
+      account = accountRepository.getById(accountId.toString(), "1", token).getBody();
     } catch (final HttpClientErrorException.Unauthorized ex) {
-      log.error("you are not authorized to access this resource");
-      throw new AccessForbiddenException("tokenRole");
+      log.error("Unauthorized access attempt with token: {}", token);
+      throw new AccessForbiddenException("User does not have the required permissions.",1);
     } catch (final HttpClientErrorException.Forbidden ex) {
-      throw new AccessForbiddenException("tokenRole");
+      log.error("Access forbidden with token: {}", token);
+      throw new AccessForbiddenException("User role is not permitted.",1);
     } catch (final HttpClientErrorException.NotFound ex) {
-      // Statuscode 404
-      log.debug("findAccountById: HttpClientErrorException.NotFound");
-      return new Account("N/A");
+      log.debug("No account found for ID: {}", accountId);
+      throw new NotFoundException(accountId, accountId);
     } catch (final HttpStatusCodeException ex) {
-      // sonstiger Statuscode 4xx oder 5xx
-      // HttpStatusCodeException oder RestClientResponseException (z.B. ServiceUnavailable)
-      log.debug("findAccountById", ex);
-      return new Account("Exception");
+      log.error("HTTP error while finding account with ID={}: Status code={}, Message={}", accountId, ex.getStatusCode(), ex.getMessage());
+      throw new RuntimeException("Unexpected error while processing the request.");
     }
 
-    log.debug("findAccountById: {}", account);
+    log.debug("Account found: {}", account);
     return account;
   }
+
+
+
 }

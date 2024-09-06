@@ -85,6 +85,7 @@ dependencies {
   implementation("org.flywaydb:flyway-core")
   implementation("org.flywaydb:flyway-database-postgresql")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
   /**------------------------------------------------------------------------------------------------------------------------
    * WICHTIGE EXTRAS
    * --------------------------------------------------------------------------------------------------------------------*/
@@ -92,6 +93,11 @@ dependencies {
   annotationProcessor("org.projectlombok:lombok:${libs.versions.lombok.get()}")
   implementation("org.springframework.boot:spring-boot-starter-web")
   annotationProcessor("org.hibernate:hibernate-jpamodelgen:${libs.versions.hibernateJpamodelgen.get()}")
+
+  /**------------------------------------------------------------------------------------------------------------------------
+   * MESSANGER
+   * --------------------------------------------------------------------------------------------------------------------*/
+  implementation("org.springframework.kafka:spring-kafka")
 
   /**------------------------------------------------------------------------------------------------------------------------
    * WEITERE EXTRAS
