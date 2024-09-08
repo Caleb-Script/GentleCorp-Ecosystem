@@ -27,10 +27,8 @@ import java.util.UUID;
 
 import static com.gentlecorp.invoice.util.Constants.ID_PATTERN;
 import static com.gentlecorp.invoice.util.Constants.INVOICE_PATH;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.created;
-import static org.springframework.http.ResponseEntity.status;
 
 @Controller
 @RequestMapping(INVOICE_PATH)
