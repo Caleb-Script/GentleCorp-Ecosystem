@@ -300,7 +300,7 @@ Die Auswahl der Datenbanktechnologie für die verschiedenen Microservices im Gen
    - **Begründung**: Robuste Unterstützung für ACID-Transaktionen, erforderlich für die Verwaltung von Bestellungen.
 
 5. **Inventory Service**
-   - **Technologie**: MySQL
+   - **Technologie**: MongoDb
    - **Begründung**: Leistungsstark und stabil, ideal für die Verwaltung von Lagerbeständen.
 
 6. **Menu Service**
@@ -330,7 +330,7 @@ Die Auswahl der Datenbanktechnologie für die verschiedenen Microservices im Gen
     - **Begründung**: Optimal für die Darstellung und Analyse von Netzwerken und Beziehungen zwischen Entitäten.
 
 13. **Product Service**
-    - **Technologie**: MySQL
+    - **Technologie**:MongoDb
     - **Begründung**: Bewährte Lösung für die Verwaltung eines umfangreichen Produktkatalogs.
 
 14. **Transaction Service**
