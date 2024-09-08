@@ -49,12 +49,14 @@ spring:
     consumer:
       group-id: gentlecorp
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring:
           json:
             type:
-              mapping: event:com.gentlecorp.transaction.model.dto.TransactionDTO
+              mapping:
+               payment:com.gentlecorp.transaction.model.dto.TransactionDTO
+
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -63,7 +65,8 @@ spring:
         spring:
           json:
             type:
-              mapping: event:com.gentlecorp.transaction.model.dto.BalanceDTO
+              mapping:
+               balance:com.gentlecorp.transaction.model.dto.BalanceDTO
 
   mvc.log-request-details: true
   output.ansi.enabled: ALWAYS

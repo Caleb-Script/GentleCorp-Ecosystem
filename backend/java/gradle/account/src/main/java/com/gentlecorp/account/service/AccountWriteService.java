@@ -1,8 +1,8 @@
 package com.gentlecorp.account.service;
 
-import com.gentlecorp.account.exception.AccessForbiddenException;
 import com.gentlecorp.account.exception.InsufficientFundsException;
 import com.gentlecorp.account.exception.NotFoundException;
+import com.gentlecorp.account.model.dto.AccountDTO;
 import com.gentlecorp.account.model.dto.BalanceDTO2;
 import com.gentlecorp.account.model.entity.Account;
 import com.gentlecorp.account.repository.AccountRepository;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 import java.util.UUID;
 
 import static com.gentlecorp.account.model.enums.StatusType.ACTIVE;
@@ -48,17 +47,11 @@ public class AccountWriteService {
     return accountDb;
   }
 
-  public Account processTransaction(final UUID id, final int version, final BigDecimal balance, final Jwt jwt) {
-    log.debug("processTransaction: id={}, version={}, balance={}", id, version, balance);
-    final var accountDb = accountReadService.findById(id, jwt);
-    final var customerId = accountDb.getCustomerId();
-    final var accessToken = String.format("Bearer %s", jwt.getTokenValue());
-    final var customer = accountReadService.findCustomerById(customerId, accessToken);
-    validateVersion(version, accountDb);
-    validation.validateCustomerRole(customer.username(), jwt);
-    final var updatedBalance = adjustBalance(balance, accountDb);
-    log.trace("processTransaction: updatedBalance={}", updatedBalance);
-    return accountDb;
+  public void create(final Account account) {
+    log.debug("Creating account {}", account);
+    account.setState(ACTIVE);
+    final var accountDb = accountRepository.save(account);
+    log.debug("create: accountDb={}", accountDb);
   }
 
   private Account adjustBalance(final BigDecimal balance, final Account account) {

@@ -10,6 +10,7 @@ import com.gentlecorp.customer.exception.PasswordInvalidException;
 import com.gentlecorp.customer.exception.UsernameExistsException;
 import com.gentlecorp.customer.exception.VersionInvalidException;
 import com.gentlecorp.customer.exception.VersionOutdatedException;
+import com.gentlecorp.customer.model.dto.AccountDTO;
 import com.gentlecorp.customer.model.entity.Contact;
 import com.gentlecorp.customer.model.entity.Customer;
 import com.gentlecorp.customer.model.interfaces.VersionedEntity;
@@ -17,10 +18,12 @@ import com.gentlecorp.customer.repository.ContactRepository;
 import com.gentlecorp.customer.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -47,6 +50,7 @@ public class CustomerWriteService {
   private final MailService mailService;
   private final MailProps props;
   private final KeycloakService keycloakService;
+  private final KafkaTemplate<String, AccountDTO> kafkaTemplate;
 
   public Customer create(final Customer customer, final String password) {
     customer.setCustomer_state(ACTIVE);
@@ -82,7 +86,15 @@ public class CustomerWriteService {
     };
 
     keycloakService.signIn(customer, password, role);
-
+    final var checkingAccount = new AccountDTO(
+      new BigDecimal(0),
+      "CH",
+      2,
+      50,
+      20,
+      customer.getId()
+    );
+    kafkaTemplate.send("newAccount", checkingAccount);
     log.debug("create: customerDb={}", customerDb);
     return customerDb;
   }
@@ -187,7 +199,7 @@ public class CustomerWriteService {
   }
 
   @SuppressWarnings("ReturnCount")
-  private boolean checkPassword(final CharSequence password) {
+  private Boolean checkPassword(final CharSequence password) {
     if (password.length() < MIN_LENGTH) {
       return false;
     }

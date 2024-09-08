@@ -4,6 +4,7 @@ import com.gentlecorp.account.exception.AccountExistsException;
 import com.gentlecorp.account.exception.ConstraintViolationsException;
 import com.gentlecorp.account.exception.EmailExistsException;
 import com.gentlecorp.account.exception.InsufficientFundsException;
+import com.gentlecorp.account.exception.NotFoundException;
 import com.gentlecorp.account.exception.VersionAheadException;
 import com.gentlecorp.account.exception.VersionInvalidException;
 import com.gentlecorp.account.exception.VersionOutdatedException;
@@ -12,7 +13,6 @@ import com.gentlecorp.account.model.dto.BalanceDTO;
 import com.gentlecorp.account.model.enums.ProblemType;
 import com.gentlecorp.account.model.mapper.AccountMapper;
 import com.gentlecorp.account.service.AccountWriteService;
-import com.gentlecorp.account.service.JwtService;
 import com.gentlecorp.account.util.UriHelper;
 import com.google.common.base.Splitter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,12 +23,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -50,7 +50,6 @@ import static com.gentlecorp.account.util.VersionUtils.getVersion;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.PRECONDITION_FAILED;
 import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.created;
@@ -68,6 +67,12 @@ public class AccountWriteController {
   private final AccountMapper accountMapper;
   private final UriHelper uriHelper;
 
+  @KafkaListener(topics = "newAccount",groupId = "gentlecorp")
+  public void handleNewAccount(AccountDTO accountDTO) {
+    log.info("Handling new account {}", accountDTO);
+    final var accountInput = accountMapper.toAccount(accountDTO);
+    accountWriteService.create(accountInput);
+  }
 
   @PostMapping(consumes = APPLICATION_JSON_VALUE)
   public ResponseEntity<Void> post(
@@ -102,20 +107,6 @@ public class AccountWriteController {
     return noContent().build();
   }
 
-  @PutMapping(path = "{id:" + ID_PATTERN + "}/transaction")
-  public ResponseEntity<Void> FundsManagement(
-    @PathVariable final UUID id,
-    @RequestBody final BalanceDTO balanceDTO,
-    final HttpServletRequest request,
-    @AuthenticationPrincipal final Jwt jwt,
-    @RequestHeader("If-Match") final Optional<String> version
-  ) {
-    log.debug("updateBalance: id={}}", id);
-    final int versionInt = getVersion(version, request);
-    final var balance = balanceDTO.amount();
-    final var updatedAccount = accountWriteService.processTransaction(id, versionInt, balance, jwt);
-    return noContent().eTag(String.format("\"%d\"", updatedAccount.getVersion())).build();
-  }
 
   @DeleteMapping(path = "{id:" + ID_PATTERN + "}")
   public ResponseEntity<Void> delete(

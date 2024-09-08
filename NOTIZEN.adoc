@@ -1,0 +1,52 @@
+= NOTIZEN
+:toc:
+:doctype: book
+:toc: left
+:icons: font
+:sectanchors:
+:sectlinks:
+:sectnums:
+:pagenums:
+:icons: font
+
+== Customer
+
+- there a 3 categories of the customer (Supreme, Elite, basic)
+- Supreme customers have a 10% discount on all items
+- Elite customers have a 15% discount on all items
+- Basic customers have no discount
+- if a customer registers, he then automatically gets an checking account and an shopping cart (kafka)
+- customer can add or remove an contact to his/her list
+- customer can only see his/her profile
+- admin can see all profiles
+- customer can only update his/her profile
+- admin can update all profiles
+
+== account
+
+- admin can see all accounts
+- customer can only see his/her account
+- customer can close an account , but not delete it
+- only admin can delete an account
+- customer can oprn an account , but he/she can only have the same type once
+- customer can get the balance of one account or all their accounts
+- admin can get the balance of one account or all accounts
+
+== transaction
+
+- customrs can only see their transactions
+- admin can see all transactions
+- admin can get the transaction of one customer or all customers
+- communicatio with the account server with kafka
+- only  the owner of the account can do a transaction
+
+== invoice
+
+- admin can see all invoices
+- customer can see their invoices
+- admin and users can make invoices
+- customer can pay their invoices
+
+== Order
+
+- an order can have multiple items

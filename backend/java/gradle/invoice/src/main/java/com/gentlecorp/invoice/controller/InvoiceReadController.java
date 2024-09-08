@@ -34,7 +34,6 @@ import static com.gentlecorp.invoice.util.Constants.ID_PATTERN;
 import static com.gentlecorp.invoice.util.Constants.INVOICE_PATH;
 import static org.springframework.hateoas.MediaTypes.HAL_JSON_VALUE;
 import static org.springframework.http.HttpStatus.NOT_MODIFIED;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
@@ -45,31 +44,17 @@ import static org.springframework.http.ResponseEntity.status;
 public class InvoiceReadController {
 
   private final InvoiceReadService invoiceReadService;
-  private final JwtService jwtService;
   private final UriHelper uriHelper;
 
   @GetMapping(path = "{id:" + ID_PATTERN + "}", produces = HAL_JSON_VALUE)
-  @Observed(name = "get-by-id")
+  @Observed(name = "get-by-customerId")
   public ResponseEntity<InvoiceModel> getInvoiceById(
     @PathVariable final UUID id,
     @RequestHeader("If-None-Match") final Optional<String> version,
     final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
   ) {
-    final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, version={}, customerUsername={}", id, version, username);
-
-    if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a customerUsername in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var role = jwtService.getRole(jwt);
-    if (role == null) {
-      log.error("Despite Spring Security, getRole() was called without a Role in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var token = "Bearer " + jwt.getTokenValue();
-    final var invoice = invoiceReadService.findById(id, username, role, token);
+    final var invoice = invoiceReadService.findById(id, jwt);
     final var currentVersion = String.format("\"%s\"", invoice.getVersion());
 
     if (Objects.equals(version.orElse(null), currentVersion)) {
@@ -124,22 +109,8 @@ public class InvoiceReadController {
     final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
   ) {
-    final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, customerUsername={}", id, username);
-
-    if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a customerUsername in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var role = jwtService.getRole(jwt);
-    if (role == null) {
-      log.error("Despite Spring Security, getRole() was called without a Role in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-
     final var baseUri = uriHelper.getBaseUri(request).toString();
-    final var token = "Bearer " + jwt.getTokenValue();
-    final var models = invoiceReadService.findByAccountId(id,role, username, token)
+    final var models = invoiceReadService.findByAccountId(id, jwt)
       .stream()
       .map(invoice -> {
         final var model = new InvoiceModel(invoice);
@@ -152,25 +123,24 @@ public class InvoiceReadController {
     return ok().body(CollectionModel.of(models));
   }
 
+  @GetMapping(path = "customer/{customerId:" + ID_PATTERN + "}", produces = HAL_JSON_VALUE)
+  public ResponseEntity<CollectionModel<InvoiceModel>> getByCustomerId(@PathVariable final UUID customerId, @AuthenticationPrincipal final Jwt jwt) {
+    final var models = invoiceReadService.findByCustomerId(customerId, jwt)
+      .stream()
+        .map(InvoiceModel::new)
+          .toList();
+    log.debug("get: models={}", models);
+    return ok().body(CollectionModel.of(models));
+  }
+
+
+
   @GetMapping(path = "{invoiceId:" + ID_PATTERN + "}/payments", produces = HAL_JSON_VALUE)
   public ResponseEntity<Collection<Payment>> getPaymentsByInvoice(
     @PathVariable final UUID invoiceId,
     @AuthenticationPrincipal final Jwt jwt
   ) {
-    final var username = jwtService.getUsername(jwt);
-    log.debug("getById: id={}, customerUsername={}", invoiceId, username);
-
-    if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a customerUsername in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var role = jwtService.getRole(jwt);
-    if (role == null) {
-      log.error("Despite Spring Security, getRole() was called without a Role in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var token = "Bearer " + jwt.getTokenValue();
-    final var invoice = invoiceReadService.findById(invoiceId,role, username, token);
+    final var invoice = invoiceReadService.findById(invoiceId, jwt);
     final var payments = invoice.getPayments();
 
     return ok().body(payments);

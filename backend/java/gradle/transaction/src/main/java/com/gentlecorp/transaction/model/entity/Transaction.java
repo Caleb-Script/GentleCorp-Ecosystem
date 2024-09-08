@@ -1,6 +1,7 @@
 package com.gentlecorp.transaction.model.entity;
 
 import com.gentlecorp.transaction.model.enums.TransactionType;
+import com.gentlecorp.transaction.model.enums.CurrencyType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -42,6 +43,8 @@ public class Transaction {
   @Transient
   private TransactionType type;
 
+  @Enumerated(EnumType.STRING)
+  private CurrencyType currencyType;
   private BigDecimal amount;
 
   private UUID sender;

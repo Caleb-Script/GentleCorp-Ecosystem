@@ -1,18 +1,24 @@
-package com.gentlecorp.transaction.util;
+package com.gentlecorp.invoice.util;
 
 
-import com.gentlecorp.transaction.exception.AccessForbiddenException;
-import com.gentlecorp.transaction.exception.UnauthorizedException;
-import com.gentlecorp.transaction.model.entity.Account;
-import com.gentlecorp.transaction.model.entity.Transaction;
-import com.gentlecorp.transaction.service.JwtService;
+import com.gentlecorp.invoice.exception.AccessForbiddenException;
+import com.gentlecorp.invoice.exception.InsufficientFundsException;
+import com.gentlecorp.invoice.exception.InvoiceAlreadyPaidException;
+import com.gentlecorp.invoice.exception.UnauthorizedException;
+import com.gentlecorp.invoice.model.entity.Account;
+import com.gentlecorp.invoice.model.entity.Invoice;
+import com.gentlecorp.invoice.model.entity.Payment;
+import com.gentlecorp.invoice.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.Objects;
+
+import static com.gentlecorp.invoice.model.enums.StatusType.PAID;
 
 @Component
 @Slf4j
@@ -21,7 +27,7 @@ public class Validation {
   private final JwtService jwtService;
 
   public void validateCustomerRole(final Account account, final Jwt jwt) {
-    log.debug("Validating Customer Role");
+    log.debug("Validating Customer Role for account: {}",account);
     final var customerUsername = account.customerUsername();
     final var usernameAndRole = validateJwtAndGetUsernameAndRole(jwt);
     final var tokenUsername = usernameAndRole.getLeft();
@@ -61,5 +67,28 @@ public class Validation {
     }
     log.debug("Validating Jwt: username={}, role={}", username, role);
     return Pair.of(username, role);
+  }
+
+  public void validatePayment(final Invoice invoice, final Payment payment, final BigDecimal currentBalance) {
+    log.debug("validatePayment: invoice={}", invoice);
+
+    if (invoice.getAmountLeft().compareTo(BigDecimal.ZERO) == 0) {
+      invoice.setType(PAID);
+    }
+
+    if (invoice.getType().equals(PAID)) {
+      log.error("pay: Invoice already paid");
+      throw new InvoiceAlreadyPaidException(invoice.getId());
+    }
+
+    if (payment.getAmount().compareTo(invoice.getAmountLeft()) > 0) {
+      log.warn("pay: Payment amount exceeds payment limit");
+      payment.setAmount(invoice.getAmountLeft());
+    }
+
+    if (currentBalance.compareTo(payment.getAmount()) < 0) {
+      throw new InsufficientFundsException(invoice.getAccountId());
+    }
+
   }
 }

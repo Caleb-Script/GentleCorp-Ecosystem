@@ -27,8 +27,6 @@ public class Address {
   @GeneratedValue
   private UUID id;
 
-  @Version
-  private Integer version;
   private String street;
   private String houseNumber;
   private String zipCode;

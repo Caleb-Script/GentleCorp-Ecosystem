@@ -41,7 +41,13 @@ public final class NotFoundException extends RuntimeException {
    * @param id The ID of the customer that could not be found.
    */
   public NotFoundException(final UUID id) {
-    super(String.format("No customer found with ID: %s", id));
+    super(String.format("No Invoice found with ID: %s", id));
+    this.id = id;
+    this.searchCriteria = null;
+  }
+
+  public NotFoundException(final UUID id, final UUID accountId) {
+    super(String.format("No Account found with ID: %s", accountId));
     this.id = id;
     this.searchCriteria = null;
   }

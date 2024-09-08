@@ -89,8 +89,6 @@ public class AccountReadController {
   @Observed(name = "get-by-customer")
   public ResponseEntity<List<AccountModel>> getAccountByCustomer(
     @PathVariable final UUID customerId,
-    @RequestHeader("If-None-Match") final Optional<String> version,
-    final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
   ) {
     final var accountList = accountReadService.findByCustomerId(customerId, jwt);

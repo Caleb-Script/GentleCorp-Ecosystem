@@ -1,13 +1,18 @@
 package com.gentlecorp.invoice.service;
 
+import com.gentlecorp.invoice.exception.InsufficientFundsException;
+import com.gentlecorp.invoice.exception.InvoiceAlreadyPaidException;
 import com.gentlecorp.invoice.exception.NotFoundException;
-import com.gentlecorp.invoice.model.dto.PaymentDTO;
+import com.gentlecorp.invoice.model.dto.TransactionDTO;
 import com.gentlecorp.invoice.model.entity.Invoice;
 import com.gentlecorp.invoice.model.entity.Payment;
 import com.gentlecorp.invoice.repository.AccountRepository;
 import com.gentlecorp.invoice.repository.InvoiceRepository;
+import com.gentlecorp.invoice.util.Validation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +31,8 @@ public class InvoiceWriteService {
 
   private final InvoiceRepository invoiceRepository;
   private final InvoiceReadService invoiceReadService;
-  private final AccountRepository accountRepository;
+  private final KafkaTemplate<String, TransactionDTO> kafkaTemplate;
+  private final Validation validation;
 
   public Invoice create(final Invoice invoice) {
     log.debug("create: invoice={}", invoice);
@@ -38,46 +44,33 @@ public class InvoiceWriteService {
     return invoiceDb;
   }
 
-  public List<Payment> pay(final UUID invoiceId, final Payment payment, final String username, final String role, String token) {
+  //TODO transaction -> invoice ->
+
+  public List<Payment> pay(final UUID invoiceId, final Payment payment, final Jwt jwt) {
     log.debug("pay: payment={}", payment);
-
-    final var invoice = invoiceReadService.findById(invoiceId, username, role, token);
-
-    if (invoice.getAmountLeft().compareTo(BigDecimal.ZERO) == 0) {
-      invoice.setType(PAID);
-    }
-
-    if (invoice.getType().equals(PAID)) {
-      log.debug("pay: Invoice already paid");
-      //TODO bessere exception
-      throw new NotFoundException(UUID.fromString("Invoice already paid"));
-    }
-
-
-    final var amountLeft =  invoice.getAmountLeft();
-
-    if (payment.getAmount().compareTo(amountLeft) > 0) {
-      //TODO zuviel
-      payment.setAmount(amountLeft);
-    }
-//TODO customize accountId
-    final var currentBalance = invoiceReadService.findCurrentBalanceByAccountId(invoice.getAccountId(), token);
-    if (currentBalance.compareTo(payment.getAmount()) < 0) {
-      //TODO zu wenig geld vorhanden
-      payment.setAmount(currentBalance);
-    }
-
-    deductFromCurrentBalance(invoice.getAccountId(),payment.getAmount().multiply(BigDecimal.valueOf(-1)), token);
-
-    //TODO cuurent balance abziehen
+    final var accessToken = String.format("Bearer %s", jwt.getTokenValue());
+    final var invoice = invoiceReadService.findById(invoiceId, jwt);
+    final var account = invoiceReadService.findAccountById(invoice.getAccountId(), accessToken, false).stream().findFirst().orElseThrow(NotFoundException::new);
+    validation.validateCustomer(account.customerUsername(),jwt);
+    final var currentBalance = invoiceReadService.findCurrentBalanceByAccountId(invoice.getAccountId(), accessToken);
+    validation.validatePayment(invoice, payment, currentBalance);
+    sendTransaction(invoice, payment);
     invoice.getPayments().add(payment);
     log.debug("pay: Payment processed successfully, updated payments: {}", invoice.getPayments());
     return invoice.getPayments();
   }
 
-  public void deductFromCurrentBalance(final UUID id, final BigDecimal amount, final String token) {
-    log.debug("deductFromCurrentBalance:id={} amount={}",id, amount);
-    final var balanceDTO = new PaymentDTO(amount);
-    accountRepository.updateBalance(id.toString(), balanceDTO, token, "\"0\"");
+  private void sendTransaction(final Invoice invoice, final Payment payment) {
+    log.debug("sendTransaction: invoice={}", invoice);
+    final var transation = new TransactionDTO(
+      payment.getAmount(),
+      "EURO",
+      invoice.getAccountId(),
+      UUID.fromString("30000000-0000-0000-0000-000000000000")
+    );
+    kafkaTemplate.send("payment", transation);
+    log.debug("sendTransaction: transaction={}", transation);
   }
+
+  //TODO pay with another account
 }

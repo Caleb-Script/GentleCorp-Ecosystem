@@ -1,8 +1,8 @@
 package com.gentlecorp.transaction.service;
 
 import com.gentlecorp.transaction.exception.InsufficientFundsException;
+import com.gentlecorp.transaction.exception.InvalidTransactionException;
 import com.gentlecorp.transaction.model.dto.BalanceDTO;
-import com.gentlecorp.transaction.model.entity.Account;
 import com.gentlecorp.transaction.model.entity.Transaction;
 import com.gentlecorp.transaction.repository.TransactionRepository;
 import com.gentlecorp.transaction.util.Validation;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -29,45 +30,92 @@ public class TransactionWriteService {
   private final KafkaTemplate<String, BalanceDTO> kafkaTemplate;
   private final KeycloakService keycloakService;
 
-  private Pair<Account, String> validateTransaction(final Transaction transaction, final Jwt jwt) {
+  private Boolean validateTransaction(final Transaction transaction) {
     log.debug("Validating transaction {}", transaction);
-    final var accessToken = String.format("Bearer %s", jwt.getTokenValue());
-    final var senderAccount = transactionReadService.findAccountById(transaction.getSender(), accessToken);
-    final var adminToken = keycloakService.login("admin", "p");
-    final var adminAccessToken = String.format("Bearer %s", adminToken.accessToken());
+
+    if (transaction.getSender() == null || transaction.getReceiver() == null) {
+      return false;
+    }
+
+    if (transaction.getSender().equals(transaction.getReceiver())) {
+      log.error("Sender and Receiver are the same");
+      //TODO passenden Namen für die Exception
+      throw new InvalidTransactionException(transaction.getSender());
+    }
+
+    String adminAccessToken = String.format("Bearer %s", keycloakService.login("admin", "p").accessToken());
     transactionReadService.findAccountById(transaction.getReceiver(), adminAccessToken);
-    validation.validateCustomer(senderAccount.customerUsername(), jwt);
-    return Pair.of(senderAccount, accessToken);
+    return true;
   }
 
   public Transaction create(final Transaction transaction, final Jwt jwt) {
-    log.debug("create: transaction={}", transaction);
-    final var accessTokenAndAccount = validateTransaction(transaction, jwt);
-    final var senderAccount = accessTokenAndAccount.getLeft();
-    final var accessToken = accessTokenAndAccount.getRight();
-    log.debug("create: senderAccount={}", senderAccount);
-    calcuteBalance(transaction, accessToken);
-    final var transactionDb = transactionRepository.save(transaction);
-    log.trace("create: Thread-ID={}", Thread.currentThread().threadId());
-    log.debug("create: transactionDb={}", transactionDb);
-    return transactionDb;
+    log.debug("Creating transaction {}", transaction);
+    var validationResult = validateTransaction(transaction);
+
+    calculateBalance(transaction, validationResult, jwt);
+
+    var savedTransaction = transactionRepository.save(transaction);
+    log.debug("Transaction saved: {}", savedTransaction);
+    return savedTransaction;
   }
 
-  private void calcuteBalance(final Transaction transaction, final String accessToken) {
-    log.debug("calcuteBalance: transaction={}", transaction);
+  public Transaction create(final Transaction transaction) {
+    log.debug("Creating transaction {}", transaction);
+
+    sendBalanceAdjustment(transaction.getSender(), transaction.getAmount().negate());
+    sendBalanceAdjustment(transaction.getReceiver(), transaction.getAmount());
+
+    var savedTransaction = transactionRepository.save(transaction);
+    log.debug("Transaction saved: {}", savedTransaction);
+    return savedTransaction;
+  }
+
+  private void calculateBalance(final Transaction transaction, final boolean isTransaction, final Jwt jwt) {
+    log.debug("Calculating balance for transaction: {}", transaction);
+    BigDecimal transactionAmount = transaction.getAmount();
+
+    if (transactionAmount.compareTo(BigDecimal.ZERO) == 0) {
+      throw new IllegalArgumentException("Transaction amount cannot be zero.");
+    }
     final var senderId = transaction.getSender();
     final var receiverId = transaction.getReceiver();
-    final var accountSender = transactionReadService.findAccountById(senderId, accessToken);
-    final var senderBalance = accountSender.balance();
-    final var newSenderBalance = senderBalance.subtract(transaction.getAmount());
+
+    if (isTransaction) {
+      handleSenderReceiverBalance(senderId, receiverId, transactionAmount, jwt);
+    } else {
+      handleSingleAccountBalance(senderId, receiverId, transactionAmount, jwt);
+    }
+  }
+
+
+  private void handleSenderReceiverBalance(final UUID senderId, final UUID receiverId, final BigDecimal transactionAmount, final Jwt jwt) {
+    final var accessToken = String.format("Bearer %s", jwt.getTokenValue());
+    final var senderAccount = transactionReadService.findAccountById(senderId, accessToken);
+    validation.validateCustomer(senderAccount.customerUsername(), jwt);
+    final BigDecimal newSenderBalance = senderAccount.balance().subtract(transactionAmount);
+
     if (newSenderBalance.compareTo(BigDecimal.ZERO) < 0) {
-      log.error("calcuteBalance: newSenderBalance={}", newSenderBalance);
+      log.error("Insufficient funds for transaction. Sender balance: {}", newSenderBalance);
       throw new InsufficientFundsException();
     }
-    final var sender = new BalanceDTO(senderId, transaction.getAmount().negate());
-    final var receiver = new BalanceDTO(receiverId, transaction.getAmount());
-    log.debug("calcuteBalance: sender={}, receiver={}", sender, receiver);
-    kafkaTemplate.send("adjustBalance", sender);
-    kafkaTemplate.send("adjustBalance", receiver);
+
+    sendBalanceAdjustment(senderId, transactionAmount.negate());
+    sendBalanceAdjustment(receiverId, transactionAmount);
+  }
+
+  private void handleSingleAccountBalance(final UUID senderId, final UUID receiverId, final BigDecimal transactionAmount, final Jwt jwt) {
+    final var accessToken = String.format("Bearer %s", jwt.getTokenValue());
+    final UUID accountId = Optional.ofNullable(senderId).orElse(receiverId);
+    var account = transactionReadService.findAccountById(accountId, accessToken);
+    validation.validateCustomer(account.customerUsername(), jwt);
+    final BigDecimal adjustedAmount = accountId.equals(receiverId) ? transactionAmount.negate() : transactionAmount;
+    sendBalanceAdjustment(accountId, adjustedAmount);
+  }
+
+
+  private void sendBalanceAdjustment(UUID accountId, BigDecimal amount) {
+    final BalanceDTO balanceDTO = new BalanceDTO(accountId, amount);
+    kafkaTemplate.send("adjustBalance", balanceDTO);
+    log.debug("Balance adjustment sent: {}", balanceDTO);
   }
 }

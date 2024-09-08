@@ -43,29 +43,38 @@ public class TransactionReadService {
 
   private void setTransactionType(final Collection<Transaction> transactions, final UUID accountId) {
     log.debug("setTransactionType: accountId={}", accountId);
+    UUID zeroUUID = UUID.fromString("30000000-0000-0000-0000-000000000000");
+
     transactions.forEach(transaction -> {
-      if(accountId.equals(transaction.getSender())) {
-        if(transaction.getReceiver() == null) {
+      final var sender = transaction.getSender();
+      final var receiver = transaction.getReceiver();
+
+      // Payment and Refund checks first to avoid overwriting
+      if (zeroUUID.equals(receiver)) {
+        transaction.setType(PAYMENT);
+        return;
+      }
+
+      if (zeroUUID.equals(sender)) {
+        transaction.setType(REFUND);
+        return;
+      }
+
+      if (accountId.equals(sender)) {
+        if (receiver == null) {
           transaction.setType(DEPOSIT);
         } else {
           transaction.setType(TRANSFER);
         }
+        return;
       }
 
-      if(accountId.equals(transaction.getReceiver())) {
-        if (transaction.getSender() == null) {
+      if (accountId.equals(receiver)) {
+        if (sender == null) {
           transaction.setType(WITHDRAWAL);
         } else {
           transaction.setType(INCOME);
         }
-      }
-
-      if(transaction.getReceiver().equals(UUID.fromString("00000000-0000-0000-0000-000000000000"))) {
-        transaction.setType(PAYMENT);
-      }
-
-      if(transaction.getSender().equals(UUID.fromString("00000000-0000-0000-0000-000000000000"))) {
-        transaction.setType(REFUND);
       }
     });
   }
@@ -138,7 +147,4 @@ public class TransactionReadService {
     log.debug("Account found: {}", account);
     return account;
   }
-
-
-
 }

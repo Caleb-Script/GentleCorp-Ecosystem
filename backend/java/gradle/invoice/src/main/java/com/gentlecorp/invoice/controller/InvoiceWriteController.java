@@ -77,20 +77,9 @@ public class InvoiceWriteController {
     log.debug("PAY: paymentDTO={}", paymentDTO);
     final var username = jwtService.getUsername(jwt);
     log.debug("getById: customerUsername={}", username);
-
-    if (username == null) {
-      log.error("Despite Spring Security, getById() was called without a customerUsername in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var role = jwtService.getRole(jwt);
-    if (role == null) {
-      log.error("Despite Spring Security, getRole() was called without a Role in the JWT");
-      return status(UNAUTHORIZED).build();
-    }
-    final var token = "Bearer " + jwt.getTokenValue();
     final var payment = invoiceMapper.toPayment(paymentDTO);
     log.debug("pay: payment={}", payment);
-    final var payments = invoiceWriteService.pay(invoiceId, payment, username, role, token);
+    final var payments = invoiceWriteService.pay(invoiceId, payment, jwt);
     final var recentPayment = payments.getLast();
     final var baseUri = uriHelper.getBaseUri(request);
     final var location = new URI(String.format("%s/%s", baseUri.toString(), recentPayment.getId()));

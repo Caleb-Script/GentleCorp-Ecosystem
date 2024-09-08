@@ -12,6 +12,7 @@ import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PutExchange;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpHeaders.IF_MATCH;
@@ -36,11 +37,10 @@ public interface AccountRepository {
     @RequestHeader(AUTHORIZATION) String authorization
   );
 
-  @PutExchange("/{id}/balance")
-  void updateBalance(
-    @PathVariable final String id,
-    @RequestBody final PaymentDTO balanceDTO,
-    @RequestHeader(AUTHORIZATION) String authorization,
-    @RequestHeader(IF_MATCH) String version
+  @GetExchange("/customer/{customerId:}")
+  Collection<Account> getByCustomerId(
+    @PathVariable String customerId,
+    @RequestHeader(AUTHORIZATION) String authorization
   );
+
 }

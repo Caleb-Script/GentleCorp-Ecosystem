@@ -2,7 +2,9 @@ package com.gentlecorp.transaction.controller;
 
 import com.gentlecorp.transaction.exception.ConstraintViolationsException;
 import com.gentlecorp.transaction.exception.InsufficientFundsException;
+import com.gentlecorp.transaction.exception.InvalidTransactionException;
 import com.gentlecorp.transaction.model.dto.TransactionDTO;
+import com.gentlecorp.transaction.model.entity.Transaction;
 import com.gentlecorp.transaction.model.enums.ProblemType;
 import com.gentlecorp.transaction.model.mapper.TransactionMapper;
 import com.gentlecorp.transaction.service.TransactionWriteService;
@@ -14,10 +16,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,9 +47,16 @@ public class TransactionWriteController {
   private final TransactionMapper transactionMapper;
   private final UriHelper uriHelper;
 
+  @KafkaListener(topics = "payment",groupId = "gentlecorp")
+  public void handleNewPayment(TransactionDTO transactionDTO) {
+    log.debug("handleNewPayment transactionDTO={}", transactionDTO);
+    final var newTransaction = transactionMapper.toTransaction(transactionDTO);
+    transactionWriteService.create(newTransaction);
+  }
+
   @PostMapping(consumes = APPLICATION_JSON_VALUE)
   public ResponseEntity<Void> post(
-    @RequestBody final TransactionDTO transactionDTO,
+    @RequestBody @Validated({Default.class, TransactionDTO.OnCreate.class}) final TransactionDTO transactionDTO,
     final HttpServletRequest request,
     @AuthenticationPrincipal final Jwt jwt
   ) throws URISyntaxException {
@@ -70,6 +81,33 @@ public class TransactionWriteController {
     final var problemDetail = ProblemDetail.forStatusAndDetail(UNPROCESSABLE_ENTITY, ex.getMessage());
     problemDetail.setType(URI.create(PROBLEM_PATH + ProblemType.CONSTRAINTS.getValue()));
     problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
+    return problemDetail;
+  }
+
+  @ExceptionHandler
+  ProblemDetail onInvalidTransaction(final InvalidTransactionException ex, final HttpServletRequest request) {
+    log.error("onInvalidTransaction: {}", ex.getMessage());
+    final var problemDetail = ProblemDetail.forStatusAndDetail(UNPROCESSABLE_ENTITY, ex.getMessage());
+    problemDetail.setType(URI.create(PROBLEM_PATH + ProblemType.CONSTRAINTS.getValue()));
+    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
+    return problemDetail;
+  }
+
+  @ExceptionHandler
+  ProblemDetail onConstraintViolations(
+    final MethodArgumentNotValidException ex,
+    final HttpServletRequest request
+  ) {
+    log.debug("onConstraintViolations: {}", ex.getMessage());
+
+    final var detailMessages = ex.getDetailMessageArguments();
+    final var detail = detailMessages == null
+      ? "Constraint Violations"
+      : ((String) detailMessages[1]).replace(", and ", ", ");
+    final var problemDetail = ProblemDetail.forStatusAndDetail(UNPROCESSABLE_ENTITY, detail);
+    problemDetail.setType(URI.create(PROBLEM_PATH + ProblemType.CONSTRAINTS.getValue()));
+    problemDetail.setInstance(URI.create(request.getRequestURL().toString()));
+
     return problemDetail;
   }
 }
