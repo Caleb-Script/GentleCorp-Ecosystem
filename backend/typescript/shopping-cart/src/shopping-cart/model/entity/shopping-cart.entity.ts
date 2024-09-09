@@ -1,50 +1,40 @@
+import {
+    CreateDateColumn,
+    Entity,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+    VersionColumn,
+} from 'typeorm';
 
 @Entity()
+export class ShoppingCart {
+    @PrimaryGeneratedColumn(`uuid`)
+    shoppingCart: string | undefined;
 
-private UUID id;
-    /**
-     * Die Versionsnummer des Einkaufswagens.
-     */
-    @Version
-    private int version;
-    /**
-     * Die Gesamtsumme des Warenkorbs
-     */
-    @DecimalMin(value = "0.0", message = "Die Gesamtsumme muss größer als 0 sein")
-    private BigDecimal totalAmount;
-    /**
-     * die Kunden-ID
-     */
-    @NotNull(message = "Die Kunden-ID darf nicht null sein")
-    private UUID customerId;
-    /**
-     * Benutzernamen des Kunden
-     */
-    @Column(name = "customer_username")
-    private String customerUsername;
-    /**
-     * Status des Warenkorbs,
-     * gibt an, ob der Einkaufswagen abgeschlossen ist
-     */
-    @Column(name = "is_complete")
-    private boolean isComplete;
+    @VersionColumn()
+    version: number | undefined;
 
-    /**
-     * Liste der Artikel im Einkaufswagen.
-     */
-    @OneToMany(cascade = {PERSIST, REMOVE}, orphanRemoval = true)
-    @JoinColumn(name = "shopping_cart_id")
-    @OrderColumn(name = "idx", nullable = false)
-    @ToString.Exclude
-    private List<Item> cartItems;
+    totalAmount: number | undefined;
 
-    /**
-     * Zeitpunkt der Erstellung des Einkaufswagens.
-     */
-   @CreationTimestamp
-    private LocalDateTime created;
-    /**
-     * Zeitpunkt der letzten Aktualisierung des Einkaufswagens.
-     */
-    @UpdateTimestamp
-    private LocalDateTime updated;
+    customerId: string | undefined;
+
+    customerUsername: string | undefined;
+
+    isComplete: boolean | undefined;
+
+    @OneToMany(() => Item, (item) => item.shoppingCart, {
+        cascade: [`insert`, `remove`],
+    })
+    items: Item[] | undefined;
+
+    @CreateDateColumn({
+        type: dbType === `sqlite` ? `datetime` : `timestamp`,
+    })
+    created: Date | undefined;
+
+    @UpdateDateColumn({
+        type: dbType === `sqlite` ? `datetime` : `timestamp`,
+    })
+    updated: Date | undefined;
+}
