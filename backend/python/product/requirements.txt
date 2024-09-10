@@ -1,4 +1,6 @@
 fastapi
+pydantic
+keycloak
 pymongo
 uvicorn
-pydantic
+pytest
