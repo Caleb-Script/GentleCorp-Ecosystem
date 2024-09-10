@@ -8,8 +8,7 @@ import {
     UpdateDateColumn,
     VersionColumn,
 } from 'typeorm';
-import { ShoppingCart } from './shopping-cart.entity.js';
-import { DecimalTransformer } from './decimal-transformer.js';
+import { ShoppingCart } from './shopping-cart.entity';
 import { Exclude } from 'class-transformer';
 
 @Entity()
@@ -20,20 +19,24 @@ export class Item {
     @VersionColumn()
     version: number | undefined;
 
-    @Column()
+    @Exclude()
     skuCode: string;
 
-    @Exclude()
+    @Column()
     quantity: number;
 
-    @Column('decimal', {
-        precision: 8,
-        scale: 2,
-        transformer: new DecimalTransformer(),
-    })
+    @Column()
+    productId: string | undefined;
+
+    // @Column('decimal', {
+    //     precision: 8,
+    //     scale: 2,
+    //     transformer: new DecimalTransformer(),
+    // })
+    @Exclude()
     price: number;
 
-    @Column()
+    @Exclude()
     name: string;
 
     @CreateDateColumn({
@@ -46,7 +49,7 @@ export class Item {
     })
     readonly updated: Date | undefined;
 
-    @ManyToOne(() => ShoppingCart, (shoppingCart) => shoppingCart.items)
+    @ManyToOne(() => ShoppingCart, (shoppingCart) => shoppingCart.cartItems)
     @JoinColumn({ name: 'shopping_cart_id' })
-    customer: ShoppingCart | undefined;
+    ShoppingCart: ShoppingCart | undefined;
 }

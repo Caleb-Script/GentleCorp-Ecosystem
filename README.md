@@ -346,7 +346,7 @@ Die Auswahl der Datenbanktechnologie für die verschiedenen Microservices im Gen
     - **Begründung**: Flexibel für das Speichern unstrukturierter Benutzerbewertungen.
 
 17. **ShoppingCart Service**
-    - **Technologie**: Redis
+    - **Technologie**: MysQl
     - **Begründung**: Optimal für die schnelle, temporäre Speicherung von Warenkorbdaten.
 
 18. **Transport Service**

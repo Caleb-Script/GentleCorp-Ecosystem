@@ -55,7 +55,8 @@ spring:
           json:
             type:
               mapping:
-               account:com.gentlecorp.customer.model.dto.AccountDTO
+               account:com.gentlecorp.customer.model.dto.AccountDTO,
+               shoppingCart:com.gentlecorp.customer.model.dto.ShoppingCartDTO
 
   mail:
     host: localhost

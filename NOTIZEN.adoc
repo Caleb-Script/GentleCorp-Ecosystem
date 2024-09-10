@@ -47,6 +47,14 @@
 - admin and users can make invoices
 - customer can pay their invoices
 
+== shopping cart
+
+- customer gets a shopping cart on the customer registration
+- customer shopping cart will be deleted on customer deletion
+- customer can add or remove an item to his/her cart
+- customer can see his/her cart
+- admin can see all carts
+
 == Order
 
 - an order can have multiple items

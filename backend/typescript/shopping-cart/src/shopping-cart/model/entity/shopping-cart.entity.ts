@@ -1,4 +1,5 @@
 import {
+    Column,
     CreateDateColumn,
     Entity,
     OneToMany,
@@ -6,27 +7,34 @@ import {
     UpdateDateColumn,
     VersionColumn,
 } from 'typeorm';
+import { Item } from './item.entity';
+import { dbType } from '../../../config/db';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class ShoppingCart {
     @PrimaryGeneratedColumn(`uuid`)
-    shoppingCart: string | undefined;
+    shoppingCartId: string | undefined;
 
     @VersionColumn()
     version: number | undefined;
 
+    @Exclude()
     totalAmount: number | undefined;
 
+    @Column()
     customerId: string | undefined;
 
+    @Exclude()
     customerUsername: string | undefined;
 
+    @Exclude()
     isComplete: boolean | undefined;
 
-    @OneToMany(() => Item, (item) => item.shoppingCart, {
+    @OneToMany(() => Item, (item) => item.ShoppingCart, {
         cascade: [`insert`, `remove`],
     })
-    items: Item[] | undefined;
+    cartItems: Item[] | undefined;
 
     @CreateDateColumn({
         type: dbType === `sqlite` ? `datetime` : `timestamp`,

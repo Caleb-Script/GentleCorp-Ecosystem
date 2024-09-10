@@ -11,6 +11,7 @@ import com.gentlecorp.customer.exception.UsernameExistsException;
 import com.gentlecorp.customer.exception.VersionInvalidException;
 import com.gentlecorp.customer.exception.VersionOutdatedException;
 import com.gentlecorp.customer.model.dto.AccountDTO;
+import com.gentlecorp.customer.model.dto.ShoppingCartDTO;
 import com.gentlecorp.customer.model.entity.Contact;
 import com.gentlecorp.customer.model.entity.Customer;
 import com.gentlecorp.customer.model.interfaces.VersionedEntity;
@@ -50,7 +51,7 @@ public class CustomerWriteService {
   private final MailService mailService;
   private final MailProps props;
   private final KeycloakService keycloakService;
-  private final KafkaTemplate<String, AccountDTO> kafkaTemplate;
+  private final KafkaTemplate<String, Object> kafkaTemplate;
 
   public Customer create(final Customer customer, final String password) {
     customer.setCustomer_state(ACTIVE);
@@ -94,7 +95,10 @@ public class CustomerWriteService {
       20,
       customer.getId()
     );
+
     kafkaTemplate.send("newAccount", checkingAccount);
+    kafkaTemplate.send("create-shopping-cart",new ShoppingCartDTO(customer.getId()));
+
     log.debug("create: customerDb={}", customerDb);
     return customerDb;
   }
