@@ -12,6 +12,7 @@ POSTGRESSQL_PORT: 5432
 MYSQL_URL: mysql
 MYSQL_PORT: 3306
 DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+TLS: ?allowPublicKeyRetrieval=true&useSSL=false
 
 #Server
 SERVER_PORT: 8080

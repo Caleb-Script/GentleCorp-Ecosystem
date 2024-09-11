@@ -4,4 +4,4 @@ uvicorn
 pydantic
 python-keycloak
 pytest
-requests
+# requests

@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from app.models.user import LoginDTO
 from app.security.security import keycloak_openid
 
+
 router = APIRouter()
 
 

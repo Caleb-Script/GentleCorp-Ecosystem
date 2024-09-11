@@ -1,31 +1,29 @@
-from fastapi import Request, HTTPException, Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2AuthorizationCodeBearer
-from fastapi.security import OAuth2PasswordRequestForm
 from keycloak import KeycloakOpenID
-from pydantic import BaseModel
-from typing import List
 
 from app.models.user import User
+
 
 # Keycloak configuration
 keycloak_openid = KeycloakOpenID(
     server_url="http://localhost:8880/",
     client_id="gentlecorp-client",
     realm_name="GentleCorp-Ecosystem",
-    client_secret_key="FiAT2ma40CGVmctDNOOG9h1XtlAqA7Vb"
+    client_secret_key="FiAT2ma40CGVmctDNOOG9h1XtlAqA7Vb",
 )
 
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
     authorizationUrl="http://localhost:8080/auth/realms/GentleCorp-Ecosystem/protocol/openid-connect/auth",
-    tokenUrl="http://localhost:8080/auth/realms/GentleCorp-Ecosystem/protocol/openid-connect/token"
+    tokenUrl="http://localhost:8080/auth/realms/GentleCorp-Ecosystem/protocol/openid-connect/token",
 )
+
+# 1. Define Roles
 ADMIN = "ADMIN"
 USER = "USER"
 SUPREME = "SUPREME"
 ELITE = "ELITE"
 BASIC = "BASIC"
-
 
 # 2. Get User Information from JWT
 def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
@@ -53,7 +51,6 @@ def get_role(user: User) -> str:
     if ELITE in roles:
         return "ELITE"
     return "BASIC"
-
 
 # 4. Role-Based Access Control
 def requires_role(required_role: str):

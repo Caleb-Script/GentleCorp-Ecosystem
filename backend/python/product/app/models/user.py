@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import List
 from pydantic import BaseModel
 
@@ -12,4 +11,3 @@ class User(BaseModel):
     sub: str
     username: str
     roles: List[str]
-

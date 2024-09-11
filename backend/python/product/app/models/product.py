@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from enum import Enum
+from pydantic import BaseModel
 
 
 class ProductCategoryType(Enum):
@@ -12,9 +12,9 @@ class ProductCategoryType(Enum):
 
 
 class Product(BaseModel):
-  # productId = str
-  name: str
-  brand: str
-  price: float
-  description: str
-  category: ProductCategoryType
+    # productId = str
+    name: str
+    brand: str
+    price: float
+    description: str
+    category: ProductCategoryType

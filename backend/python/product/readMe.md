@@ -16,17 +16,18 @@ project-root/
 │   ├── models/                    # Enthält die Datenmodelle
 │   │   ├── __init__.py
 │   │   ├── product.py             # Modelle für Produkte
-│   │   └── category.py            # Modelle für Kategorien
+│   │   └── user.py                # Modelle für Benutzer
 │   ├── schemas/                   # Enthält Pydantic-Schemas für Validierung
 │   │   ├── __init__.py
 │   │   ├── product.py             # Schemas für Produkte
 │   │   └── category.py            # Schemas für Kategorien
 │   ├── crud/                      # CRUD-Operationen
 │   │   ├── __init__.py
-│   │   ├── product.py             # CRUD-Operationen für Produkte
-│   │   └── category.py            # CRUD-Operationen für Kategorien
+│   │   ├── read_product.py        # lese CRUD-Operationen für Produkte
+│   │   └── write_product.py       # schreib CRUD-Operationen für Produkte
 │   ├── db/                        # Datenbankkonfigurationen und -operationen
 │   │   ├── __init__.py
+|   |   ├── data.py                # Beispieldaten für die Datebank
 │   │   └── mongo.py               # MongoDB-Verbindungskonfiguration
 │   ├── security/                  # Sicherheits- und Authentifizierungslogik
 │   │   ├── __init__.py
@@ -35,7 +36,7 @@ project-root/
 │   ├── routers/                   # Routers (Kapselung von Routen)
 │   │   ├── __init__.py
 │   │   ├── product_router.py      # Routen für Produkte
-│   │   └── category_router.py     # Routen für Kategorien
+│   │   └── auth_router.py         # Routen für Authentifizierung
 │   └── utils/                     # Hilfsfunktionen
 │       ├── __init__.py
 │       └── helpers.py             # Hilfsfunktionen und Utility-Methoden
@@ -43,7 +44,9 @@ project-root/
 ├── tests/                         # Tests
 │   ├── __init__.py
 │   ├── test_product.py            # Tests für Produkte
-│   └── test_category.py           # Tests für Kategorien
+│   └── test_auth.py               # Tests für Authentifizierung
 │
+├── pyproject.toml
+├── .venv_product
 ├── requirements.txt               # Python-Abhängigkeiten
 └── README.md                      # Projektbeschreibung und Anweisungen

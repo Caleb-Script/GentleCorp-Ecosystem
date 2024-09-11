@@ -1,0 +1,15 @@
+
+services:
+  mongodb:
+    image: mongo:latest # use the latest image.
+    container_name: mongodb
+    restart: unless-stopped
+    # environment: # set required env variables to access mongo
+    env_file: .env
+    ports:
+      - published: 27017
+        target: 27017
+    volumes: # optional to preserve database after container is deleted.
+      - type: bind
+        source: ../../volumes/mongo/database-data
+        target: /data/db
