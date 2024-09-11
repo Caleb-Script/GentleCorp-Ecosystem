@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: inventory_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - inventory_net
+
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: mysql://root:example@db:3306/inventory_db
+    networks:
+      - inventory_net
+
+networks:
+  inventory_net:
+
+volumes:
+  mysql_data:

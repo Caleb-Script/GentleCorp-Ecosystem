@@ -1,4 +1,11 @@
 fastapi
-pymongo
-uvicorn
+sqlalchemy
 pydantic
+uvicorn
+pytest
+# pymysql ist Synchronous
+aiomysql # ist asynchronous
+fastapi-keycloak
+alembic
+pydantic-settings
+
