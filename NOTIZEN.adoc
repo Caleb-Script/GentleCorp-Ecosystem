@@ -9,7 +9,9 @@
 :pagenums:
 :icons: font
 
-== Customer
+== Services
+
+=== Customer
 
 - there a 3 categories of the customer (Supreme, Elite, basic)
 - Supreme customers have a 10% discount on all items
@@ -22,7 +24,7 @@
 - customer can only update his/her profile
 - admin can update all profiles
 
-== account
+=== account
 
 - admin can see all accounts
 - customer can only see his/her account
@@ -32,7 +34,7 @@
 - customer can get the balance of one account or all their accounts
 - admin can get the balance of one account or all accounts
 
-== transaction
+=== transaction
 
 - customrs can only see their transactions
 - admin can see all transactions
@@ -40,14 +42,14 @@
 - communicatio with the account server with kafka
 - only  the owner of the account can do a transaction
 
-== invoice
+=== invoice
 
 - admin can see all invoices
 - customer can see their invoices
 - admin and users can make invoices
 - customer can pay their invoices
 
-== shopping cart
+=== shopping cart
 
 - customer gets a shopping cart on the customer registration
 - customer shopping cart will be deleted on customer deletion
@@ -55,6 +57,86 @@
 - customer can see his/her cart
 - admin can see all carts
 
-== Order
+=== Order
 
 - an order can have multiple items
+
+== Selbstsigniertes SSL-Zertifikat erstellen
+
+=== Erstelle einen privaten Schlüssel
+Erstelle eine private Schlüsseldatei (key.pem) mit dem folgenden Befehl:
+
+ openssl genpkey -algorithm RSA -out key.pem -aes256
+
+[cols="1,2", options="header"]
+|===
+|Bezeichnung
+|Erklärung
+
+|openssl genpkey
+|Der Befehl genpkey wird verwendet, um ein neues Schlüsselpaar (privaten und öffentlichen Schlüssel) zu generieren.
+
+|algorithm RSA
+|Gibt an, dass der RSA-Algorithmus verwendet werden soll. RSA ist ein weit verbreitetes Verfahren für die Erstellung von Schlüsselpaaren.
+
+|out key.pem
+|Gibt den Namen der Ausgabedatei für den privaten Schlüssel an. In diesem Fall wird die Datei key.pem erstellt, die den privaten Schlüssel enthält.
+
+|aes256
+|Gibt an, dass der private Schlüssel mit dem AES-256-Algorithmus verschlüsselt werden soll. Dies bedeutet, dass ein Passwort zum Schutz des Schlüssels erforderlich ist. AES-256 ist eine starke Verschlüsselungsmethode.
+
+|===
+
+=== Erstelle ein Zertifikats-Signierungsanforderung (CSR)
+Erstelle eine Zertifikats-Signierungsanforderung (csr.pem) mit dem folgenden Befehl:
+
+ openssl req -new -key key.pem -out csr.pem
+
+[cols="1,2", options="header"]
+|===
+|Bezeichnung
+|Erklärung
+
+|openssl req
+|Der Befehl req wird verwendet, um eine Zertifikats-Signierungsanforderung (CSR) zu erstellen oder ein Zertifikat zu signieren.
+
+|new
+|Gibt an, dass eine neue Zertifikats-Signierungsanforderung erstellt werden soll.
+
+|key key.pem
+|Gibt den privaten Schlüssel an, der zur Erstellung der CSR verwendet werden soll. Die Datei key.pem enthält diesen privaten Schlüssel.
+
+|out csr.pem
+|Gibt den Namen der Ausgabedatei für die CSR an. In diesem Fall wird die Datei csr.pem erstellt, die die Zertifikats-Signierungsanforderung enthält.
+
+|===
+
+=== Erstelle das selbstsignierte Zertifikat
+Erstelle ein selbstsigniertes Zertifikat (certificate.crt) mit dem folgenden Befehl:
+
+ openssl x509 -req -in csr.pem -signkey key.pem -out certificate.crt -days 365
+
+[cols="1,2", options="header"]
+|===
+|Bezeichnung
+|Erklärung
+
+|openssl x509
+|Der Befehl x509 wird verwendet, um Zertifikate zu erstellen und zu verwalten. Hier wird er verwendet, um das Zertifikat zu erstellen.
+
+|req
+|Gibt an, dass ein Zertifikat basierend auf einer Zertifikats-Signierungsanforderung (CSR) erstellt werden soll.
+
+|in csr.pem
+|Gibt die Datei an, die die Zertifikats-Signierungsanforderung (CSR) enthält. Diese Datei wird verwendet, um das Zertifikat zu erstellen.
+
+|signkey key.pem
+|Gibt den privaten Schlüssel an, der zur Signierung des Zertifikats verwendet wird. Die Datei key.pem enthält diesen privaten Schlüssel.
+
+|out certificate.crt
+|Gibt den Namen der Ausgabedatei für das Zertifikat an. In diesem Fall wird die Datei certificate.crt erstellt, die das selbstsignierte Zertifikat enthält.
+
+|days 365
+|Gibt die Gültigkeitsdauer des Zertifikats in Tagen an. In diesem Fall ist das Zertifikat 365 Tage gültig.
+
+|===

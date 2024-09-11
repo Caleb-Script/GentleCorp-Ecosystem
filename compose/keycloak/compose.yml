@@ -9,15 +9,15 @@ services:
         target: 8443
     volumes:
       - type: bind
-        source: /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/volumes/keycloak
+        source: ../../volumes/keycloak
         # mit Unterverzeichnis h2
         target: /opt/keycloak/data
       - type: bind
-        source: key.pem
+        source: ../../.keys/key.pem
         target: /opt/keycloak/conf/key.pem
         read_only: true
       - type: bind
-        source: certificate.crt
+        source: ../../.keys/certificate.crt
         target: /opt/keycloak/conf/certificate.crt
         read_only: true
       # ggf. /opt/keycloak/conf/keycloak.conf
