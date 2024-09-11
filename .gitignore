@@ -98,6 +98,12 @@ TODO.adoc
 /backend/**/nbdist/
 /backend/**/.nb-gradle/
 
+### Python
 .venv_product/
 __pycache__/
 *.pyc
+
+###Keys
+.keys
+
+###databank
