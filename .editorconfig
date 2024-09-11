@@ -13,6 +13,9 @@ trim_trailing_whitespace = true
 [*.{ts,mts,js,mjs,cjs,puml}]
 indent_size = 4
 
+[*.{py}]
+indent_size = 4
+
 [Dockerfile]
 indent_size = 4
 

@@ -1,8 +1,11 @@
 from typing import List, Optional
 
 from app.db.mongo import db
+from app.models.product import ProductCategoryType
 from app.schemas.product import ProductSchema as ProductSchema
 from bson import ObjectId
+
+from app.schemas.search_criteria import SearchCriteria
 
 
 # Helper function to serialize MongoDB ObjectId to string
@@ -28,32 +31,40 @@ def find_by_id(product_id: str) -> Optional[ProductSchema]:
     return None
 
 
-# Filter products based on various criteria
-def find_products(
-    name: Optional[str] = None,
-    brand: Optional[str] = None,
-    category: Optional[str] = None,
-    min_price: Optional[float] = None,
-    max_price: Optional[float] = None,
-) -> List[ProductSchema]:
+def find_products(search_criteria: SearchCriteria) -> List[ProductSchema]:
     try:
         query = {}
 
-        if name:
-            query["name"] = {"$regex": name, "$options": "i"}  # Case-insensitive search
-        if brand:
-            query["brand"] = {"$regex": brand, "$options": "i"}
-        if category:
-            query["category"] = category
-        if min_price is not None:
-            query["price"] = {"$gte": min_price}
-        if max_price is not None:
-            query.setdefault("price", {})["$lte"] = max_price
+        # Name-Filter: Fallunabhängige, teilweise Übereinstimmung
+        if search_criteria.name:
+            query["name"] = {
+                "$regex": search_criteria.name,
+                "$options": "i",
+            }  # e.g., "phon" or "16"
 
+        # Brand-Filter: Fallunabhängige, teilweise Übereinstimmung
+        if search_criteria.brand:
+            query["brand"] = {"$regex": search_criteria.brand, "$options": "i"}
+
+        # Kategorie-Filter: Enum-Wert in String umwandeln
+        if search_criteria.category:
+            query["category"] = (
+                search_criteria.category.value
+            )  # Enum wird in String umgewandelt
+
+        # Preis-Filter
+        if search_criteria.min_price is not None:
+            query["price"] = {"$gte": search_criteria.min_price}
+        if search_criteria.max_price is not None:
+            query.setdefault("price", {})["$lte"] = search_criteria.max_price
+
+        # Produkte aus der Datenbank abrufen, basierend auf der Abfrage
         products = list(db.products.find(query)) if query else list(db.products.find())
+
+        # MongoDB-Dokumente in ProductSchema-Objekte umwandeln
         return [ProductSchema(**serialize_product(product)) for product in products]
+
     except Exception as e:
-        # Log or handle error as appropriate
+        # Fehlerbehandlung (kann Logging hinzufügen)
         print(f"Error retrieving products: {e}")
         return []
-

@@ -1,0 +1,39 @@
+# Filter products based on various criteria
+def find_products(
+    name: Optional[str] = None,
+    brand: Optional[str] = None,
+    category: Optional[ProductCategoryType] = None,  # Enum für Kategorie
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+) -> List[ProductSchema]:
+    try:
+        query = {}
+
+        # Case-insensitive, partial matching for name
+        if name:
+            query["name"] = {"$regex": name, "$options": "i"}  # e.g., "phon" or "16"
+
+        # Case-insensitive, partial matching for brand
+        if brand:
+            query["brand"] = {"$regex": brand, "$options": "i"}
+
+        # Convert Enum to string value for category
+        if category:
+            query["category"] = category.value  # Convert Enum to its string value
+
+        # Price filtering
+        if min_price is not None:
+            query["price"] = {"$gte": min_price}
+        if max_price is not None:
+            query.setdefault("price", {})["$lte"] = max_price
+
+        # Fetch products from the database based on the query
+        products = list(db.products.find(query)) if query else list(db.products.find())
+
+        # Convert MongoDB documents to ProductSchema objects
+        return [ProductSchema(**serialize_product(product)) for product in products]
+
+    except Exception as e:
+        # Log or handle error as appropriate
+        print(f"Error retrieving products: {e}")
+        return []

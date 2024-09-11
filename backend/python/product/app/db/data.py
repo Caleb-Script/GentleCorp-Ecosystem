@@ -1,6 +1,7 @@
 from .mongo import db
 from ..models.product import Product, ProductCategoryType
 from pymongo import errors
+from bson import ObjectId
 
 
 # Example Data

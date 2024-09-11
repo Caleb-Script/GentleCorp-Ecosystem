@@ -13,6 +13,7 @@ class ProductCategoryType(Enum):
 
 class Product(BaseModel):
     # productId = str
+    _id: str
     name: str
     brand: str
     price: float
