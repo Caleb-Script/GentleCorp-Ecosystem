@@ -2,16 +2,13 @@ import os
 from pydantic_settings import BaseSettings
 
 
-from pydantic_settings import BaseSettings
-
-
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Inventory Service"
     DATABASE_URL: str
     KEYCLOAK_SERVER_URL: str
     KEYCLOAK_CLIENT_ID: str
     KEYCLOAK_CLIENT_SECRET: str
-    LOG_LEVEL: str = "debug"  # Provide a default value if desired
+    LOG_LEVEL: str
     APP_ENV: str = "development"  # Added if needed
     APP_DEBUG: bool = True
 

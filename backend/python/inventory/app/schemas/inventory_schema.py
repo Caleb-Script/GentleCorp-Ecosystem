@@ -1,14 +1,15 @@
 from pydantic import BaseModel
 from typing import Optional
 from uuid import UUID
-import enum
+
+from ..models import InventoryStatusType
 
 
-class InventoryStatusType(str, enum.Enum):
-    DISCONTINUED = "D"
-    AVAILABLE = "A"
-    RESERVED = "R"
-    OUT_OF_STOCK = "O"
+# class InventoryStatusType(str, enum.Enum):
+#     DISCONTINUED = "D"
+#     AVAILABLE = "A"
+#     RESERVED = "R"
+#     OUT_OF_STOCK = "O"
 
 
 class InventoryBase(BaseModel):
@@ -37,6 +38,11 @@ class InventoryUpdate(BaseModel):
 
 class InventoryResponse(InventoryBase):
     id: UUID
+
+
+class InventoryModel(InventoryBase):
+    id: UUID
+
 
 
 class InventoryRead(InventoryBase):

@@ -8,4 +8,5 @@ aiomysql # ist asynchronous
 fastapi-keycloak
 alembic
 pydantic-settings
+loguru
 

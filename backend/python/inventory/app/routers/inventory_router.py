@@ -1,16 +1,24 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.loggin import custom_logger
 from ..models import Inventory
-from app.schemas.inventory_schema import InventoryCreate, InventoryCreateResponse, InventoryRead, InventoryResponse
+from ..schemas import InventoryModel, InventoryRead, InventoryCreate, InventoryCreateResponse
 from app.crud.inventory_crud import get_inventory, get_inventories, create_inventory
 from ..db import get_session
 
 router = APIRouter()
+logger = custom_logger(__name__)
+# logger = custom_logger(color="yellow")
 
-@router.get("/s")
-async def test():
-    return {"message": "Hello, World!"}
+@router.get("/skuCode/{sku_code}")
+async def get_by_sku_coder(sku_code: str):
+    logger.debug("getBySkuCodeAsd: {}", sku_code)
+    logger.error("getBySkuCodeAsd: {}", sku_code)
+    logger.success("getBySkuCodeAsd: {}", sku_code)
+    return sku_code
+
 
 @router.get("/", response_model=List[InventoryRead])
 async def read_inventories(
@@ -20,8 +28,8 @@ async def read_inventories(
     return inventories
 
 
-@router.get("/{inventory_id}", response_model=InventoryRead)
-async def read_inventory(inventory_id: int, db: AsyncSession = Depends(get_session)):
+@router.get("/id/{inventory_id}", response_model=InventoryModel)
+async def read_inventory(inventory_id: str, db: AsyncSession = Depends(get_session)):
     inventory = await get_inventory(db, inventory_id)
     if inventory is None:
         raise HTTPException(status_code=404, detail="Inventory not found")
