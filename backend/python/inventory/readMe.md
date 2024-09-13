@@ -26,55 +26,54 @@ Dockerfile und docker-compose.yml: Falls Sie Docker verwenden, um die Anwendung 
 README.md: Dokumentation des Projekts, um anderen Entwicklern eine Einführung und Anleitung zu bieten.
 
 ```plaintext
-inventory_service/
-│
+inventory-service/
 ├── app/
 │   ├── __init__.py
-│   ├── main.py
+│   ├── main.py                  # Main entry point for FastAPI application
 │   ├── core/
 │   │   ├── __init__.py
-│   │   └── config.py             # Configuration for FastAPI and Keycloak
+│   │   └── config.py            # Configuration for FastAPI and Keycloak
 │   ├── db/
 │   │   ├── __init__.py
-│   │   ├── base.py               # Database base configuration
-│   │   └── mysql.py              # MySQL connection setup
+│   │   └── mysql.py             # MySQL connection setup
 │   ├── models/
 │   │   ├── __init__.py
-│   │   └── inventory.py          # SQLAlchemy models for inventory
-│   ├── routers/
-│   │   ├── __init__.py
-│   │   └── inventory_router.py   # Routes for inventory
-│   ├── security/
-│   │   ├── __init__.py
-│   │   └── keycloak.py           # Keycloak integration
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   └── inventory.py          # Pydantic schemas for inventory
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   └── dependencies.py       # Dependencies for authentication
-│   ├── tests/
-│   │   ├── __init__.py
-│   │   └── test_inventory.py     # Tests for inventory API
-│   ├── exceptions/
-│   │   ├── __init__.py
-│   │   └── http_exceptions.py    # HTTP exceptions for errors
-│   ├── repositories/
+│   │   └── inventory.py         # SQLAlchemy models for inventory
+│   ├── repository/
 │   │   ├── __init__.py
 │   │   └── inventory_repository.py  # Repository for inventory data
-│   ├── services/
+│   ├── service/
 │   │   ├── __init__.py
-│   │   └── inventory_service.py  # Service layer for inventory logic
-│   └── controllers/
-│       ├── __init__.py
-│       └── inventory_controller.py  # Controller layer for handling API requests
-|
-├── .env                             # Environment variables
-├── pyproject.toml           # Project metadata and dependencies
-├── requirements.txt         # Python dependencies (if not using Poetry)
-├── Dockerfile                # Dockerfile for containerizing the application
-├── docker-compose.yml        # Docker Compose configuration (if needed)
-└── README.md                 # Project documentation
+│   │   ├── inventory_read_service.py  # Service layer for read operations
+│   │   └── inventory_write_service.py  # Service layer for write operations
+│   ├── controller/
+│   │   ├── __init__.py
+│   │   ├── inventory_read_controller.py  # Controller for read operations
+│   │   └── inventory_write_controller.py  # Controller for write operations
+│   ├── security/
+│   │   ├── __init__.py
+│   │   └── keycloak.py          # Keycloak integration
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   └── inventory.py         # Pydantic schemas for inventory
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   └── dependencies.py      # Dependencies for authentication
+│   ├── tests/
+│   │   ├── __init__.py
+│   │   ├── test_inventory_read.py    # Tests for inventory read API
+│   │   └── test_inventory_write.py   # Tests for inventory write API
+│   ├── exceptions/
+│   │   ├── __init__.py
+│   │   └── http_exceptions.py   # HTTP exceptions for errors
+│
+├── .env                          # Environment variables
+├── pyproject.toml                # Project metadata and dependencies
+├── requirements.txt              # Python dependencies (if not using Poetry)
+├── Dockerfile                     # Dockerfile for containerizing the application
+├── docker-compose.yml             # Docker Compose configuration (if needed)
+└── README.md                      # Project documentation
+
 
 ```
 

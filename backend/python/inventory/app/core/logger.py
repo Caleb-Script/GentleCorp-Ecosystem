@@ -1,8 +1,7 @@
 import sys
 from loguru import logger
 from typing import Optional
-
-from .config import settings
+from .settings import settings
 
 
 def custom_logger(class_name: str, color: Optional[str] = None, time: Optional[bool] = True):
@@ -34,3 +33,5 @@ def custom_logger(class_name: str, color: Optional[str] = None, time: Optional[b
     )
     child = logger.bind(file=class_name)
     return child
+
+

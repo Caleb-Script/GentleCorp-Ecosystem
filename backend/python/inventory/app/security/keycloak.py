@@ -1,15 +1,18 @@
-from fastapi import Depends
-from fastapi_keycloak import FastAPIKeycloak
-from app.core.config import settings
+from fastapi import HTTPException, Depends
+from fastapi.security import OAuth2AuthorizationCodeBearer
+from keycloak import KeycloakOpenID
 
-keycloak_openid = FastAPIKeycloak(
+from ..core import settings
+
+# Keycloak configuration
+keycloak_openid = KeycloakOpenID(
     server_url=settings.KEYCLOAK_SERVER_URL,
     client_id=settings.KEYCLOAK_CLIENT_ID,
-    client_secret=settings.KEYCLOAK_CLIENT_SECRET,
-    realm_name="GentleCorp-Ecosystem",
-    callback_uri="http://localhost:8000/callback",
+    realm_name=settings.KEYCLOAK_REALM,
+    client_secret_key=settings.KEYCLOAK_CLIENT_SECRET,
 )
 
-
-def get_current_user(token: str = Depends(keycloak_openid.get_current_user)):
-    return token
+oauth2_scheme = OAuth2AuthorizationCodeBearer(
+    authorizationUrl=settings.KEYCLOAK_AUTH_URL,
+    tokenUrl=settings.KEYCLOAK_TOKEN_URL,
+)

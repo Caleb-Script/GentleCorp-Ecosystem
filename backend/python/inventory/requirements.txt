@@ -1,12 +1,28 @@
 fastapi
 sqlalchemy
-pydantic
 uvicorn
-pytest
+
+# Datenbank
 # pymysql ist Synchronous
 aiomysql # ist asynchronous
-fastapi-keycloak
-alembic
+
+# alembic
+
+# Schema
+pydantic
 pydantic-settings
+
+# Logging
 loguru
 
+# db_populate
+databases
+
+httpx
+
+# Tests
+pytest
+pytest-asyncio
+
+# Keycloak
+fastapi-keycloak

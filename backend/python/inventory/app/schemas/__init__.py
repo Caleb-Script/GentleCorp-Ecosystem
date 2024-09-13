@@ -3,5 +3,6 @@ from .inventory_schema import (
     InventoryModel,
     InventoryCreate,
     InventoryRead,
-    InventoryCreateResponse,
+    InventoryBase,
+    InventoryUpdate,
 )

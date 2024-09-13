@@ -11,6 +11,7 @@ services:
       - "--ssl-key=/var/lib/mysql-tls/key.pem"
       - "--ssl-cert=/var/lib/mysql-tls/certificate.crt"
       - "--ssl-ca=/var/lib/mysql-tls/certificate.crt"
+      - "--local_infile=1"
     volumes:
       - type: bind
         source: ../../volumes/mysql/db
@@ -31,6 +32,9 @@ services:
         source: ../../.keys/certificate.crt
         target: /var/lib/mysql-tls/certificate.crt
         read_only: true
+      - type: bind
+        source: ../../volumes/mysql/csv/inventory
+        target: /var/lib/mysql-files
       - type: bind
         source: config.phpmyadmin.inc.phpx
         target: /etc/phpmyadmin/config.inc.php
