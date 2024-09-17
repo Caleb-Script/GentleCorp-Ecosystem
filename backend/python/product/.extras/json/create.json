@@ -1,0 +1,12 @@
+[
+  {
+    "collection": "products",
+    "operation": "create_index",
+    "data": {"name": 1}
+  },
+  {
+    "collection": "products",
+    "operation": "create_index",
+    "data": {"category": 1}
+  }
+]

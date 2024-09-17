@@ -1,7 +1,13 @@
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
+from ..core import settings
 
-# client = MongoClient("mongodb://root:password@mongodb:27017/")
-client = MongoClient("mongodb://root:password@localhost:27017/")
+client = AsyncIOMotorClient(settings.DATABASE_URL)
+db = client[settings.DATABASE_NAME]
 
-db = client["product_db"]
 
+async def get_database():
+    return db
+
+
+async def close_mongo_connection():
+    client.close()

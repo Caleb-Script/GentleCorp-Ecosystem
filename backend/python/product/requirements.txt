@@ -1,7 +1,16 @@
 fastapi
-pymongo
+
 uvicorn
 pydantic
+pydantic-settings
 python-keycloak
 pytest
 # requests
+loguru
+
+# asynchrone MongoDB-Treiberbibliothek
+motor
+
+# synchrone MongoDB-Treiberbibliothek
+# pymongo
+

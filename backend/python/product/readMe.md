@@ -89,3 +89,82 @@ project-root/
     ```bash
     uvicorn app.main:app --reload
     ```
+
+
+project-root/
+│
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── controllers/
+│   │   ├── __init__.py
+│   │   ├── product_controller.py
+│   │   └── auth_controller.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── product_service.py
+│   │   └── auth_service.py
+│   ├── repositories/
+│   │   ├── __init__.py
+│   │   └── product_repository.py
+│   ├── db/
+│   │   ├── __init__.py
+│   │   ├── data.py
+│   │   └── mongo.py
+│   ├── exception/
+│   │   ├── __init__.py
+│   │   └── exceptions.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── product.py
+│   │   └── user.py
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── product.py
+│   │   └── search_criteria.py
+│   ├── security/
+│   │   ├── __init__.py
+│   │   └── security.py
+│   └── utils/
+│       ├── __init__.py
+│       └── helpers.py
+│
+├── tests/
+│   ├── __init__.py
+│   ├── test_product.py
+│   └── test_auth.py
+│
+├── pyproject.toml
+├── requirements.txt
+└── README.md
+
+
+project-root/
+│
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── controllers/
+│   │   ├── __init__.py
+│   │   ├── read_product_controller.py
+│   │   ├── write_product_controller.py
+│   │   └── auth_controller.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── read_product_service.py
+│   │   ├── write_product_service.py
+│   │   └── auth_service.py
+│   ├── repositories/
+│   │   ├── __init__.py
+│   │   └── product_repository.py
+│   ├── db/
+│   ├── exception/
+│   ├── models/
+│   ├── schemas/
+│   ├── security/
+│   └── utils/
+│
+├── tests/
+├── pyproject.toml
+├── requirements.txt
+└── README.md

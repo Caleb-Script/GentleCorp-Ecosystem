@@ -10,7 +10,7 @@ python = "^3.9"
 fastapi = "^0.95.0"
 pydantic = "^1.11.1"
 keycloak = "^0.21.0"
-pymongo = "^4.0.0"
+
 uvicorn = "^0.21.0"
 
 [tool.poetry.dev-dependencies]
