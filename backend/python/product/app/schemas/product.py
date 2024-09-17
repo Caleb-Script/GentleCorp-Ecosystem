@@ -1,16 +1,9 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 from enum import Enum
 
+from ..models import ProductCategoryType
 
-class ProductCategoryType(str, Enum):
-    ELECTRONICS = "ELECTRONICS"
-    CLOTHING = "CLOTHING"
-    BOOKS = "BOOKS"
-    TOYS = "TOYS"
-    FURNITURE = "FURNITURE"
-    FRUIT_AND_VEGETABLES = "FRUIT_AND_VEGETABLES"
-    # ... andere Kategorien ...
 
 class ProductModel(BaseModel):
     name: str
@@ -25,11 +18,8 @@ class ProductModel(BaseModel):
 
 
 class ProductSchema(ProductModel):
-    id: UUID = Field(alias="_id")
+    id: UUID = Field(default_factory=uuid4, alias="_id")
 
-    class Config:
-        allow_population_by_field_name = True
-        json_encoders = {UUID: str}
 
 
 class SearchCriteria(BaseModel):

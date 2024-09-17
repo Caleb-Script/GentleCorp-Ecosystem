@@ -1,7 +1,7 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from ..core import Logger
-from ..schemas import ProductSchema
+from ..schemas import ProductModel
 from ..security import AuthService, User
 from ..service import ProductWriteService
 
@@ -9,26 +9,31 @@ router = APIRouter()
 logger = Logger("ProductWriteController")
 
 
-@router.post("/", status_code=201)
+@router.post("/")
 async def create_product(
-    product: ProductSchema,
+    product: ProductModel,
     user: User = Depends(AuthService.get_current_user),
     write_product_service: ProductWriteService = Depends(ProductWriteService),
+    response: Response = Response(),
 ):
     if "ADMIN" not in user.roles:
         raise HTTPException(status_code=403, detail="Nicht genügend Berechtigungen")
     logger.info("Produkt wird erstellt: {}", product)
     created_product = await write_product_service.create_product(product)
     logger.success("Produkt erstellt: {}", created_product)
-    return None
+    response.headers["Location"] = f"/product/{created_product}"
+    response.status_code = status.HTTP_201_CREATED
+    logger.success("createProduct; new product id={}", created_product)
+    return response
 
 
-@router.put("/{product_id}", status_code=200)
+@router.put("/{product_id}")
 async def update_product(
     product_id: UUID,
-    product: ProductSchema,
+    product: ProductModel,
     user: User = Depends(AuthService.get_current_user),
     write_product_service: ProductWriteService = Depends(ProductWriteService),
+    response: Response = Response(),
 ):
     if "ADMIN" not in user.roles:
         raise HTTPException(status_code=403, detail="Nicht genügend Berechtigungen")
@@ -36,18 +41,21 @@ async def update_product(
     updated_product = await write_product_service.update_product(product_id, product)
     if not updated_product:
         raise HTTPException(status_code=404, detail="Produkt nicht gefunden")
-    logger.success("Produkt aktualisiert: {}", updated_product)
-    return updated_product
+    response.status_code = status.HTTP_204_NO_CONTENT
+    logger.success("updateProduct; product id={}", product_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-
-@router.delete("/{product_id}", status_code=204)
+@router.delete("/{product_id}")
 async def delete_product(
     product_id: UUID,
     user: User = Depends(AuthService.get_current_user),
     write_product_service: ProductWriteService = Depends(ProductWriteService),
+    response: Response = Response(),
 ):
     if "ADMIN" not in user.roles:
         raise HTTPException(status_code=403, detail="Nicht genügend Berechtigungen")
     if not await write_product_service.delete_product(product_id):
         raise HTTPException(status_code=404, detail="Produkt nicht gefunden")
-    return None
+    response.status_code = status.HTTP_204_NO_CONTENT
+    logger.success("deleteProduct; product id={}", product_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
