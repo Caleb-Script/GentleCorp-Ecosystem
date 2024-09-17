@@ -1,2 +1,2 @@
 # app/db/__init__.py
-from .mysql import engine, create_async_engine, Base, get_session
+from .mysql import engine, create_async_engine, Base, get_session, async_session_maker

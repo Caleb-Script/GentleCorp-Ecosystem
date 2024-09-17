@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Enum, DECIMAL
+from sqlalchemy import Column, ForeignKey, String, Integer, Enum, DECIMAL
 from sqlalchemy.dialects.mysql import CHAR
 from sqlalchemy.orm import relationship
 import uuid
@@ -19,14 +19,26 @@ class Inventory(Base):
     id = Column(
         CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )  # UUID als CHAR
-    sku_code = Column(String(50), nullable=False)  # Länge für VARCHAR angeben
+    sku_code = Column(String(50), nullable=False)
     quantity = Column(Integer, nullable=False)
     unit_price = Column(
         DECIMAL(10, 2), nullable=False
-    )  # Präzision und Skala für DECIMAL angeben
-    status = Column(Enum(InventoryStatusType), nullable=False)
-    product_id = Column(CHAR(36), nullable=False)  # UUID als CHAR
-
-    reserved_products = relationship(
-        "ReservedProduct", back_populates="inventory", cascade="all, delete-orphan"
     )
+    status = Column(Enum(InventoryStatusType), nullable=False)
+    product_id = Column(CHAR(36), nullable=False)
+
+    reserved_items = relationship(
+        "ReservedItem", back_populates="inventory", cascade="all, delete-orphan"
+    )
+
+
+class ReservedItem(Base):
+    __tablename__ = "reserved_item"
+
+    id = Column(
+        CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    quantity = Column(Integer, nullable=False)
+    username = Column(String(255), nullable=False)
+    inventory_id = Column(CHAR(36), ForeignKey("inventory.id", ondelete="CASCADE"))
+    inventory = relationship("Inventory", back_populates="reserved_items")

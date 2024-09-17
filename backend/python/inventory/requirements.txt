@@ -18,6 +18,7 @@ loguru
 # db_populate
 databases
 
+# Externe Service-Aufrufe
 httpx
 
 # Tests

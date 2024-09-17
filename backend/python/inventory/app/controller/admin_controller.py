@@ -60,7 +60,7 @@ async def db_populate():
         logger.success(f"Executed create script: {create_script}")
 
         # Load data into tables
-        tables = ["inventory", "reserved_products"]
+        tables = ["inventory", "reserved_item"]
         for table in tables:
             load_data_script = f"""
             LOAD DATA LOCAL INFILE '{Path(__file__).resolve().parent.parent.parent / ".extras" / "csv" / f"{table}.csv"}'
