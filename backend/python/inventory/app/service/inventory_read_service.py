@@ -1,8 +1,9 @@
 from typing import List, Optional
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 
+from ..clients import get_product_repository
 from ..core import custom_logger
-from ..repository import InventoryRepository
+from ..repository import InventoryRepository, ProductRepository
 from ..schemas import (
     InventoryModel,
     InventoryBase,
@@ -18,22 +19,50 @@ logger = custom_logger(__name__)
 
 class InventoryReadService:
 
-    def __init__(self, repository: InventoryRepository = Depends(InventoryRepository)):
-        self.repository = repository
+    def __init__(
+        self,
+        inventory_repository: InventoryRepository = Depends(InventoryRepository),
+        product_repository=Depends(get_product_repository),
+    ):
+        self.inventory_repository = inventory_repository
+        self.product_repository = product_repository
 
     async def find_by_id(self, id: str, full: bool) -> InventoryBase:
         logger.debug("Getting inventory by id: {}, full={}", id, full)
-        inventory = await self.repository.get_inventory_by_id(id, full)
+        inventory = await self.inventory_repository.get_inventory_by_id(id, full)
 
         if inventory is None:
             raise NotFoundException(id)
+
+        try:
+            product = await self.product_repository.get_by_id(inventory.product_id,"1")
+            logger.debug("find_by_id: product={}", product)
+            inventory.name = product.name
+
+        except HTTPException as e:
+            if e.status_code == 404:
+                logger.warning(f"Product with id {inventory.product_id} not found")
+                product = None
+            else:
+                raise
 
         logger.debug("Found inventory: {}", inventory)
         return inventory
 
     async def find(self, search_params: SearchParams) -> List[InventoryBase]:
         logger.debug("Searching inventory: {}", search_params)
-        inventories = await self.repository.list_inventory(search_params)
+        inventories = await self.inventory_repository.list_inventory(search_params)
+        inventory_with_names = []
+        for inventory in inventories:
+            try:
+                product = await self.product_repository.get_by_id(inventory.product_id, "-1")
+                inventory.name = product.name if product else None
+            except HTTPException as e:
+                if e.status_code == 404:
+                    logger.warning(f"Product with id {inventory.product_id} not found")
+                    product_name = None
+                else:
+                    raise
         # Convert SQLAlchemy models to Pydantic
         return [InventoryBase.model_validate(inventory) for inventory in inventories]
 
@@ -47,7 +76,7 @@ class InventoryReadService:
 
     async def find_by_username(self, username: str):
         logger.debug("Finding inventory by username: {}", username)
-        reserved_item_list = await self.repository.get_reserved_items(username)
+        reserved_item_list = await self.inventory_repository.get_reserved_items(username)
         logger.debug("Found reserved items: {}", reserved_item_list)
         return reserved_item_list
 
@@ -65,5 +94,5 @@ class InventoryReadService:
 
     async def find_reserved_item_by_inventory(self, inventory_id: str):
         logger.debug("Finding reserved item by inventory_id: {}", inventory_id)
-        reserve_item_list = await self.repository.get_reserved_items(inventory_id)
+        reserve_item_list = await self.inventory_repository.get_reserved_items(inventory_id)
         return reserve_item_list

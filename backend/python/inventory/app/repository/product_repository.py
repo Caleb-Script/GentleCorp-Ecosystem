@@ -2,11 +2,12 @@ from typing import Optional
 import httpx
 from fastapi import HTTPException
 from pydantic import BaseModel
+from ..core import custom_logger
+from ..clients.product import ProductInfo
 
-class ProductInfo(BaseModel):
-    id: str
-    name: str
-    # Fügen Sie hier weitere Felder hinzu, die Sie vom Product-Service erwarten
+logger = custom_logger(__name__)
+
+
 
 class ProductRepository:
     def __init__(self, base_url: str, token: str):
@@ -21,7 +22,9 @@ class ProductRepository:
         try:
             response = await self.client.get(f"/product/{id}", headers=headers)
             response.raise_for_status()
-            return ProductInfo(**response.json())
+            product_data = response.json()
+            logger.debug("get_by_id: product={}", product_data)
+            return ProductInfo(name=product_data['name'])
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 raise HTTPException(status_code=404, detail=f"Product with id {id} not found")

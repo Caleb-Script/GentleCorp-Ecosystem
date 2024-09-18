@@ -12,7 +12,8 @@ class InventoryBase(BaseModel):
     unit_price: float
     status: InventoryStatusType
     product_id: str
-
+    name: str
+    
     class Config:
         orm_model = True
         from_attributes = True
@@ -24,6 +25,7 @@ class InventoryModel(BaseModel):
     unit_price: float
     status: InventoryStatusType
     product_id: str
+    name: str
 
     class Config:
         from_attributes = True
