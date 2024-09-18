@@ -167,8 +167,8 @@ async def test_create_duplicate_product(admin_client):
     }
     response = await admin_client.post("/product/", json=product_data)
     assert response.status_code == 409
-    assert "detail" in response.json()
+    assert "message" in response.json()
     assert (
-        response.json()["detail"]
-        == "409: The Product with name \"Apple iPhone 14\" of the brand \"Apple\" already exists."
+        response.json()["message"]
+        == "The Product with name \"Apple iPhone 14\" of the brand \"Apple\" already exists."
     )
