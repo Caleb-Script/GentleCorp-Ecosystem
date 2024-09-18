@@ -9,7 +9,6 @@ class NotFoundException(HTTPException):
         id: Optional[UUID] = None,
         search_criteria: Optional[Dict[str, List[str]]] = None,
     ):
-    
         # Standard-Fehlermeldung
         status_code = 404
 

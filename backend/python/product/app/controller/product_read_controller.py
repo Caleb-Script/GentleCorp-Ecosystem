@@ -1,11 +1,11 @@
 from uuid import UUID
 
-from app.exception.not_found import NotFoundException
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, Path
 
+from ..exception import UnauthorizedError
 from ..core import Logger
 from ..schemas import ProductModel, ProductSchema, SearchCriteria
-from ..security import AuthService, User
+from ..security import AuthService, User, Role
 from ..service import ProductReadService
 
 router = APIRouter()
@@ -18,6 +18,10 @@ async def get_product_by_id(
     user: User = Depends(AuthService.get_current_user),
     read_product_service: ProductReadService = Depends(ProductReadService),
 ):
+    username = user.username
+    roles = user.roles
+    if Role.ADMIN not in roles:
+        raise UnauthorizedError(username=username, roles=roles)
     logger.info("Getting product by id: {}", product_id)
     logger.debug("User: {}", user)
     logger.debug("ProductReadService: {}", read_product_service)
@@ -29,8 +33,13 @@ async def get_product_by_id(
 @router.get("/", response_model=list[ProductSchema])
 async def find_products(
     search_criteria: SearchCriteria = Depends(),
+    user: User = Depends(AuthService.get_current_user),
     read_product_service: ProductReadService = Depends(ProductReadService),
 ):
+    username = user.username
+    roles = user.roles
+    if Role.ADMIN not in roles:
+        raise UnauthorizedError(username=username, roles=roles)
     products = await read_product_service.find_all(search_criteria)
     products_schema = [ProductSchema.from_mongo(product) for product in products]
     return products_schema

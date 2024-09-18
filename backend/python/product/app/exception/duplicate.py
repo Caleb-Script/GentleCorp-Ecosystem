@@ -6,8 +6,8 @@ class DuplicateException(HTTPException):
 
     def __init__(
         self,
-        name: Optional[str] = None,
-        brand: Optional[str] = None,
+        name: str,
+        brand: str,
     ):
 
         # Standard-Fehlermeldung
