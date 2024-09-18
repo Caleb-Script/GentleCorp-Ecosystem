@@ -1,10 +1,10 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-from ..exception import DuplicateException
+from ..exception import DuplicateException, UnauthorizedError
 from ..core import Logger
 from ..schemas import ProductModel, ProductUpdateModel
-from ..security import AuthService, User
+from ..security import AuthService, User, Role
 from ..service import ProductWriteService
 
 router = APIRouter()
@@ -18,8 +18,10 @@ async def create_product(
     write_product_service: ProductWriteService = Depends(ProductWriteService),
     response: Response = Response(),
 ):
-    if "ADMIN" not in user.roles:
-        raise HTTPException(status_code=403, detail="Nicht genügend Berechtigungen")
+    username = user.username
+    roles = user.roles
+    if Role.ADMIN not in roles:
+        raise UnauthorizedError(username=username, roles=roles)
     logger.info("Produkt wird erstellt: {}", product)
     created_product = await write_product_service.create_product(product)
     logger.success("Produkt erstellt: {}", created_product)
@@ -27,7 +29,6 @@ async def create_product(
     response.status_code = status.HTTP_201_CREATED
     logger.success("createProduct; new product id={}", created_product)
     return response
-    
 
 
 @router.put("/{product_id}")
@@ -38,8 +39,10 @@ async def update_product(
     write_product_service: ProductWriteService = Depends(ProductWriteService),
     response: Response = Response(),
 ):
-    if "ADMIN" not in user.roles:
-        raise HTTPException(status_code=403, detail="Nicht genügend Berechtigungen")
+    username = user.username
+    roles = user.roles
+    if Role.ADMIN not in roles and Role.USER not in roles:
+        raise UnauthorizedError(username=username, roles=roles)
     logger.info("Produkt wird aktualisiert: {}", product)
     updated_product = await write_product_service.update_product(product_id, product)
     if not updated_product:
@@ -55,8 +58,10 @@ async def delete_product(
     write_product_service: ProductWriteService = Depends(ProductWriteService),
     response: Response = Response(),
 ):
-    if "ADMIN" not in user.roles:
-        raise HTTPException(status_code=403, detail="Nicht genügend Berechtigungen")
+    username = user.username
+    roles = user.roles
+    if Role.ADMIN not in roles:
+        raise UnauthorizedError(username=username, roles=roles)
     if not await write_product_service.delete_product(product_id):
         raise HTTPException(status_code=404, detail="Produkt nicht gefunden")
     response.status_code = status.HTTP_204_NO_CONTENT

@@ -50,6 +50,15 @@ async def admin_client(client):
     client.headers["Authorization"] = f"Bearer {token}"
     return client
 
+@pytest.fixture(scope="function")
+async def basic_client(client):
+    response = await client.post(
+        "/auth/login", json={"username": "erik", "password": "p"}
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    client.headers["Authorization"] = f"Bearer {token}"
+    return client
 
 @pytest.fixture(autouse=True)
 async def reset_db(test_db):
@@ -171,3 +180,15 @@ async def test_create_duplicate_product(admin_client):
         response.json()["message"]
         == "The Product with name \"Apple iPhone 14\" of the brand \"Apple\" already exists."
     )
+
+@pytest.mark.asyncio
+async def test_unauthorized_access(basic_client):
+    response = await basic_client.get("/product/")
+    assert response.status_code == 403
+    assert "message" in response.json()
+    assert response.json()["message"] == "The user erik with the role BASIC does not have sufficient rights to access this resource."  
+
+@pytest.mark.asyncio
+async def test_authorized_access(client):
+    response = await client.get("/product/")
+    assert response.status_code == 401
