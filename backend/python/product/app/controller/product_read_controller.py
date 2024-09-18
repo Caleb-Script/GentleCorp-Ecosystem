@@ -20,7 +20,7 @@ async def get_product_by_id(
 ):
     username = user.username
     roles = user.roles
-    if Role.ADMIN not in roles:
+    if Role.ADMIN not in roles and Role.USER not in roles:
         raise UnauthorizedError(username=username, roles=roles)
     logger.info("Getting product by id: {}", product_id)
     logger.debug("User: {}", user)
@@ -38,7 +38,7 @@ async def find_products(
 ):
     username = user.username
     roles = user.roles
-    if Role.ADMIN not in roles:
+    if Role.ADMIN not in roles and Role.USER not in roles:
         raise UnauthorizedError(username=username, roles=roles)
     products = await read_product_service.find_all(search_criteria)
     products_schema = [ProductSchema.from_mongo(product) for product in products]

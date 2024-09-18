@@ -15,6 +15,7 @@ new_id = ""
 query_params = {"max_price": 600, "min_price": 100}
 query_params2 = {"brand": "Apple"}
 product_id = "70000000-0000-0000-0000-000000000000"
+product_id_2 = "70000000-0000-0000-0000-000000000001"
 
 
 @pytest.fixture(scope="session")
@@ -49,6 +50,18 @@ async def admin_client(client):
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
     return client
+
+
+@pytest.fixture(scope="function")
+async def user_client(client):
+    response = await client.post(
+        "/auth/login", json={"username": "user", "password": "p"}
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    client.headers["Authorization"] = f"Bearer {token}"
+    return client
+
 
 @pytest.fixture(scope="function")
 async def basic_client(client):
@@ -192,3 +205,70 @@ async def test_unauthorized_access(basic_client):
 async def test_authorized_access(client):
     response = await client.get("/product/")
     assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_user_access(user_client):
+    response = await user_client.get("/product/")
+    assert response.status_code == 200
+
+@pytest.mark.asyncio
+async def test_basic_access(basic_client):
+    response = await basic_client.get("/product/")
+    assert response.status_code == 403
+    assert "message" in response.json()
+    assert response.json()["message"] == "The user erik with the role BASIC does not have sufficient rights to access this resource."
+
+@pytest.mark.asyncio
+async def test_create_product_with_basic_role(basic_client):
+    product_data = {
+        "name": "New Test Product",
+        "brand": "Test Brand",
+        "price": 199.99,
+        "description": "A new test product",
+        "category": "E",
+    }
+    response = await basic_client.post("/product/", json=product_data)
+    assert response.status_code == 403
+
+@pytest.mark.asyncio
+async def test_update_product_with_basic_role(basic_client):
+    update_data = {"price": 249.99}
+    response = await basic_client.put(f"/product/{product_id_2}", json=update_data)
+    assert response.status_code == 403
+
+@pytest.mark.asyncio
+async def test_delete_product_with_basic_role(basic_client):
+    response = await basic_client.delete(f"/product/{product_id_2}")
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_create_product_with_user_role(user_client):
+    product_data = {
+        "name": "New Test Product",
+        "brand": "Test Brand",
+        "price": 199.99,
+        "description": "A new test product",
+        "category": "E",
+    }
+    response = await user_client.post("/product/", json=product_data)
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_update_product_with_user_role(user_client):
+    update_data = {"price": 249.99}
+    response = await user_client.put(f"/product/{product_id_2}", json=update_data)
+    assert response.status_code == 204
+
+@pytest.mark.asyncio
+async def test_get_product_2_with_user(user_client):
+    response = await user_client.get(f"/product/{product_id_2}")
+    assert response.status_code == 200
+    assert response.json()["price"] == 249.99
+
+
+@pytest.mark.asyncio
+async def test_delete_product_with_user_role(user_client):
+    response = await user_client.delete(f"/product/{product_id_2}")
+    assert response.status_code == 403
