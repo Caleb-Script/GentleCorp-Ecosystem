@@ -46,7 +46,8 @@ async def admin_client(client):
     assert response.status_code == 200
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
-    client.headers["If-None-Match"] = "0"
+    client.headers["If-None-Match"] = "-1"
+    client.headers["If-Match"] = "0"
     return client
 
 
@@ -58,7 +59,8 @@ async def user_client(client):
     assert response.status_code == 200
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
-    client.headers["If-None-Match"] = "0"
+    client.headers["If-None-Match"] = "-1"
+    client.headers["If-Match"] = "0"
     return client
 
 
@@ -70,7 +72,8 @@ async def basic_client(client):
     assert response.status_code == 200
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
-    client.headers["If-None-Match"] = "0"
+    client.headers["If-None-Match"] = "-1"
+    client.headers["If-Match"] = "0"
     return client
 
 @pytest.fixture(autouse=True)
@@ -115,15 +118,10 @@ async def test_get_product_ohne_version(admin_client):
 
 
 @pytest.mark.asyncio
-async def test_get_product_falsche_version(admin_client):
-    admin_client.headers["If-None-Match"] = "1"
+async def test_get_product_aktuelle_version(admin_client):
+    admin_client.headers["If-None-Match"] = "0"
     response = await admin_client.get(f"/product/{product_id}")
-    assert response.status_code == 409
-    assert "message" in response.json()
-    assert (
-        response.json()["message"]
-        == "Version conflict for product 70000000-0000-0000-0000-000000000000. Current version is 0, but version 1 was requested."
-    )
+    assert response.status_code == 304
 
 
 @pytest.mark.asyncio
