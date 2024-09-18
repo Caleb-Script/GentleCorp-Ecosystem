@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from .exception import DuplicateKeyError, NotFoundException, UnauthorizedError
+from .exception import DuplicateException, NotFoundException, UnauthorizedError
 from .controller import (
     auth_router as auth,
     admin_router as admin,
@@ -25,7 +25,6 @@ async def lifespan(app: FastAPI):
     logger.success("Beispieldaten eingefügt")
 
     yield
-
     logger.info("Schließe Datenbankverbindung")
     await close_mongo_connection()
     logger.success("Anwendung wird beendet")
@@ -50,8 +49,8 @@ app.include_router(auth, prefix="/auth", tags=["auth"])
 app.include_router(admin, prefix="/admin", tags=["admin"])
 
 
-@app.exception_handler(DuplicateKeyError)
-async def duplicate_key_error_handler(request: Request, exc: DuplicateKeyError):
+@app.exception_handler(DuplicateException)
+async def duplicate_exception_handler(request: Request, exc: DuplicateException):
     return JSONResponse(status_code=400, content={"detail": str(exc)})
 
 
