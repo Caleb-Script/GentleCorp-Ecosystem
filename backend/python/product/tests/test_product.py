@@ -51,17 +51,6 @@ async def admin_client(client):
 
 
 @pytest.fixture(scope="function")
-async def admin_client_2(client):
-    response = await client.post(
-        "/auth/login", json={"username": "admin", "password": "p"}
-    )
-    assert response.status_code == 200
-    token = response.json()["access_token"]
-    client.headers["Authorization"] = f"Bearer {token}"
-    return client
-
-
-@pytest.fixture(scope="function")
 async def user_client(client):
     response = await client.post(
         "/auth/login", json={"username": "user", "password": "p"}
@@ -113,8 +102,10 @@ async def test_get_product(admin_client):
 
 
 @pytest.mark.asyncio
-async def test_get_product_ohne_version(admin_client_2):
-    response = await admin_client_2.get(f"/product/{product_id}")
+async def test_get_product_ohne_version(admin_client):
+    if "If-None-Match" in admin_client.headers:
+        del admin_client.headers["If-None-Match"]
+    response = await admin_client.get(f"/product/{product_id}")
     assert response.status_code == 428
     assert "message" in response.json()
     assert (
@@ -124,11 +115,24 @@ async def test_get_product_ohne_version(admin_client_2):
 
 
 @pytest.mark.asyncio
-async def test_list_products(admin_client):
-    response = await admin_client.get("/product/")
-    assert response.status_code == 200
-    assert isinstance(response.json(), list)
-    assert len(response.json()) == 5
+async def test_get_product_falsche_version(admin_client):
+    admin_client.headers["If-None-Match"] = "1"
+    response = await admin_client.get(f"/product/{product_id}")
+    assert response.status_code == 409
+    assert "message" in response.json()
+    assert (
+        response.json()["message"]
+        == "Version conflict for product 70000000-0000-0000-0000-000000000000. Current version is 0, but version 1 was requested."
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_product_ungültige_version(admin_client):
+    admin_client.headers["If-None-Match"] = "0a"
+    response = await admin_client.get(f"/product/{product_id}")
+    assert response.status_code == 412
+    assert "message" in response.json()
+    assert response.json()["message"] == "0a ist eine ungültige versionsnummer"
 
 
 @pytest.mark.asyncio

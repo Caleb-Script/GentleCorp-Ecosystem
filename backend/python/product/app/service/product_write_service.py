@@ -88,3 +88,8 @@ class ProductWriteService:
         if exclude_id:
             return any(product.id != exclude_id for product in products)
         return True
+
+
+# product_version = product.version
+#         if product_version != version:
+#             raise VersionConflictException(product_id, product_version, version)
