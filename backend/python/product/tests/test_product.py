@@ -46,6 +46,18 @@ async def admin_client(client):
     assert response.status_code == 200
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
+    client.headers["If-None-Match"] = "0"
+    return client
+
+
+@pytest.fixture(scope="function")
+async def admin_client_2(client):
+    response = await client.post(
+        "/auth/login", json={"username": "admin", "password": "p"}
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    client.headers["Authorization"] = f"Bearer {token}"
     return client
 
 
@@ -57,6 +69,7 @@ async def user_client(client):
     assert response.status_code == 200
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
+    client.headers["If-None-Match"] = "0"
     return client
 
 
@@ -68,6 +81,7 @@ async def basic_client(client):
     assert response.status_code == 200
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
+    client.headers["If-None-Match"] = "0"
     return client
 
 @pytest.fixture(autouse=True)
@@ -96,6 +110,17 @@ async def test_get_product(admin_client):
     assert data["brand"] == "Apple"
     assert data["price"] == 999.99
     assert data["category"] == "E"
+
+
+@pytest.mark.asyncio
+async def test_get_product_ohne_version(admin_client_2):
+    response = await admin_client_2.get(f"/product/{product_id}")
+    assert response.status_code == 428
+    assert "message" in response.json()
+    assert (
+        response.json()["message"]
+        == "The If-None-Match header is required for version control."
+    )
 
 
 @pytest.mark.asyncio

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from .exception import DuplicateException, NotFoundException, UnauthorizedError
+from .exception import DuplicateException, NotFoundException, UnauthorizedError, InvalidException, VersionMissingException
 from .controller import (
     auth_router as auth,
     admin_router as admin,
@@ -67,6 +67,21 @@ async def not_found_exception_handler(request, exc):
 
 @app.exception_handler(UnauthorizedError)
 async def unauthorized_error_handler(request: Request, exc: UnauthorizedError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail, "status_code": exc.status_code},
+    )
+
+@app.exception_handler(InvalidException)
+async def invalid_exception_handler(request: Request, exc: InvalidException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail, "status_code": exc.status_code},
+    )
+
+
+@app.exception_handler(VersionMissingException)
+async def version_missing_exception_handler(request: Request, exc: VersionMissingException):
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.detail, "status_code": exc.status_code},

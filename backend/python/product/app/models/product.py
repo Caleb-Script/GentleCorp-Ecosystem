@@ -13,11 +13,16 @@ class ProductCategoryType(enum.Enum):
 
 class Product(BaseModel):
     id: UUID = Field(default_factory=uuid4, alias="_id")
+    version: int
     name: str
     brand: str
     price: float
     description: str
     category: ProductCategoryType
+
+    class Config:
+        populate_by_name = True
+        json_encoders = {UUID: lambda v: str(v)}
 
     @classmethod
     def from_mongo(cls, data: dict):

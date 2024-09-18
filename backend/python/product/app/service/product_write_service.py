@@ -1,26 +1,34 @@
 from uuid import UUID
+
 from fastapi import Depends
 
-from ..service import ProductReadService
+from ..core import Logger
 from ..exception import DuplicateException
 from ..repository import ProductRepository
-from ..schemas import ProductModel, ProductUpdateModel, SearchCriteria
-from ..core import Logger
+from ..schemas import ProductCreateSchema, ProductUpdateModel, SearchCriteria
+from ..service import ProductReadService
 
 logger = Logger(__name__)
 
 # TODO: implement duplicate key error
 
+
 class ProductWriteService:
-    def __init__(self, product_repository: ProductRepository = Depends(ProductRepository), product_read_service: ProductReadService = Depends(ProductReadService)):
+    def __init__(
+        self,
+        product_repository: ProductRepository = Depends(ProductRepository),
+        product_read_service: ProductReadService = Depends(ProductReadService),
+    ):
         self.product_repository = product_repository
         self.product_read_service = product_read_service
 
-    async def create_product(self, product: ProductModel) -> UUID:
+    async def create_product(self, product: ProductCreateSchema) -> UUID:
         logger.info("Erstelle neues Produkt: {}", product)
         if await self.check_duplicate(product.name, product.brand):
             logger.error(
-                'The Product with name "{}" of the brand "{}" already exists.',product.name, product.brand
+                'The Product with name "{}" of the brand "{}" already exists.',
+                product.name,
+                product.brand,
             )
             raise DuplicateException(
                 name=product.name,
@@ -31,7 +39,9 @@ class ProductWriteService:
         logger.success("Produkt erfolgreich erstellt mit ID: {}", product_id)
         return product_id
 
-    async def update_product(self, product_id: UUID, product: ProductUpdateModel) -> bool:
+    async def update_product(
+        self, product_id: UUID, product: ProductUpdateModel
+    ) -> bool:
         logger.info("Aktualisiere Produkt mit ID: {}", product_id)
         try:
             product_db = await self.product_read_service.find_by_id(product_id)
@@ -41,7 +51,11 @@ class ProductWriteService:
 
             updated_product = ProductUpdateModel(
                 name=product.name if product.name is not None else product_db.name,
-                description=product.description if product.description is not None else product_db.description,
+                description=(
+                    product.description
+                    if product.description is not None
+                    else product_db.description
+                ),
                 price=product.price if product.price is not None else product_db.price,
             )
 
@@ -68,9 +82,7 @@ class ProductWriteService:
         self, name: str, brand: str, exclude_id: UUID = None
     ) -> bool:
         search_criteria = SearchCriteria(name=name, brand=brand)
-        products = await self.product_read_service.find_all(
-            search_criteria
-        )
+        products = await self.product_read_service.find_all(search_criteria)
         if not products:
             return False
         if exclude_id:

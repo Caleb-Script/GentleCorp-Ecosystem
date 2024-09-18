@@ -55,8 +55,9 @@ class ProductRepository:
         logger.info("Erstelle neues Produkt: {}", product)
 
         product_id = uuid4()
-        product_dict = product.model_dump(exclude={"id"})
+        product_dict = product.model_dump(exclude={"id", "version"})
         product_dict["_id"] = Binary.from_uuid(product_id)
+        product_dict["version"] = 0
         await self.db.products.insert_one(product_dict)
         logger.success("Produkt erfolgreich erstellt mit ID: {}", product_id)
         return product_id

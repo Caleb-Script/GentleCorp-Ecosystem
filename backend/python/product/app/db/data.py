@@ -15,6 +15,7 @@ def generate_uuid(index):
 example_products = [
     ProductSchema(
         id=generate_uuid(0),
+        version=0,
         name="Apple iPhone 14",
         brand="Apple",
         price=999.99,
@@ -23,6 +24,7 @@ example_products = [
     ),
     ProductSchema(
         id=generate_uuid(1),
+        version=0,
         name="Bio-Äpfel",
         brand="Bauern's Beste",
         price=3.99,
@@ -31,6 +33,7 @@ example_products = [
     ),
     ProductSchema(
         id=generate_uuid(2),
+        version=0,
         name="Ledersofa",
         brand="Komfort Leben",
         price=549.99,
@@ -39,6 +42,7 @@ example_products = [
     ),
     ProductSchema(
         id=generate_uuid(3),
+        version=0,
         name="Herren Freizeitjacke",
         brand="ModeFirma",
         price=79.99,
@@ -47,6 +51,7 @@ example_products = [
     ),
     ProductSchema(
         id=generate_uuid(4),
+        version=0,
         name="Lego Star Wars Set",
         brand="LEGO",
         price=59.99,
@@ -79,4 +84,3 @@ async def insert_example_data():
 
     inserted_count = await collection.count_documents({})
     logger.success(f"Insgesamt {inserted_count} Beispielprodukte eingefügt")
-

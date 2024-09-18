@@ -1,10 +1,11 @@
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-from ..exception import UnauthorizedError
 from ..core import Logger
-from ..schemas import ProductModel, ProductUpdateModel
-from ..security import AuthService, User, Role
+from ..exception import UnauthorizedError
+from ..schemas import ProductCreateSchema, ProductUpdateModel
+from ..security import AuthService, Role, User
 from ..service import ProductWriteService
 
 router = APIRouter()
@@ -13,7 +14,7 @@ logger = Logger("ProductWriteController")
 
 @router.post("/")
 async def create_product(
-    product: ProductModel,
+    product: ProductCreateSchema,
     user: User = Depends(AuthService.get_current_user),
     write_product_service: ProductWriteService = Depends(ProductWriteService),
     response: Response = Response(),
@@ -50,6 +51,7 @@ async def update_product(
     response.status_code = status.HTTP_204_NO_CONTENT
     logger.success("updateProduct; product id={}", product_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
 
 @router.delete("/{product_id}")
 async def delete_product(
