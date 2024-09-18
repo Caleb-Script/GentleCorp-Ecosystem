@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.db.mysql import get_session, Base
 import pytest
-from ..schemas import InventoryModel, InventoryUpdate, InventoryStatusType
+from app.schemas import InventoryModel, InventoryUpdate, InventoryStatusType
 
 base_url = "http://localhost:8000"
 username = "admin"

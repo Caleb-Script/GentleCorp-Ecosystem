@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     LOG_LEVEL: str
     APP_ENV: str = "development"
     APP_DEBUG: bool = True
+    PRODUCT_SERVICE_SCHEMA: str
+    PRODUCT_SERVICE_HOST: str
+    PRODUCT_SERVICE_PORT: str 
 
     class Config:
         env_file = "/.env"  # Make sure this points to your .env file if you have one
