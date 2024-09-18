@@ -1,7 +1,0 @@
-[
-  {
-    "collection": "products",
-    "operation": "delete_many",
-    "data": {}
-  }
-]

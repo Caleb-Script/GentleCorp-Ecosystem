@@ -1,7 +1,0 @@
-[
-  {
-    "collection": "products",
-    "operation": "create_index",
-    "data": {"name": 1}
-  }
-]
