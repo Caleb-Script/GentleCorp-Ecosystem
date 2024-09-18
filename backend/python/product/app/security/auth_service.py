@@ -30,7 +30,6 @@ class AuthService:
         return authorization[len(token_prefix) :]
 
     # 2. Get User Information from JWT
-
     def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
         try:
             user_info = keycloak_openid.userinfo(token)

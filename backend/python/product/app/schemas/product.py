@@ -20,11 +20,8 @@ class ProductModel(BaseModel):
 class ProductSchema(ProductModel):
     id: UUID = Field(default_factory=uuid4, alias="_id")
 
-
-
-class SearchCriteria(BaseModel):
-    name: str | None = None
-    brand: str | None = None
-    category: ProductCategoryType | None = None
-    min_price: float | None = None
-    max_price: float | None = None
+    @classmethod
+    def from_mongo(cls, data: dict):
+        if data.get("category"):
+            data["category"] = ProductCategoryType[data["category"]]
+        return cls(**data)

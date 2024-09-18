@@ -15,7 +15,7 @@ class ProductRepository:
     async def find_by_id(self, product_id: UUID) -> ProductSchema | None:
         product = await self.db.products.find_one({"_id": Binary.from_uuid(product_id)})
         if product:
-            return ProductSchema(**product)
+            return ProductSchema.from_mongo(product)
         return None
 
     async def find_all(self, search_params: SearchCriteria) -> list[ProductSchema]:

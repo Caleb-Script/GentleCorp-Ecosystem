@@ -15,6 +15,7 @@ class ProductWriteService:
 
     async def create_product(self, product: ProductModel) -> UUID:
         logger.info("Erstelle neues Produkt: {}", product)
+        product.category = product.category.name
         try:
             product_id = await self.product_repository.create(product)
             logger.success("Produkt erfolgreich erstellt mit ID: {}", product_id)

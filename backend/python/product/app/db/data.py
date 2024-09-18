@@ -68,7 +68,7 @@ async def insert_example_data():
         try:
             product_dict = product.model_dump(by_alias=True)
             product_dict["_id"] = Binary.from_uuid(product_dict["id"])
-            product_dict["category"] = product_dict["category"].value
+            product_dict["category"] = product_dict["category"].name
             del product_dict["id"]
 
             result = await collection.insert_one(product_dict)
@@ -80,3 +80,4 @@ async def insert_example_data():
 
     inserted_count = await collection.count_documents({})
     logger.success(f"Insgesamt {inserted_count} Beispielprodukte eingefügt")
+

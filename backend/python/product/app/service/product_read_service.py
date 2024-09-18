@@ -25,6 +25,7 @@ class ProductReadService:
     async def find_products(self, search_criteria: SearchCriteria) -> list[ProductSchema]:
         logger.debug("Searching products: {}", search_criteria)
         products = await self.product_repository.find_all(search_criteria)
-        products_schema = [ProductSchema.model_validate(product) for product in products]
+        products_schema = [ProductSchema.from_mongo(product) for product in products]
         logger.debug("Found products: {}", products_schema)
         return products_schema
+

@@ -1,19 +1,18 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 
+from ..db import insert_example_data
 from ..core import Logger
-from ..service import AdminService
 
 router = APIRouter()
 logger = Logger("AdminController")
 
 
-
 @router.post("/db_populate", tags=["Admin"])
-async def db_populate(admin_service: AdminService = Depends(AdminService)):
-    logger.info("Populating database")
-    """Populate the database with test data."""
+async def db_populate():
+    logger.info("Starting database population")
     try:
-        await admin_service.populate_database()
+        await insert_example_data()
+        logger.info("Database population completed successfully")
         return {"db_populate": "success"}
     except Exception as e:
         logger.error(f"Database population failed: {e}")

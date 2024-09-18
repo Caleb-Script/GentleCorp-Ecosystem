@@ -1,9 +1,10 @@
+import enum
 from uuid import UUID
 from pydantic import BaseModel, Field
 from enum import Enum
 
 
-class ProductCategoryType(str, Enum):
+class ProductCategoryType(enum.Enum):
     ELECTRONICS = "E"
     FRUIT_AND_VEGETABLES = "FAV"
     FURNITURE = "F"
