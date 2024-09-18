@@ -8,6 +8,7 @@ from .exception import (
     InvalidException,
     VersionMissingException,
     VersionConflictException,
+    NoChangesDetectedException,
 )
 from .controller import (
     auth_router as auth,
@@ -98,6 +99,16 @@ async def version_missing_exception_handler(request: Request, exc: VersionMissin
 @app.exception_handler(VersionConflictException)
 async def version_conflict_exception_handler(
     request: Request, exc: VersionConflictException
+):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail, "status_code": exc.status_code},
+    )
+
+
+@app.exception_handler(NoChangesDetectedException)
+async def no_changes_detected_exception_handler(
+    request: Request, exc: NoChangesDetectedException
 ):
     return JSONResponse(
         status_code=exc.status_code,

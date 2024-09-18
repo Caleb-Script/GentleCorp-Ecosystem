@@ -21,3 +21,6 @@ class DuplicateException(HTTPException):
         # Speichert die zusätzlichen Attribute
         self.name = name
         self.brand = brand
+
+
+

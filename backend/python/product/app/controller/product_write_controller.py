@@ -1,9 +1,14 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 
 from ..core import Logger
-from ..exception import UnauthorizedError
+from ..exception import (
+    InvalidException,
+    UnauthorizedError,
+    VersionConflictException,
+    VersionMissingException,
+)
 from ..schemas import ProductCreateSchema, ProductUpdateModel
 from ..security import AuthService, Role, User
 from ..service import ProductWriteService
@@ -32,6 +37,9 @@ async def create_product(
     return response
 
 
+# TODO logger clean up
+
+
 @router.put("/{product_id}")
 async def update_product(
     product_id: UUID,
@@ -39,13 +47,15 @@ async def update_product(
     user: User = Depends(AuthService.get_current_user),
     write_product_service: ProductWriteService = Depends(ProductWriteService),
     response: Response = Response(),
+    if_match: str = Header(None),
 ):
     username = user.username
     roles = user.roles
     if Role.ADMIN not in roles and Role.USER not in roles:
         raise UnauthorizedError(username=username, roles=roles)
+    version = get_version(if_match)
     logger.info("Produkt wird aktualisiert: {}", product)
-    updated_product = await write_product_service.update_product(product_id, product)
+    updated_product = await write_product_service.update(product_id, product, version)
     if not updated_product:
         raise HTTPException(status_code=404, detail="Produkt nicht gefunden")
     response.status_code = status.HTTP_204_NO_CONTENT
@@ -59,13 +69,26 @@ async def delete_product(
     user: User = Depends(AuthService.get_current_user),
     write_product_service: ProductWriteService = Depends(ProductWriteService),
     response: Response = Response(),
+    if_match: str = Header(None),
 ):
     username = user.username
     roles = user.roles
     if Role.ADMIN not in roles:
         raise UnauthorizedError(username=username, roles=roles)
-    if not await write_product_service.delete_product(product_id):
+    version = get_version(if_match)
+    if not await write_product_service.delete_product(product_id, version):
         raise HTTPException(status_code=404, detail="Produkt nicht gefunden")
     response.status_code = status.HTTP_204_NO_CONTENT
     logger.success("deleteProduct; product id={}", product_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+def get_version(if_match: str | None) -> int:
+    if if_match is None:
+        raise VersionMissingException()
+    try:
+        version = int(if_match.strip('"'))
+        logger.debug("get_version: version={}", version)
+        return version
+    except ValueError:
+        raise InvalidException(if_match)

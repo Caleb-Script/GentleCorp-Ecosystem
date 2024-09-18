@@ -39,11 +39,14 @@ class ProductRepository:
         product_model = [Product.from_mongo(product) for product in products]
         return product_model
 
-    async def update(self, product_id: UUID, product: Product) -> bool:
+    async def update(self, product_id: UUID, product: Product, version: int) -> bool:
         logger.info("Aktualisiere Produkt mit ID: {}", product_id)
         result = await self.db.products.update_one(
-            {"_id": Binary.from_uuid(product_id)},
-            {"$set": product.model_dump(exclude={"id"})},
+            {"_id": Binary.from_uuid(product_id), "version": version},
+            {
+                "$set": product.model_dump(exclude={"id"}),
+                "$inc": {"version": 1}
+            }
         )
         if result.modified_count > 0:
             logger.success("Produkt erfolgreich aktualisiert")

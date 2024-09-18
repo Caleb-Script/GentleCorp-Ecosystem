@@ -171,6 +171,31 @@ async def test_create_product(admin_client):
 
 
 @pytest.mark.asyncio
+async def test_update_product_ohne_version(admin_client):
+    global new_id
+    update_data = {"price": 249.99}
+    del admin_client.headers["If-Match"]
+    response = await admin_client.put(f"/product/{new_id}", json=update_data)
+    assert response.status_code == 428
+    assert "message" in response.json()
+    assert response.json()["message"] == "The If-None-Match header is required for version control."
+
+
+@pytest.mark.asyncio
+async def test_update_product_falscher_version(admin_client):
+    global new_id
+    update_data = {"price": 249.99}
+    admin_client.headers["If-Match"] = "-1"
+    response = await admin_client.put(f"/product/{new_id}", json=update_data)
+    assert response.status_code == 409
+    assert "message" in response.json()
+    assert (
+        response.json()["message"]
+        == f"Version conflict for product {new_id}. Current version is 0, but version -1 was requested.",
+    )
+
+
+@pytest.mark.asyncio
 async def test_update_product(admin_client):
     global new_id
     update_data = {"price": 249.99}
@@ -179,7 +204,7 @@ async def test_update_product(admin_client):
 
 
 @pytest.mark.asyncio
-async def test_get_updated_product(admin_client):
+async def test_get_updated_product_old_version(admin_client):
     global new_id
     response = await admin_client.get(f"/product/{new_id}")
     assert response.status_code == 200
@@ -189,8 +214,35 @@ async def test_get_updated_product(admin_client):
 
 
 @pytest.mark.asyncio
+async def test_delete_product_old_version(admin_client):
+    global new_id
+    response = await admin_client.delete(f"/product/{new_id}")
+    assert response.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_get_updated_product(admin_client):
+    global new_id
+    admin_client.headers["If-Match"] = "1"
+    response = await admin_client.get(f"/product/{new_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == "New Test Product"
+    assert data["price"] == 249.99
+
+
+@pytest.mark.asyncio
+async def test_get_updated_product_ohne_änderung(admin_client):
+    global new_id
+    admin_client.headers["If-Match"] = "2"
+    response = await admin_client.get(f"/product/{new_id}")
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
 async def test_delete_product(admin_client):
     global new_id
+    admin_client.headers["If-Match"] = "1"
     response = await admin_client.delete(f"/product/{new_id}")
     assert response.status_code == 204
 
@@ -226,7 +278,7 @@ async def test_unauthorized_access(basic_client):
     assert response.json()["message"] == "The user erik with the role BASIC does not have sufficient rights to access this resource."  
 
 @pytest.mark.asyncio
-async def test_authorized_access(client):
+async def test_unauthorized_access_2(client):
     response = await client.get("/product/")
     assert response.status_code == 401
 
