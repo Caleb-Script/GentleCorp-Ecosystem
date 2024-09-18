@@ -4,7 +4,7 @@ from fastapi import Depends
 from ..service import ProductReadService
 from ..exception import DuplicateException
 from ..repository import ProductRepository
-from ..schemas import ProductModel, ProductUpdateModel, ProductSchema, SearchCriteria
+from ..schemas import ProductModel, ProductUpdateModel, SearchCriteria
 from ..core import Logger
 
 logger = Logger(__name__)

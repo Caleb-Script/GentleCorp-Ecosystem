@@ -1,8 +1,9 @@
 from fastapi import Depends
 from uuid import UUID, uuid4
 from bson import Binary
-from ..schemas import ProductSchema, SearchCriteria
-from ..db.mongo import get_database
+from ..schemas import SearchCriteria
+from ..models import Product
+from ..db import get_database
 from ..core import Logger
 
 logger = Logger(__name__)
@@ -11,13 +12,13 @@ class ProductRepository:
     def __init__(self, db=Depends(get_database)):
         self.db = db
 
-    async def find_by_id(self, product_id: UUID) -> ProductSchema | None:
+    async def find_by_id(self, product_id: UUID) -> Product | None:
         product = await self.db.products.find_one({"_id": Binary.from_uuid(product_id)})
         if product:
-            return ProductSchema.from_mongo(product)
+            return Product.from_mongo(product)
         return None
 
-    async def find_all(self, search_params: SearchCriteria) -> list[ProductSchema]:
+    async def find_all(self, search_params: SearchCriteria) -> list[Product]:
         query = {}
 
         if search_params.name:
@@ -35,9 +36,10 @@ class ProductRepository:
 
         cursor = self.db.products.find(query)
         products = await cursor.to_list(length=None)
-        return products
+        product_model = [Product.from_mongo(product) for product in products]
+        return product_model
 
-    async def update(self, product_id: UUID, product: ProductSchema) -> bool:
+    async def update(self, product_id: UUID, product: Product) -> bool:
         logger.info("Aktualisiere Produkt mit ID: {}", product_id)
         result = await self.db.products.update_one(
             {"_id": Binary.from_uuid(product_id)},
@@ -49,7 +51,7 @@ class ProductRepository:
         logger.warning("Produkt nicht gefunden oder keine Änderungen vorgenommen")
         return False
 
-    async def create(self, product: ProductSchema) -> UUID:
+    async def create(self, product: Product) -> UUID:
         logger.info("Erstelle neues Produkt: {}", product)
 
         product_id = uuid4()

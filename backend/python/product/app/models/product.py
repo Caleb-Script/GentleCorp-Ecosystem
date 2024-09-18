@@ -1,7 +1,6 @@
 import enum
-from uuid import UUID
+from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
-from enum import Enum
 
 
 class ProductCategoryType(enum.Enum):
@@ -13,12 +12,15 @@ class ProductCategoryType(enum.Enum):
 
 
 class Product(BaseModel):
-    id: UUID = Field(...)
+    id: UUID = Field(default_factory=uuid4, alias="_id")
     name: str
     brand: str
     price: float
     description: str
     category: ProductCategoryType
 
-    class Config:
-        json_encoders = {UUID: lambda v: str(v)}
+    @classmethod
+    def from_mongo(cls, data: dict):
+        if data.get("category"):
+            data["category"] = ProductCategoryType[data["category"]]
+        return cls(**data)

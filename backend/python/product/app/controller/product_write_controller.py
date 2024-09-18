@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-from ..exception import DuplicateException, UnauthorizedError
+from ..exception import UnauthorizedError
 from ..core import Logger
 from ..schemas import ProductModel, ProductUpdateModel
 from ..security import AuthService, User, Role

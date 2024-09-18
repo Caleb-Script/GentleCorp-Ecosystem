@@ -5,7 +5,8 @@ from fastapi import Depends
 from ..core import Logger
 from ..exception import NotFoundException
 from ..repository import ProductRepository
-from ..schemas import ProductSchema, SearchCriteria
+from ..schemas import SearchCriteria
+from ..models import Product
 
 logger = Logger(__name__)
 
@@ -16,7 +17,7 @@ class ProductReadService:
     ):
         self.product_repository = product_repository
 
-    async def find_by_id(self, product_id: UUID) -> ProductSchema:
+    async def find_by_id(self, product_id: UUID) -> Product:
         logger.info("Finding product by ID: {}", product_id)
         product = await self.product_repository.find_by_id(product_id)
         if product is None:
@@ -24,7 +25,7 @@ class ProductReadService:
         logger.success("Found product: {}", product)
         return product
 
-    async def find_all(self, search_criteria: SearchCriteria) -> list[ProductSchema]:
+    async def find_all(self, search_criteria: SearchCriteria) -> list[Product]:
         logger.debug("Searching products: {}", search_criteria)
         products = await self.product_repository.find_all(search_criteria)
         return products

@@ -3,9 +3,6 @@ import asyncio
 from httpx import AsyncClient
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.main import app
-from app.db.mongo import get_database
-from app.schemas import ProductModel
-from app.models import ProductCategoryType
 from app.core.settings import settings
 
 base_url = "http://localhost:8000"
@@ -207,7 +204,7 @@ async def test_authorized_access(client):
     assert response.status_code == 401
 
 @pytest.mark.asyncio
-async def test_user_access(user_client):
+async def test_user_access_product_list(user_client):
     response = await user_client.get("/product/")
     assert response.status_code == 200
 

@@ -1,10 +1,9 @@
 from .mongo import db
-from ..models.product import Product, ProductCategoryType
+from ..models import Product, ProductCategoryType
+from ..schemas import ProductSchema
 from uuid import UUID
 from bson import Binary
-from ..core import Logger
-from ..core.settings import settings
-
+from ..core import Logger, settings
 
 logger = Logger(__name__)
 
@@ -14,7 +13,7 @@ def generate_uuid(index):
 
 
 example_products = [
-    Product(
+    ProductSchema(
         id=generate_uuid(0),
         name="Apple iPhone 14",
         brand="Apple",
@@ -22,7 +21,7 @@ example_products = [
         description="Neuestes iPhone mit fortschrittlicher Kamera und Display.",
         category=ProductCategoryType.ELECTRONICS,
     ),
-    Product(
+    ProductSchema(
         id=generate_uuid(1),
         name="Bio-Äpfel",
         brand="Bauern's Beste",
@@ -30,7 +29,7 @@ example_products = [
         description="Frische Bio-Äpfel von lokalen Bauernhöfen.",
         category=ProductCategoryType.FRUIT_AND_VEGETABLES,
     ),
-    Product(
+    ProductSchema(
         id=generate_uuid(2),
         name="Ledersofa",
         brand="Komfort Leben",
@@ -38,7 +37,7 @@ example_products = [
         description="Luxuriöses Ledersofa mit Liegefunktion.",
         category=ProductCategoryType.FURNITURE,
     ),
-    Product(
+    ProductSchema(
         id=generate_uuid(3),
         name="Herren Freizeitjacke",
         brand="ModeFirma",
@@ -46,7 +45,7 @@ example_products = [
         description="Stilvolle und bequeme Jacke für alle Jahreszeiten.",
         category=ProductCategoryType.CLOTHING,
     ),
-    Product(
+    ProductSchema(
         id=generate_uuid(4),
         name="Lego Star Wars Set",
         brand="LEGO",

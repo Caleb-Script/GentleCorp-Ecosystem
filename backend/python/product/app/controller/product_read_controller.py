@@ -7,6 +7,7 @@ from ..core import Logger
 from ..schemas import ProductModel, ProductSchema, SearchCriteria
 from ..security import AuthService, User, Role
 from ..service import ProductReadService
+from ..models import Product
 
 router = APIRouter()
 logger = Logger(__name__)
@@ -41,11 +42,11 @@ async def find_products(
     if Role.ADMIN not in roles and Role.USER not in roles:
         raise UnauthorizedError(username=username, roles=roles)
     products = await read_product_service.find_all(search_criteria)
-    products_schema = [ProductSchema.from_mongo(product) for product in products]
+    products_schema = [ProductSchema.model_dump(product) for product in products]
     return products_schema
 
 
-def to_model(product: ProductSchema) -> ProductModel:
+def to_model(product: Product) -> ProductModel:
     product_model = ProductModel.model_validate(product)
     logger.debug("Found product: {}", product_model)
     return product_model
