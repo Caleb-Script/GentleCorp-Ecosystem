@@ -52,7 +52,7 @@ class AdminService:
             drop_script = (
                 Path(__file__).resolve().parent.parent.parent
                 / ".extras"
-                / "mongodb"
+                / "json"
                 / "drop.json"
             )
             logger.info(f"Executing drop script: {drop_script}")
@@ -63,7 +63,7 @@ class AdminService:
             create_script = (
                 Path(__file__).resolve().parent.parent.parent
                 / ".extras"
-                / "mongodb"
+                / "json"
                 / "create.json"
             )
             logger.info(f"Executing create script: {create_script}")

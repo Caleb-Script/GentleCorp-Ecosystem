@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from .exception import DuplicateKeyError, NotFoundException, UnauthorizedError
 from .controller import (
     auth_router as auth,
+    admin_router as admin,
     product_read_router as product_read,
     product_write_router as product_write,
 )
@@ -46,6 +47,7 @@ def read_root():
 app.include_router(product_read, prefix="/product", tags=["Read products"])
 app.include_router(product_write, prefix="/product", tags=["Write products"])
 app.include_router(auth, prefix="/auth", tags=["auth"])
+app.include_router(admin, prefix="/admin", tags=["admin"])
 
 
 @app.exception_handler(DuplicateKeyError)

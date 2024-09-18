@@ -168,3 +168,7 @@ project-root/
 ├── pyproject.toml
 ├── requirements.txt
 └── README.md
+
+
+
+Remove-Item Env:DATABASE_NAME

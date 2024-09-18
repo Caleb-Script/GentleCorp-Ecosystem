@@ -4,7 +4,10 @@ uvicorn
 pydantic
 pydantic-settings
 python-keycloak
+
+
 pytest
+pytest-asyncio
 # requests
 loguru
 
@@ -12,5 +15,5 @@ loguru
 motor
 
 # synchrone MongoDB-Treiberbibliothek
-# pymongo
+pymongo
 
