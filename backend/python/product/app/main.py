@@ -51,17 +51,23 @@ app.include_router(admin, prefix="/admin", tags=["admin"])
 
 @app.exception_handler(DuplicateException)
 async def duplicate_exception_handler(request: Request, exc: DuplicateException):
-    return JSONResponse(status_code=400, content={"detail": str(exc)})
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail, "status_code": exc.status_code},
+    )
 
 
 @app.exception_handler(NotFoundException)
 async def not_found_exception_handler(request, exc):
     return JSONResponse(
         status_code=exc.status_code,
-        content={"message": exc.detail},
+        content={"message": exc.detail, "status_code": exc.status_code},
     )
 
 
 @app.exception_handler(UnauthorizedError)
 async def unauthorized_error_handler(request: Request, exc: UnauthorizedError):
-    return JSONResponse(status_code=401, content={"detail": str(exc)})
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail, "status_code": exc.status_code},
+    )

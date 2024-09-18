@@ -1,7 +1,9 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+
+from ..exception import DuplicateException
 from ..core import Logger
-from ..schemas import ProductModel
+from ..schemas import ProductModel, ProductUpdateModel
 from ..security import AuthService, User
 from ..service import ProductWriteService
 
@@ -25,12 +27,13 @@ async def create_product(
     response.status_code = status.HTTP_201_CREATED
     logger.success("createProduct; new product id={}", created_product)
     return response
+    
 
 
 @router.put("/{product_id}")
 async def update_product(
     product_id: UUID,
-    product: ProductModel,
+    product: ProductUpdateModel,
     user: User = Depends(AuthService.get_current_user),
     write_product_service: ProductWriteService = Depends(ProductWriteService),
     response: Response = Response(),

@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 from enum import Enum
@@ -25,3 +26,8 @@ class ProductSchema(ProductModel):
         if data.get("category"):
             data["category"] = ProductCategoryType[data["category"]]
         return cls(**data)
+
+class ProductUpdateModel(BaseModel):
+    name: Optional[str] = None
+    description:Optional[str] = None
+    price: Optional[float] = None

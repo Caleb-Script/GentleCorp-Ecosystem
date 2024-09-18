@@ -1,5 +1,5 @@
-import pytest
 import pytest_asyncio
+import pytest
 import asyncio
 from httpx import AsyncClient
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -13,12 +13,12 @@ base_url = "http://localhost:8000"
 username = "admin"
 password = "p"
 new_id = ""
-query_params = {"max_price": 200, "min_price": 100}
+query_params = {"max_price": 600, "min_price": 100}
 query_params2 = {"brand": "Apple"}
 product_id = "70000000-0000-0000-0000-000000000000"
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest.fixture(scope="session")
 def event_loop():
     policy = asyncio.get_event_loop_policy()
     loop = policy.new_event_loop()
@@ -26,22 +26,22 @@ def event_loop():
     loop.close()
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest.fixture(scope="function")
 async def test_db():
     client = AsyncIOMotorClient(settings.DATABASE_URL)
     db = client[settings.DATABASE_NAME]
     yield db
-    await client.drop_database(settings.DATABASE_NAME)
-    client.close()
+    # await client.drop_database(settings.DATABASE_NAME)
+    # client.close()
 
 
-@pytest_asyncio.fixture(scope="function")
-async def client():
+@pytest.fixture(scope="function")
+async def client(event_loop):
     async with AsyncClient(app=app, base_url="http://test") as client:
         yield client
 
 
-@pytest_asyncio.fixture(scope="function")
+@pytest.fixture(scope="function")
 async def admin_client(client):
     response = await client.post(
         "/auth/login", json={"username": "admin", "password": "p"}
@@ -57,10 +57,10 @@ async def reset_db(test_db):
     await test_db["product"].delete_many({})  # Ändern Sie dies zu der korrekten Collection
 
 
-# @pytest.mark.asyncio
-# async def test_db_populate(admin_client):
-#     response = await admin_client.post("/admin/db_populate")
-#     assert response.status_code == 200
+@pytest.mark.asyncio
+async def test_db_populate(admin_client):
+    response = await admin_client.post("/admin/db_populate")
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -77,7 +77,7 @@ async def test_get_product(admin_client):
     assert data["name"] == "Apple iPhone 14"
     assert data["brand"] == "Apple"
     assert data["price"] == 999.99
-    assert data["category"] == "ELECTRONICS"
+    assert data["category"] == "E"
 
 
 @pytest.mark.asyncio
@@ -106,7 +106,7 @@ async def test_list_products_by_brand(admin_client):
     assert data["name"] == "Apple iPhone 14"
     assert data["brand"] == "Apple"
     assert data["price"] == 999.99
-    assert data["category"] == "ELECTRONICS"
+    assert data["category"] == "E"
 
 
 @pytest.mark.asyncio
@@ -117,7 +117,7 @@ async def test_create_product(admin_client):
         "brand": "Test Brand",
         "price": 199.99,
         "description": "A new test product",
-        "category": "ELECTRONICS",
+        "category": "E",
     }
     response = await admin_client.post("/product/", json=product_data)
     assert response.status_code == 201
@@ -155,3 +155,20 @@ async def test_get_deleted_product(admin_client):
     global new_id
     response = await admin_client.get(f"/product/{new_id}")
     assert response.status_code == 404
+
+@pytest.mark.asyncio
+async def test_create_duplicate_product(admin_client):
+    product_data = {
+        "name": "Apple iPhone 14",
+        "brand": "Apple",
+        "price": 999.99,
+        "description": "Neuestes iPhone mit fortschrittlicher Kamera und Display.",
+        "category": "E",
+    }
+    response = await admin_client.post("/product/", json=product_data)
+    assert response.status_code == 409
+    assert "detail" in response.json()
+    assert (
+        response.json()["detail"]
+        == "409: The Product with name \"Apple iPhone 14\" of the brand \"Apple\" already exists."
+    )

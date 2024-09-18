@@ -1,9 +1,10 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Path
 
 from app.exception.not_found import NotFoundException
+from fastapi import APIRouter, Depends, HTTPException, Path
+
 from ..core import Logger
-from ..schemas import ProductSchema, SearchCriteria, ProductModel
+from ..schemas import ProductModel, ProductSchema, SearchCriteria
 from ..security import AuthService, User
 from ..service import ProductReadService
 
@@ -20,16 +21,9 @@ async def get_product_by_id(
     logger.info("Getting product by id: {}", product_id)
     logger.debug("User: {}", user)
     logger.debug("ProductReadService: {}", read_product_service)
-    try:
-        product = await read_product_service.find_by_id(product_id)
-        logger.debug("Product found: {}", product)
-        return product
-    except NotFoundException as e:
-        logger.error("Product not found: {}", str(e))
-        raise HTTPException(status_code=404, detail="Product not found")
-    except Exception as e:
-        logger.error("Unexpected error: {}", str(e))
-        raise HTTPException(status_code=500, detail="Internal server error")
+    product = await read_product_service.find_by_id(product_id)
+    logger.debug("Product found: {}", product)
+    return product
 
 
 @router.get("/", response_model=list[ProductSchema])
@@ -37,8 +31,9 @@ async def find_products(
     search_criteria: SearchCriteria = Depends(),
     read_product_service: ProductReadService = Depends(ProductReadService),
 ):
-    products = await read_product_service.find_products(search_criteria)
-    return products
+    products = await read_product_service.find_all(search_criteria)
+    products_schema = [ProductSchema.from_mongo(product) for product in products]
+    return products_schema
 
 
 def to_model(product: ProductSchema) -> ProductModel:

@@ -4,7 +4,6 @@ from bson import Binary
 from ..schemas import ProductSchema, SearchCriteria
 from ..db.mongo import get_database
 from ..core import Logger
-from ..exception import DuplicateKeyError
 
 logger = Logger(__name__)
 
@@ -52,20 +51,13 @@ class ProductRepository:
 
     async def create(self, product: ProductSchema) -> UUID:
         logger.info("Erstelle neues Produkt: {}", product)
-        try:
-            product_id = uuid4()
-            product_dict = product.model_dump(exclude={"id"})
-            product_dict["_id"] = Binary.from_uuid(product_id)
-            await self.db.products.insert_one(product_dict)
-            logger.success("Produkt erfolgreich erstellt mit ID: {}", product_id)
-            return product_id
-        except Exception as e:
-            logger.error("Fehler beim Erstellen des Produkts: {}", str(e))
-            if "duplicate key error" in str(e).lower():
-                raise DuplicateKeyError(
-                    "Ein Produkt mit diesen Daten existiert bereits"
-                )
-            raise
+
+        product_id = uuid4()
+        product_dict = product.model_dump(exclude={"id"})
+        product_dict["_id"] = Binary.from_uuid(product_id)
+        await self.db.products.insert_one(product_dict)
+        logger.success("Produkt erfolgreich erstellt mit ID: {}", product_id)
+        return product_id
 
     async def delete(self, product_id: UUID) -> bool:
         logger.info("Lösche Produkt mit ID: {}", product_id)
