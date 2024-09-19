@@ -18,10 +18,11 @@ async def create_inventory(
     user: User = Depends(AuthService.get_current_user),
 ):
     logger.debug("createInventory: inventory={}, role={}", inventory, user)
-
+    username = user.username
+    roles = user.roles
     # Correct role-checking logic
-    if Role.ADMIN not in user.roles and Role.USER not in user.roles:
-        raise HTTPException(status_code=403, detail="Not enough permissions")   
+    if Role.ADMIN not in user.roles:
+        raise UnauthorizedException(username=username, roles=roles)
     created_inventory_id = await service.create(inventory)
     response.headers["Location"] = f"/inventory/{created_inventory_id}"
     response.status_code = status.HTTP_201_CREATED

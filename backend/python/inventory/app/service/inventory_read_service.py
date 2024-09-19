@@ -1,4 +1,5 @@
 from typing import List, Optional
+from uuid import UUID
 from fastapi import Depends, HTTPException
 
 from ..clients import ProductClient
@@ -32,7 +33,7 @@ class InventoryReadService:
         inventory = await self.inventory_repository.get_inventory_by_id(id, full)
 
         if inventory is None:
-            raise NotFoundException(id)
+            raise NotFoundException(id=id)
 
         if reservation:
             inventory.name = "."

@@ -83,7 +83,7 @@ class InventoryRepository:
         return inventory
 
     async def delete_inventory(self, id: str) -> Optional[Inventory]:
-        async with self.session.begin():
+        #async with self.session.begin():
             # Delete dependent reserved products
             await self.session.execute(
                 delete(ReservedItem).where(ReservedItem.inventory_id == id)

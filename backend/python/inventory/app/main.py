@@ -15,6 +15,7 @@ from .exceptions import (
     UnauthorizedException,
     VersionMissingException,
     VersionConflictException,
+    InsufficientStockException
 )
 
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -28,7 +29,6 @@ app = FastAPI(title=settings.PROJECT_NAME)
 
 
 # TODO loggger cleanup
-# TODO exceptionabfangen wenn die vom product service kommen
 
 
 app.add_middleware(
@@ -102,6 +102,16 @@ async def version_missing_exception_handler(
 @app.exception_handler(VersionConflictException)
 async def version_conflict_exception_handler(
     request: Request, exc: VersionConflictException
+):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail, "status_code": exc.status_code},
+    )
+
+
+@app.exception_handler(InsufficientStockException)
+async def insufficient_stocke_xception_handler(
+    request: Request, exc: InsufficientStockException
 ):
     return JSONResponse(
         status_code=exc.status_code,
