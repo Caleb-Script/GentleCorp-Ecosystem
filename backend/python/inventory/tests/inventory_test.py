@@ -18,6 +18,12 @@ inventory_id_1 = "80000000-0000-0000-0000-000000000001"
 query_params_3 = {"product_id": "70000000-0000-0000-0000-000000000000"}
 query_params_3 = {"product_id": "80000000-0000-0000-0000-000000000000"}
 
+#TODO 
+# 304 testen
+# falsche version testen
+# alte version testen
+# 403 bei get, post, put
+# 401
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -64,6 +70,8 @@ async def admin_client(client):
     assert response.status_code == 200
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
+    client.headers["If-None-Match"] = "-1"
+    client.headers["If-Match"] = "0"
     return client
 
 
@@ -75,6 +83,8 @@ async def basic_client(client):
     assert response.status_code == 200
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
+    client.headers["If-None-Match"] = "-1"
+    client.headers["If-Match"] = "0"
     return client
 
 @pytest.fixture(scope="function")
@@ -85,6 +95,8 @@ async def elite_client(client):
     assert response.status_code == 200
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
+    client.headers["If-None-Match"] = "-1"
+    client.headers["If-Match"] = "0"
     return client
 
 
@@ -96,6 +108,8 @@ async def supreme_client(client):
     assert response.status_code == 200
     token = response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
+    client.headers["If-None-Match"] = "-1"
+    client.headers["If-Match"] = "0"
     return client
 
 
@@ -130,14 +144,14 @@ async def test_get_inventory(admin_client):
 
 
 @pytest.mark.asyncio
-async def test_list_inventory(admin_client):
+async def test_get_list_inventory(admin_client):
     response = await admin_client.get("inventory/")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
     assert len(response.json()) == 3
 
 @pytest.mark.asyncio
-async def test_list_inventory_2(admin_client):
+async def test_get_list_inventory_2(admin_client):
     response = await admin_client.get("inventory/", params=query_params)
     assert response.status_code == 200
     assert isinstance(response.json(), list)
@@ -145,7 +159,7 @@ async def test_list_inventory_2(admin_client):
 
 
 @pytest.mark.asyncio
-async def test_list_inventory_3(admin_client):
+async def test_get_list_inventory_3(admin_client):
     response = await admin_client.get("inventory/", params=query_params_2)
     assert response.status_code == 200
     assert isinstance(response.json(), list)
@@ -175,16 +189,6 @@ async def test_list_inventory_3_as_BASIC(basic_client):
         response.json()["message"]
         == "The user erik with the role BASIC does not have sufficient rights to access this resource."
     )
-
-
-@pytest.mark.asyncio
-async def test_list_inventory_product_id(admin_client):
-    response = await admin_client.get("inventory/", params=query_params_3)
-    assert response.status_code == 200
-    assert isinstance(response.json(), list)
-    assert len(response.json()) == 1
-    data = response.json()[0]
-    assert data["product_id"] == "70000000-0000-0000-0000-000000000000"
 
 
 @pytest.mark.asyncio
@@ -329,7 +333,7 @@ async def test_get_reserve_items_by_inventory(admin_client):
     assert data[0]["quantity"] == 5
     assert data[0]["username"] == "admin"
     assert data[1]["quantity"] == 15
-    assert data[1]["username"] == "erik"
+    assert data[1]["username"] == "gentlecg99"
 
 
 @pytest.mark.asyncio

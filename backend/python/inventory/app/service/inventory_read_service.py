@@ -69,6 +69,7 @@ class InventoryReadService:
                     product_name = None
                 else:
                     raise
+        logger.debug("find: inventories={}", inventories)        
         # Convert SQLAlchemy models to Pydantic
         return [InventoryBase.model_validate(inventory) for inventory in inventories]
 

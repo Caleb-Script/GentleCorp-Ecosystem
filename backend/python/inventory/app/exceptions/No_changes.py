@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 
-class NoChangesDetectedException(HTTPException):
+class NoChangesException(HTTPException):
     def __init__(self):
 
         super().__init__(

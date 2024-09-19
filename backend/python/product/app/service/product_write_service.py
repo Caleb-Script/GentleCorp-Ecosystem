@@ -37,9 +37,6 @@ class ProductWriteService:
         logger.info("Aktualisiere Produkt mit ID: {}", product_id)
 
         product_db = await self.product_read_service.find_by_id(product_id)
-        if not product_db:
-            logger.warning("Produkt nicht gefunden")
-            return False
         if product_db.version != version:
             logger.error("update: Konflikt bei den Versionen")
             raise VersionConflictException(product_id, product_db.version, version)

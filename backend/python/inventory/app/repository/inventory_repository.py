@@ -65,6 +65,7 @@ class InventoryRepository:
         inventory = result.scalars().first()
 
         if inventory:
+            inventory.version += + 1
             # Übertrage die Änderungen vom aktualisierten Inventory
             for key, value in updated_inventory.__dict__.items():
                 if value is not None:

@@ -38,9 +38,7 @@ class InventoryModel(InventoryCreateModel):
     name: str
     brand: str
 
-
-class ReservationModel(BaseModel):
-    version: int
+class ReservationCreateModel(BaseModel):
     quantity: int
 
     class Config:
@@ -50,8 +48,14 @@ class ReservationModel(BaseModel):
         return f"<ReservationModel(quantity={self.quantity}"
 
 
+class ReservationModel(ReservationCreateModel):
+    version: int
+    quantity: int
+
+
 class ReservationDetailModel(ReservationModel):
     username: str
+    id: UUID
 
     class Config:
         from_attributes = True

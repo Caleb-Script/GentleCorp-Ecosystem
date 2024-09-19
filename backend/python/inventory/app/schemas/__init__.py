@@ -8,6 +8,7 @@ from .inventory_schema import (
     ReservationModel,
     ReservationDetailModel,
     InventoryStatusType,
-    InventoryCreateModel
+    InventoryCreateModel,
+    ReservationCreateModel,
 )
 from .search_params import SearchParams

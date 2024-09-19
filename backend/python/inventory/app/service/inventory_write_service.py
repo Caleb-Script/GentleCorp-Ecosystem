@@ -1,30 +1,38 @@
+import math
+import random
+import re
+import string
+from decimal import Decimal
 from typing import Optional
 from uuid import UUID
-import re
-from unidecode import unidecode
-import random
-import string
-import math
-from decimal import Decimal
 
 from app.models.inventory import Inventory
 from fastapi import Depends, HTTPException
+from unidecode import unidecode
 
 from ..clients import ProductClient
-from ..service import InventoryReadService
-from ..repository import InventoryRepository
-from ..schemas import (
-    InventoryModel,
-    InventoryBase,
-    InventoryUpdate,
-    ReservationModel,
-    InventoryCreateModel,
-    SearchParams,
+from ..core import custom_logger
+from ..exceptions import (
+    DuplicateException,
+    InsufficientStockException,
+    NoChangesException,
+    NotFoundException,
+    VersionConflictException,
+    VersionMissingException,
 )
 from ..mapper import InventoryMapper
-from ..core import custom_logger
 from ..models import ReservedItem
-from ..exceptions import InsufficientStockException, NotFoundException, DuplicateException, NoChangesDetectedException
+from ..repository import InventoryRepository
+from ..schemas import (
+    InventoryBase,
+    InventoryCreateModel,
+    InventoryModel,
+    InventoryUpdate,
+    ReservationCreateModel,
+    ReservationModel,
+    SearchParams,
+)
+from ..service import InventoryReadService
 
 logger = custom_logger(__name__)
 
@@ -43,12 +51,13 @@ class InventoryWriteService:
         self.inventoryMapper = inventoryMapper
         self.product_repository = product_client
 
-    # TODO DuplicateException implementieren
     async def create(self, inventory_create: InventoryCreateModel) -> UUID:
         logger.debug("create: inventory_create={}", inventory_create)
         product_id = inventory_create.product_id
         try:
-            product = await self.product_repository.get_by_id(inventory_create.product_id, "-1")
+            product = await self.product_repository.get_by_id(
+                inventory_create.product_id, "-1"
+            )
             logger.debug("create: product={}", product)
             sku_code = self.generate_sku_code(product.brand, product.name)
         except NotFoundException as not_found:
@@ -65,47 +74,65 @@ class InventoryWriteService:
         logger.debug("create: created_inventory={}", created_inventory)
         return created_inventory.id
 
-    async def update(self, id: str, inventory_data: InventoryUpdate) -> InventoryBase:
+    async def update(
+        self, id: str, inventory_data: InventoryUpdate, version: int
+    ) -> None:
         inventory_db = await self.inventoryReadService.find_by_id(id, True, False)
+        if inventory_db.version != version:
+            logger.error("update: Konflikt bei den Versionen")
+            raise VersionConflictException(id, inventory_db.version, version)
 
         update_data = inventory_data.model_dump(exclude_unset=True)
-        logger.debug("update: update_data={}", update_data)    
+        logger.debug("update: update_data={}", update_data)
 
         if not update_data:
             logger.debug("No update data provided")
-            raise NoChangesDetectedException()
+            raise NoChangesException()
 
         self._compare_and_update_fields(inventory_db, update_data)
-
-        logger.debug("Changes applied successfully")
         updated_inventory = await self.repository.update_inventory(id, inventory_db)
-        return InventoryBase.model_validate(updated_inventory)
+        logger.debug("update: updated_inventory={}", updated_inventory)
+        return None
 
     def _compare_and_update_fields(self, inventory_db, update_data):
         changes_made = False
         for field, value in update_data.items():
             current_value = getattr(inventory_db, field)
-            logger.debug(f"Comparing {field}: new={value} ({type(value)}), current={current_value} ({type(current_value)})")
-            
+            logger.debug(
+                f"Comparing {field}: new={value} ({type(value)}), current={current_value} ({type(current_value)})"
+            )
+
             if self._is_value_changed(current_value, value):
                 setattr(inventory_db, field, value)
                 changes_made = True
                 logger.debug(f"Change detected in {field}: {current_value} -> {value}")
-        
+
         if not changes_made:
             logger.debug("No changes detected")
-            raise NoChangesDetectedException()
+            raise NoChangesException()
 
     def _is_value_changed(self, current_value, new_value):
-        if isinstance(new_value, (float, Decimal)) and isinstance(current_value, (float, Decimal)):
-            return not math.isclose(float(new_value), float(current_value), rel_tol=1e-9, abs_tol=0.0)
+        if isinstance(new_value, (float, Decimal)) and isinstance(
+            current_value, (float, Decimal)
+        ):
+            return not math.isclose(
+                float(new_value), float(current_value), rel_tol=1e-9, abs_tol=0.0
+            )
         return current_value != new_value
 
-    async def delete(self, id: str) -> Optional[InventoryModel]:
+    async def delete(self, id: str, version: int) -> Optional[InventoryModel]:
+        inventory_db = await self.inventoryReadService.find_by_id(id, True, False)
+        if inventory_db.version != version:
+            logger.error("update: Konflikt bei den Versionen")
+            raise VersionConflictException(id, inventory_db.version, version)
         return await self.repository.delete_inventory(id)
 
     async def reseveItem(
-        self, id: str, item: ReservationModel, username: str
+        self,
+        id: str,
+        item: ReservationCreateModel,
+        username: str,
+        version: Optional[int] = None,
     ) -> UUID:
         inventory = await self.inventoryReadService.find_by_id(id, True, True)
 
@@ -119,7 +146,14 @@ class InventoryWriteService:
             raise InsufficientStockException(inventory.id)
 
         try:
-            reserved_item = await self.inventoryReadService.find_reserved_item_by_username(username, id)
+            reserved_item = (
+                await self.inventoryReadService.find_reserved_item_by_username(
+                    username, id
+                )
+            )
+            if reserved_item.version != version:
+                logger.error("update: Konflikt bei den Versionen")
+                raise VersionConflictException(id, reserved_item.version, version)
         except NotFoundException:
             reserved_item = None
 
@@ -127,26 +161,31 @@ class InventoryWriteService:
             # Aktualisiere die vorhandene Reservierung
             reserved_item.quantity += item.quantity
             await self.repository.update_reserved_item(reserved_item)
+            reserved_item_id = reserved_item.id
         else:
             # Erstelle eine neue Reservierung
             new_reserved_item = ReservedItem(
-                quantity=item.quantity, username=username, inventory_id=UUID(id)
+                quantity=item.quantity,
+                username=username,
+                inventory_id=UUID(id),
+                version=0,
             )
             await self.repository.add_reserved_item(new_reserved_item)
-            inventory.reserved_items.append(new_reserved_item)
+            reserved_item_id = new_reserved_item.id
+            # inventory.reserved_items.append(new_reserved_item)
 
         # # Aktualisiere die verfügbare Menge im Inventar
         # inventory.quantity -= item.quantity
 
         # Speichere die Änderungen
-        updated_inventory = await self.repository.update_inventory(id, inventory)
+        # updated_inventory = await self.repository.update_inventory(id, inventory)
 
-        return updated_inventory.id
+        return reserved_item_id
 
     def generate_sku_code(self, brand: str, product_name: str, length: int = 11) -> str:
         """
         Generiert einen SKU-Code basierend auf der Marke und dem Produktnamen.
-    
+
         :param brand: Die Marke des Produkts
         :param product_name: Der Name des Produkts
         :param length: Die gewünschte Länge des SKU-Codes (Standard: 11)

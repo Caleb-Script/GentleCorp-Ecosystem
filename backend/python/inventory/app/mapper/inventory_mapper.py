@@ -26,6 +26,7 @@ class InventoryMapper:
 
     def to_inventory(self, inventory_create: InventoryCreateModel) -> Inventory:
         return Inventory(
+            version=0,
             sku_code="",
             quantity=inventory_create.quantity,
             unit_price=inventory_create.unit_price,

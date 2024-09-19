@@ -1,15 +1,21 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-from .exceptions import (
-    NotFoundException,
-    DuplicateException,
-    NoChangesDetectedException,
-    UnauthorizedException,
-)
+from .controller import admin_controller as admin
+from .controller import auth_controller as auth
+from .controller import inventory_read_controller as inventory_read
+from .controller import inventory_write_controller as inventory_write
 from .core import settings
-from .controller import inventory_read_controller as inventory_read, inventory_write_controller as inventory_write, admin_controller as admin, auth_controller as auth
+from .exceptions import (
+    DuplicateException,
+    InvalidArgumentException,
+    NoChangesException,
+    NotFoundException,
+    UnauthorizedException,
+    VersionMissingException,
+    VersionConflictException,
+)
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
@@ -23,11 +29,11 @@ app = FastAPI(title=settings.PROJECT_NAME)
 
 # TODO loggger cleanup
 # TODO exceptionabfangen wenn die vom product service kommen
-# TODO versionierung
+
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['http://localhost:3000'],
+    allow_origins=["http://localhost:3000"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -38,9 +44,11 @@ app.include_router(inventory_write, prefix="/inventory", tags=["Inventory Write"
 app.include_router(admin, prefix="/admin", tags=["admin"])
 app.include_router(auth, prefix="/auth", tags=["Auth"])
 
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Inventory Service!"}
+
 
 @app.exception_handler(NotFoundException)
 async def not_found_exception_handler(request: Request, exc: NotFoundException):
@@ -60,10 +68,30 @@ async def duplicate_exception_handler(request: Request, exc: DuplicateException)
         },
     )
 
+@app.exception_handler(NoChangesException)
+async def no_changes_exception_handler(request: Request, exc: NoChangesException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail, "status_code": exc.status_code},
+    )
 
-@app.exception_handler(NoChangesDetectedException)
-async def not_found_exception_handler(
-    request: Request, exc: NoChangesDetectedException
+@app.exception_handler(UnauthorizedException)
+async def unauthorized_exception_handler(request: Request, exc: UnauthorizedException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail, "status_code": exc.status_code},
+    )
+
+@app.exception_handler(InvalidArgumentException)
+async def invalid_exception_handler(request: Request, exc: InvalidArgumentException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail, "status_code": exc.status_code},
+    )
+
+@app.exception_handler(VersionMissingException)
+async def version_missing_exception_handler(
+    request: Request, exc: VersionMissingException
 ):
     return JSONResponse(
         status_code=exc.status_code,
@@ -71,8 +99,10 @@ async def not_found_exception_handler(
     )
 
 
-@app.exception_handler(UnauthorizedException)
-async def not_found_exception_handler(request: Request, exc: UnauthorizedException):
+@app.exception_handler(VersionConflictException)
+async def version_conflict_exception_handler(
+    request: Request, exc: VersionConflictException
+):
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.detail, "status_code": exc.status_code},
