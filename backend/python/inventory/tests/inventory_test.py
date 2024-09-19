@@ -16,6 +16,7 @@ query_params = {"max_price": 200, "min_price": 100}
 query_params_2 = {"sku_code": "LMN456"}
 inventory_id_1 = "80000000-0000-0000-0000-000000000001"
 query_params_3 = {"product_id": "70000000-0000-0000-0000-000000000000"}
+query_params_3 = {"product_id": "80000000-0000-0000-0000-000000000000"}
 
 
 @pytest.fixture(scope="session")
@@ -155,6 +156,14 @@ async def test_list_inventory_3(admin_client):
     assert data["unit_price"] == 79.99
     assert data["status"] == "O"
     assert data["product_id"] == "70000000-0000-0000-0000-000000000002"
+
+
+@pytest.mark.asyncio
+async def test_list_inventory_3(admin_client):
+    response = await admin_client.get("inventory/", params=query_params_3)
+    assert response.status_code == 404
+    assert "message" in response.json()
+    assert response.json()["message"] == "Keine Inventare gefunden."
 
 
 @pytest.mark.asyncio

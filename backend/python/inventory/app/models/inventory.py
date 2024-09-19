@@ -19,13 +19,14 @@ class Inventory(Base):
     id = Column(
         CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )  # UUID als CHAR
+    version = Column(Integer, nullable=False)
     sku_code = Column(String(50), nullable=False)
     quantity = Column(Integer, nullable=False)
     unit_price = Column(
         DECIMAL(10, 2), nullable=False
     )
     status = Column(Enum(InventoryStatusType), nullable=False)
-    product_id = Column(CHAR(36), nullable=False)
+    product_id = Column(CHAR(36), unique=True, nullable=False)
 
     reserved_items = relationship(
         "ReservedItem", back_populates="inventory", cascade="all, delete-orphan"
@@ -38,6 +39,7 @@ class ReservedItem(Base):
     id = Column(
         CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
+    version = Column(Integer, nullable=False)
     quantity = Column(Integer, nullable=False)
     username = Column(String(255), nullable=False)
     inventory_id = Column(CHAR(36), ForeignKey("inventory.id", ondelete="CASCADE"))

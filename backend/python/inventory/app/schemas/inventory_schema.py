@@ -18,6 +18,7 @@ class InventoryCreateModel(BaseModel):
 
 class InventoryBase(BaseModel):
     id: UUID
+    version: int
     sku_code: str
     quantity: int
     unit_price: float
@@ -32,12 +33,14 @@ class InventoryBase(BaseModel):
 
 
 class InventoryModel(InventoryCreateModel):
+    version: int
     sku_code: str
     name: str
     brand: str
 
 
 class ReservationModel(BaseModel):
+    version: int
     quantity: int
 
     class Config:
