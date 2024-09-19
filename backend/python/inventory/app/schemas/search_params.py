@@ -1,5 +1,7 @@
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
+
 from ..models import InventoryStatusType
 
 
@@ -10,6 +12,7 @@ class SearchParams(BaseModel):
     min_price: Optional[float] = None
     max_price: Optional[float] = None
     status: Optional[InventoryStatusType] = None
+    product_id: Optional[str] = None
 
     class Config:
         orm_mode = True

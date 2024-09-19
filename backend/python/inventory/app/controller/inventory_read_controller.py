@@ -1,5 +1,13 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+    Header,
+    Path,
+    Response,
+)
 from uuid import UUID
 
 from app.schemas.inventory_schema import ReservationDetailModel
@@ -9,20 +17,27 @@ from ..security import User
 from ..core import custom_logger
 from ..schemas import InventoryBase, InventoryModel, SearchParams, InventoryFullModel, ReservationFullModel, ReservationModel
 from ..service import AuthService, InventoryReadService
-from ..exceptions import NotFoundException
+from ..exceptions import NotFoundException, UnauthorizedException
 
 router = APIRouter()
 logger = custom_logger(__name__)
+
 
 @router.get("/", response_model=List[InventoryBase])
 async def list_inventory(
     search_params: SearchParams = Depends(),
     service: InventoryReadService = Depends(InventoryReadService),
+    if_none_match: str = Header(None),
+    response: Response = Response(),
+    user: User = Depends(AuthService.get_current_user),
 ):
+    if Role.ADMIN not in user.roles and Role.USER not in user.roles:
+        raise UnauthorizedException(user.username, user.roles)
     inventories = await service.find(search_params)
     if not inventories:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No inventories found")
+        raise NotFoundException()
     return inventories
+
 
 @router.get("/reserve", response_model=List[ReservationFullModel])
 async def get_reserved_items_by_username(
@@ -43,7 +58,6 @@ async def get_reserved_items_by_username(
 async def get_reserved_item_by_inventory(
     inventory_id: UUID,
     service: InventoryReadService = Depends(InventoryReadService),
-    token: str = Depends(AuthService.get_bearer_token),
     user: User = Depends(AuthService.get_current_user),
 ):
     if Role.ADMIN not in user.roles and Role.USER not in user.roles:
@@ -120,3 +134,14 @@ def to_full_model(inventory: InventoryBase) -> Optional[InventoryFullModel]:
 # ):
 #     inventories = await get_inventories(db)
 #     return inventories
+
+
+def get_version(if_none_match: str | None) -> int:
+    if if_none_match is None:
+        raise VersionMissingException()
+    try:
+        version = int(if_none_match.strip('"'))
+        logger.debug("get_version: version={}", version)
+        return version
+    except ValueError:
+        raise InvalidException(if_none_match)

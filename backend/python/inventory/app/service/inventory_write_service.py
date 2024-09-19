@@ -1,5 +1,11 @@
 from typing import Optional
 from uuid import UUID
+import re
+from unidecode import unidecode
+import random
+import string
+import math
+from decimal import Decimal
 
 from app.models.inventory import Inventory
 from fastapi import Depends, HTTPException
@@ -7,12 +13,18 @@ from fastapi import Depends, HTTPException
 from ..clients import ProductClient
 from ..service import InventoryReadService
 from ..repository import InventoryRepository
-from ..schemas import InventoryModel, InventoryBase, InventoryUpdate, ReservationModel, InventoryCreateModel
+from ..schemas import (
+    InventoryModel,
+    InventoryBase,
+    InventoryUpdate,
+    ReservationModel,
+    InventoryCreateModel,
+    SearchParams,
+)
 from ..mapper import InventoryMapper
 from ..core import custom_logger
-from ..exceptions import UnzureichenderBestandFehler
-from app.models import ReservedItem
-from app.exceptions import UnzureichenderBestandFehler, NotFoundException
+from ..models import ReservedItem
+from ..exceptions import InsufficientStockException, NotFoundException, DuplicateException, NoChangesDetectedException
 
 logger = custom_logger(__name__)
 
@@ -38,7 +50,7 @@ class InventoryWriteService:
         try:
             product = await self.product_repository.get_by_id(inventory_create.product_id, "-1")
             logger.debug("create: product={}", product)
-            sku_code = generate_sku_code(product.brand, product.name)
+            sku_code = self.generate_sku_code(product.brand, product.name)
         except NotFoundException as not_found:
             logger.error("create: Kein Produkt mit der ID: {} gefunden", product_id)
             raise NotFoundException(product_id=product_id)
@@ -48,24 +60,46 @@ class InventoryWriteService:
 
         inventory = self.inventoryMapper.to_inventory(inventory_create)
         inventory.sku_code = sku_code
+        await self.check_duplicate(product_id=product_id)
         created_inventory = await self.repository.create_inventory(inventory)
         logger.debug("create: created_inventory={}", created_inventory)
         return created_inventory.id
 
     async def update(self, id: str, inventory_data: InventoryUpdate) -> InventoryBase:
+        inventory_db = await self.inventoryReadService.find_by_id(id, True, False)
 
-        inventory = await self.inventoryReadService.find_by_id(id, True, False)
+        update_data = inventory_data.model_dump(exclude_unset=True)
+        logger.debug("update: update_data={}", update_data)    
 
-        update_data = {
-            field: value
-            for field, value in inventory_data.model_dump(exclude_unset=True).items()
-        }
+        if not update_data:
+            logger.debug("No update data provided")
+            raise NoChangesDetectedException()
 
+        self._compare_and_update_fields(inventory_db, update_data)
+
+        logger.debug("Changes applied successfully")
+        updated_inventory = await self.repository.update_inventory(id, inventory_db)
+        return InventoryBase.model_validate(updated_inventory)
+
+    def _compare_and_update_fields(self, inventory_db, update_data):
+        changes_made = False
         for field, value in update_data.items():
-            setattr(inventory, field, value)
+            current_value = getattr(inventory_db, field)
+            logger.debug(f"Comparing {field}: new={value} ({type(value)}), current={current_value} ({type(current_value)})")
+            
+            if self._is_value_changed(current_value, value):
+                setattr(inventory_db, field, value)
+                changes_made = True
+                logger.debug(f"Change detected in {field}: {current_value} -> {value}")
+        
+        if not changes_made:
+            logger.debug("No changes detected")
+            raise NoChangesDetectedException()
 
-        await self.repository.update_inventory(id, inventory)
-        return InventoryBase.model_validate(inventory)
+    def _is_value_changed(self, current_value, new_value):
+        if isinstance(new_value, (float, Decimal)) and isinstance(current_value, (float, Decimal)):
+            return not math.isclose(float(new_value), float(current_value), rel_tol=1e-9, abs_tol=0.0)
+        return current_value != new_value
 
     async def delete(self, id: str) -> Optional[InventoryModel]:
         return await self.repository.delete_inventory(id)
@@ -82,7 +116,7 @@ class InventoryWriteService:
         logger.debug("Übrige Quantity: {}", übrigeQuantity)
 
         if übrigeQuantity < item.quantity:
-            raise UnzureichenderBestandFehler(inventory.id)
+            raise InsufficientStockException(inventory.id)
 
         try:
             reserved_item = await self.inventoryReadService.find_reserved_item_by_username(username, id)
@@ -109,37 +143,53 @@ class InventoryWriteService:
 
         return updated_inventory.id
 
+    def generate_sku_code(self, brand: str, product_name: str, length: int = 11) -> str:
+        """
+        Generiert einen SKU-Code basierend auf der Marke und dem Produktnamen.
+    
+        :param brand: Die Marke des Produkts
+        :param product_name: Der Name des Produkts
+        :param length: Die gewünschte Länge des SKU-Codes (Standard: 11)
+        :return: Der generierte SKU-Code
+        """
+        # Bereinige und kürze die Marke
+        cleaned_brand = unidecode(brand.upper())
+        cleaned_brand = re.sub(r"[^A-Z]", "", cleaned_brand)
+        brand_prefix = cleaned_brand[:3]
 
-import re
-from unidecode import unidecode
-import random
-import string
+        # Bereinige und kürze den Produktnamen
+        cleaned_name = unidecode(product_name.upper())
+        cleaned_name = re.sub(r"[^A-Z0-9]", "", cleaned_name)
+        name_part = cleaned_name[:3]
 
+        # Kombiniere Marke und Produktname
+        prefix = f"{brand_prefix}-{name_part}"
 
-def generate_sku_code(brand: str, product_name: str, length: int = 11) -> str:
-    """
-    Generiert einen SKU-Code basierend auf der Marke und dem Produktnamen.
+        # Fülle den Rest mit zufälligen Zahlen auf
+        suffix_length = length - len(prefix) - 1  # -1 für den Bindestrich
+        suffix = "".join(random.choices(string.digits, k=suffix_length))
 
-    :param brand: Die Marke des Produkts
-    :param product_name: Der Name des Produkts
-    :param length: Die gewünschte Länge des SKU-Codes (Standard: 11)
-    :return: Der generierte SKU-Code
-    """
-    # Bereinige und kürze die Marke
-    cleaned_brand = unidecode(brand.upper())
-    cleaned_brand = re.sub(r"[^A-Z]", "", cleaned_brand)
-    brand_prefix = cleaned_brand[:3]
+        return f"{prefix}-{suffix}"
 
-    # Bereinige und kürze den Produktnamen
-    cleaned_name = unidecode(product_name.upper())
-    cleaned_name = re.sub(r"[^A-Z0-9]", "", cleaned_name)
-    name_part = cleaned_name[:3]
+    async def check_duplicate(self, product_id: UUID) -> None:
+        """
+        Check if an inventory with the given product_id already exists.
 
-    # Kombiniere Marke und Produktname
-    prefix = f"{brand_prefix}-{name_part}"
+        :param product_id: UUID of the product to check
+        :param exclude_id: UUID of an inventory to exclude from the check (optional)
+        :raises DuplicateException: If a duplicate inventory is found
+        """
+        search_criteria = SearchParams(product_id=product_id)
+        inventories = await self.inventoryReadService.find(search_criteria)
 
-    # Fülle den Rest mit zufälligen Zahlen auf
-    suffix_length = length - len(prefix) - 1  # -1 für den Bindestrich
-    suffix = "".join(random.choices(string.digits, k=suffix_length))
+        if not inventories:
+            return
 
-    return f"{prefix}-{suffix}"
+        inventory = inventories[0]  # We expect at most one inventory
+        product = await self.product_repository.get_by_id(product_id, "-1")
+        logger.error(
+            "An inventory with product '{}' of brand '{}' already exists",
+            product.name,
+            product.brand,
+        )
+        raise DuplicateException(product.name, product.brand, inventory.id)

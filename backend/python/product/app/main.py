@@ -56,6 +56,7 @@ app.include_router(product_write, prefix="/product", tags=["Write products"])
 app.include_router(auth, prefix="/auth", tags=["auth"])
 app.include_router(admin, prefix="/admin", tags=["admin"])
 
+# TODO HATEOS Links
 
 @app.exception_handler(DuplicateException)
 async def duplicate_exception_handler(request: Request, exc: DuplicateException):

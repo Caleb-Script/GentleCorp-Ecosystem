@@ -13,8 +13,9 @@ username = "admin"
 password = "p"
 new_id = ""
 query_params = {"max_price": 200, "min_price": 100}
-query_params2 = {"sku_code": "LMN456"}
+query_params_2 = {"sku_code": "LMN456"}
 inventory_id_1 = "80000000-0000-0000-0000-000000000001"
+query_params_3 = {"product_id": "70000000-0000-0000-0000-000000000000"}
 
 
 @pytest.fixture(scope="session")
@@ -144,7 +145,7 @@ async def test_list_inventory_2(admin_client):
 
 @pytest.mark.asyncio
 async def test_list_inventory_3(admin_client):
-    response = await admin_client.get("inventory/", params=query_params2)
+    response = await admin_client.get("inventory/", params=query_params_2)
     assert response.status_code == 200
     assert isinstance(response.json(), list)
     assert len(response.json()) == 1
@@ -154,6 +155,28 @@ async def test_list_inventory_3(admin_client):
     assert data["unit_price"] == 79.99
     assert data["status"] == "O"
     assert data["product_id"] == "70000000-0000-0000-0000-000000000002"
+
+
+@pytest.mark.asyncio
+async def test_list_inventory_3_as_BASIC(basic_client):
+    response = await basic_client.get("inventory/", params=query_params_2)
+    assert response.status_code == 403
+    assert "message" in response.json()
+    assert (
+        response.json()["message"]
+        == "The user erik with the role BASIC does not have sufficient rights to access this resource."
+    )
+
+
+@pytest.mark.asyncio
+async def test_list_inventory_product_id(admin_client):
+    response = await admin_client.get("inventory/", params=query_params_3)
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+    assert len(response.json()) == 1
+    data = response.json()[0]
+    assert data["product_id"] == "70000000-0000-0000-0000-000000000000"
+
 
 @pytest.mark.asyncio
 async def test_get_full_inventory(admin_client):
@@ -184,7 +207,7 @@ async def test_create_inventory(admin_client):
         "quantity": 10,
         "unit_price": 99.99,
         "status": "A",
-        "product_id": "70000000-0000-0000-0000-000000000000",
+        "product_id": "70000000-0000-0000-0000-000000000004",
     }
     response = await admin_client.post("/inventory/", json=inventory_data)
     assert response.status_code == 201
@@ -211,11 +234,37 @@ async def test_create_inventory_produkt_gibt_es_nicht(admin_client):
 
 
 @pytest.mark.asyncio
+async def test_create_inventory_duplicate(admin_client):
+    global new_id
+    inventory_data = {
+        "quantity": 10,
+        "unit_price": 99.99,
+        "status": "A",
+        "product_id": "70000000-0000-0000-0000-000000000000",
+    }
+    response = await admin_client.post("/inventory/", json=inventory_data)
+    assert response.status_code == 409
+    assert "message" in response.json()
+    assert (
+        response.json()["message"]
+        == 'The Inventory with name "IPhone 14" of the brand "Apple" already exists.'
+    )
+
+
+@pytest.mark.asyncio
 async def test_update_inventory(admin_client):
     global new_id
     update_data = {"quantity": 20}
     response = await admin_client.put(f"/inventory/{new_id}", json=update_data)
     assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_update_inventory_304(admin_client):
+    global new_id
+    update_data = {"quantity": 20}
+    response = await admin_client.put(f"/inventory/{new_id}", json=update_data)
+    assert response.status_code == 304
 
 
 @pytest.mark.asyncio
@@ -230,7 +279,7 @@ async def test_get_inventory_2(admin_client):
     assert data["quantity"] == 20
     assert data["unit_price"] == 99.99
     assert data["status"] == "A"
-    assert data["product_id"] == "70000000-0000-0000-0000-000000000000"
+    assert data["product_id"] == "70000000-0000-0000-0000-000000000004"
 
 
 @pytest.mark.asyncio
@@ -250,7 +299,7 @@ async def test_get_inventory_3(admin_client):
     assert data["quantity"] == 2
     assert data["unit_price"] == 199.99
     assert data["status"] == "D"
-    assert data["product_id"] == "70000000-0000-0000-0000-000000000000"
+    assert data["product_id"] == "70000000-0000-0000-0000-000000000004"
 
 
 @pytest.mark.asyncio

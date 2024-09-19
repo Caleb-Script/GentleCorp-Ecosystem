@@ -4,10 +4,8 @@ from fastapi import HTTPException
 from uuid import UUID
 
 from ..exceptions import NotFoundException
-from ..core import custom_logger
 from ..clients.product import ProductInfo
 
-logger = custom_logger(__name__)
 
 class ProductRepository:
     def __init__(self, base_url: str, token: str):
@@ -23,7 +21,6 @@ class ProductRepository:
             response = await self.client.get(f"/product/{id}", headers=headers)
             response.raise_for_status()
             product_data = response.json()
-            logger.debug("get_by_id: product={}", product_data)
             return ProductInfo.to_product_info(product_data)
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:

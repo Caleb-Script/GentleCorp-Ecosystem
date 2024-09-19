@@ -41,6 +41,8 @@ class InventoryRepository:
             query = query.filter(Inventory.unit_price <= search_params.max_price)
         if search_params.status:
             query = query.filter(Inventory.status == search_params.status)
+        if search_params.product_id:
+            query = query.filter(Inventory.product_id == search_params.product_id)
 
         result = await self.session.execute(query)
         return result.scalars().all()
@@ -93,8 +95,6 @@ class InventoryRepository:
                 await self.session.delete(inventory)
                 await self.session.commit()
             return inventory
-    
-
 
     async def update_reserved_item(self, reserved_item: ReservedItem):
         self.session.add(reserved_item)
@@ -105,14 +105,15 @@ class InventoryRepository:
             await self.session.rollback()
             raise e
         return reserved_item
-    
+
     async def get_reserved_items(self, identifier: str) -> List[ReservedItem]:
         query = select(ReservedItem).filter(
-            (ReservedItem.inventory_id == identifier) | (ReservedItem.username == identifier)
+            (ReservedItem.inventory_id == identifier)
+            | (ReservedItem.username == identifier)
         )
         result = await self.session.execute(query)
         return result.scalars().all()
-    
+
     async def add_reserved_item(self, reserved_item: ReservedItem):
         self.session.add(reserved_item)
         try:
