@@ -11,7 +11,6 @@ logger = custom_logger(__name__)
 class AuthService:
     @staticmethod
     async def get_bearer_token(authorization: Optional[str] = Header(None)) -> str:
-        logger.debug("get_bearer_token: {}", authorization)
         if authorization is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

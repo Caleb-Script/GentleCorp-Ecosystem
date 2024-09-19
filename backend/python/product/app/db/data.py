@@ -16,7 +16,7 @@ example_products = [
     ProductSchema(
         id=generate_uuid(0),
         version=0,
-        name="Apple iPhone 14",
+        name="IPhone 14",
         brand="Apple",
         price=999.99,
         description="Neuestes iPhone mit fortschrittlicher Kamera und Display.",

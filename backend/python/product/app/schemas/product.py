@@ -26,7 +26,7 @@ class ProductModel(ProductCreateSchema):
 class ProductSchema(ProductModel):
     id: UUID = Field(...)
 
-
+# TODO namen entfernen
 class ProductUpdateModel(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None

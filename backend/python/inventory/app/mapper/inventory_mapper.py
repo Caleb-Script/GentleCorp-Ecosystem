@@ -1,5 +1,5 @@
 from app.models.inventory import Inventory
-from app.schemas import InventoryBase, InventoryModel
+from app.schemas import InventoryBase, InventoryModel, InventoryCreateModel
 
 class InventoryMapper:
     def to_base(inventory: Inventory) -> InventoryBase:
@@ -24,9 +24,9 @@ class InventoryMapper:
             updated_at=inventory.updated_at
         )
 
-    def to_inventory(self, inventory_create: InventoryModel) -> Inventory:
+    def to_inventory(self, inventory_create: InventoryCreateModel) -> Inventory:
         return Inventory(
-            sku_code=inventory_create.sku_code,
+            sku_code="",
             quantity=inventory_create.quantity,
             unit_price=inventory_create.unit_price,
             status=inventory_create.status,

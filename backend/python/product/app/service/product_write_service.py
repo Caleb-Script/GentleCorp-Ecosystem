@@ -30,6 +30,7 @@ class ProductWriteService:
         logger.success("Produkt erfolgreich erstellt mit ID: {}", product_id)
         return product_id
 
+# TODO namen entfernen
     async def update(
         self, product_id: UUID, product: ProductUpdateModel, version: int
     ) -> bool:

@@ -1,4 +1,7 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+
+from .exceptions import NotFoundException
 from .db import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 from .core import settings
@@ -13,6 +16,11 @@ app = FastAPI(title=settings.PROJECT_NAME)
 #     async with engine.begin() as conn:
 #         await conn.run_sync(Base.metadata.create_all)
 
+
+# TODO loggger cleanup
+# TODO exceptionabfangen wenn die vom product service kommen
+# TODO skucode generator
+# TODO versionierung
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,3 +38,11 @@ app.include_router(auth, prefix="/auth", tags=["Auth"])
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Inventory Service!"}
+
+
+@app.exception_handler(NotFoundException)
+async def not_found_exception_handler(request, exc: NotFoundException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail, "status_code": exc.status_code},
+    )

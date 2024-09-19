@@ -1,7 +1,7 @@
 from typing import List, Optional
 from fastapi import Depends, HTTPException
 
-from ..clients import get_product_repository
+from ..clients import ProductClient
 from ..core import custom_logger
 from ..repository import InventoryRepository, ProductRepository
 from ..schemas import (
@@ -22,22 +22,27 @@ class InventoryReadService:
     def __init__(
         self,
         inventory_repository: InventoryRepository = Depends(InventoryRepository),
-        product_repository=Depends(get_product_repository),
+        product_client=Depends(ProductClient()),
     ):
         self.inventory_repository = inventory_repository
-        self.product_repository = product_repository
+        self.product_repository = product_client
 
-    async def find_by_id(self, id: str, full: bool) -> InventoryBase:
+    async def find_by_id(self, id: str, full: bool, reservation: bool) -> InventoryBase:
         logger.debug("Getting inventory by id: {}, full={}", id, full)
         inventory = await self.inventory_repository.get_inventory_by_id(id, full)
 
         if inventory is None:
             raise NotFoundException(id)
 
+        if reservation:
+            inventory.name = "."
+            return inventory
+
         try:
-            product = await self.product_repository.get_by_id(inventory.product_id,"1")
+            product = await self.product_repository.get_by_id(inventory.product_id, "-1")
             logger.debug("find_by_id: product={}", product)
             inventory.name = product.name
+            inventory.brand = product.brand
 
         except HTTPException as e:
             if e.status_code == 404:
@@ -57,6 +62,7 @@ class InventoryReadService:
             try:
                 product = await self.product_repository.get_by_id(inventory.product_id, "-1")
                 inventory.name = product.name if product else None
+                inventory.brand = product.brand if product else None
             except HTTPException as e:
                 if e.status_code == 404:
                     logger.warning(f"Product with id {inventory.product_id} not found")

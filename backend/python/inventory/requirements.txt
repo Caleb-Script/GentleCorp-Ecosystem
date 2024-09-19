@@ -27,3 +27,6 @@ pytest-asyncio
 
 # Keycloak
 fastapi-keycloak
+
+# für skuCode generator:  um Sonderzeichen und Akzente zu entfernen und den Namen in ASCII zu konvertieren.
+unidecode

@@ -4,6 +4,17 @@ from uuid import UUID
 
 from ..models import InventoryStatusType
 
+class InventoryCreateModel(BaseModel):
+    quantity: int
+    unit_price: float
+    status: InventoryStatusType
+    product_id: str
+
+    class Config:
+        from_attributes = True
+
+    def __repr__(self):
+        return f"<Inventory(sku_code={self.sku_code}, quantity={self.quantity}), >"
 
 class InventoryBase(BaseModel):
     id: UUID
@@ -13,25 +24,17 @@ class InventoryBase(BaseModel):
     status: InventoryStatusType
     product_id: str
     name: str
-    
+    brand: str
+
     class Config:
         orm_model = True
         from_attributes = True
 
 
-class InventoryModel(BaseModel):
+class InventoryModel(InventoryCreateModel):
     sku_code: str
-    quantity: int
-    unit_price: float
-    status: InventoryStatusType
-    product_id: str
     name: str
-
-    class Config:
-        from_attributes = True
-
-    def __repr__(self):
-        return f"<Inventory(sku_code={self.sku_code}, quantity={self.quantity}), >"
+    brand: str
 
 
 class ReservationModel(BaseModel):
@@ -75,7 +78,6 @@ class InventoryFullModel(InventoryModel):
 
 
 class InventoryUpdate(BaseModel):
-    sku_code: Optional[str] = None
     quantity: Optional[int] = None
     unit_price: Optional[float] = None
     status: Optional[InventoryStatusType] = None

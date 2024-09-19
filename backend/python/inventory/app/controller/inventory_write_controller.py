@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 
 from ..core import custom_logger
-from ..schemas import InventoryModel, InventoryUpdate, ReservationModel
+from ..schemas import InventoryCreateModel, InventoryUpdate, ReservationModel
 from ..service import InventoryWriteService
 from ..security import AuthService, User, Role
 
@@ -11,27 +11,21 @@ logger = custom_logger(__name__)
 
 @router.post("/", response_model=str)
 async def create_inventory(
-    inventory: InventoryModel,
+    inventory: InventoryCreateModel,
     service: InventoryWriteService = Depends(InventoryWriteService),
     response: Response = Response(),
     user: User = Depends(AuthService.get_current_user),
 ):
     logger.debug("createInventory: inventory={}, role={}", inventory, user)
-    try:
-        # Correct role-checking logic
-        if Role.ADMIN not in user.roles and Role.USER not in user.roles:
-            raise HTTPException(status_code=403, detail="Not enough permissions")
 
-        created_inventory = await service.create(inventory)
-        response.headers["Location"] = f"/inventory/{created_inventory.id}"
-        response.status_code = status.HTTP_201_CREATED
-        logger.success("createInventory; new inventory id={}", created_inventory.id)
-        return response
-    except Exception as e:
-        logger.error(f"Error creating inventory: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+    # Correct role-checking logic
+    if Role.ADMIN not in user.roles and Role.USER not in user.roles:
+        raise HTTPException(status_code=403, detail="Not enough permissions")   
+    created_inventory_id = await service.create(inventory)
+    response.headers["Location"] = f"/inventory/{created_inventory_id}"
+    response.status_code = status.HTTP_201_CREATED
+    logger.success("createInventory; new inventory id={}", created_inventory_id)
+    return response
 
 
 @router.put("/{id}")
@@ -64,7 +58,7 @@ async def delete_inventory(
     logger.success("createInventory; new inventory id={}", inventory.id)
     return response
 
-
+# TODO ID in location header
 @router.post("/{id}/item")
 async def reserve_item(
     id: str,
@@ -76,5 +70,5 @@ async def reserve_item(
         raise HTTPException(status_code=403, detail="Not enough permissions")
     username = user.username
     logger.debug("reserve_item: id={}, item={}, username={}", id, item, username)
-    reserved_item = await service.reseveItem(id, item, username)
-    return reserved_item.id
+    reserved_item_id = await service.reseveItem(id, item, username)
+    return reserved_item_id

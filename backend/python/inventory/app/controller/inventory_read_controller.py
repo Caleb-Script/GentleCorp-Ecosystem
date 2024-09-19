@@ -81,7 +81,7 @@ async def get_by_id_full(
     token: str = Depends(AuthService.get_bearer_token),
 ):
     logger.debug("getByIdFull: {}", id)
-    inventory = await service.find_by_id(str(id), True)
+    inventory = await service.find_by_id(str(id), True, False)
     if not inventory:
         raise NotFoundException(id=id)
     return to_full_model(inventory)
@@ -93,7 +93,7 @@ async def get_by_id(
     token: str = Depends(AuthService.get_bearer_token),
 ):
     logger.debug("getById: {}", id)
-    inventory = await service.find_by_id(str(id), False)
+    inventory = await service.find_by_id(str(id), False, False)
     if not inventory:
         raise NotFoundException(id=id)
     inventory_model = to_model(inventory)

@@ -14,7 +14,7 @@ password = "p"
 new_id = ""
 query_params = {"max_price": 200, "min_price": 100}
 query_params2 = {"sku_code": "LMN456"}
-inventory_id = "80000000-0000-0000-0000-000000000001"
+inventory_id_1 = "80000000-0000-0000-0000-000000000001"
 
 
 @pytest.fixture(scope="session")
@@ -123,6 +123,8 @@ async def test_get_inventory(admin_client):
     assert data["unit_price"] == 299.99
     assert data["status"] == "A"
     assert data["product_id"] == "70000000-0000-0000-0000-000000000000"
+    assert data["name"] == "IPhone 14"
+    assert data["brand"] == "Apple"
 
 
 @pytest.mark.asyncio
@@ -179,7 +181,6 @@ async def test_get_full_inventory(admin_client):
 async def test_create_inventory(admin_client):
     global new_id
     inventory_data = {
-        "sku_code": "NEW123",
         "quantity": 10,
         "unit_price": 99.99,
         "status": "A",
@@ -189,6 +190,24 @@ async def test_create_inventory(admin_client):
     assert response.status_code == 201
     new_id = response.headers["Location"].split("/")[-1]
     assert new_id, "ID should not be empty"
+
+
+@pytest.mark.asyncio
+async def test_create_inventory_produkt_gibt_es_nicht(admin_client):
+    global new_id
+    inventory_data = {
+        "quantity": 10,
+        "unit_price": 99.99,
+        "status": "A",
+        "product_id": "00000000-0000-0000-0000-000000000000",
+    }
+    response = await admin_client.post("/inventory/", json=inventory_data)
+    assert response.status_code == 404
+    assert "message" in response.json()
+    assert (
+        response.json()["message"]
+        == "Kein Produkt mit der ID: 00000000-0000-0000-0000-000000000000 gefunden"
+    )
 
 
 @pytest.mark.asyncio
@@ -207,7 +226,7 @@ async def test_get_inventory_2(admin_client):
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["sku_code"] == "NEW123"
+    assert len(data["sku_code"]) == 11
     assert data["quantity"] == 20
     assert data["unit_price"] == 99.99
     assert data["status"] == "A"
@@ -228,7 +247,6 @@ async def test_get_inventory_3(admin_client):
     response = await admin_client.get(f"/inventory/{new_id}")
     assert response.status_code == 200
     data = response.json()
-    assert data["sku_code"] == "NEW123"
     assert data["quantity"] == 2
     assert data["unit_price"] == 199.99
     assert data["status"] == "D"
@@ -281,12 +299,12 @@ async def test_get_reserve_item_by_inventory_and_username(admin_client):
 @pytest.mark.asyncio
 async def test_reserve_item(admin_client):
     global new_id
-    response = await admin_client.post(f"/inventory/{inventory_id}/item", json={"quantity": 55})
+    response = await admin_client.post(f"/inventory/{inventory_id_1}/item", json={"quantity": 55})
     assert response.status_code == 200
 
 @pytest.mark.asyncio
 async def test_get_reserve_item_by_inventory_and_username_2(admin_client):
-    response = await admin_client.get(f"/inventory/reserve/{inventory_id}")
+    response = await admin_client.get(f"/inventory/reserve/{inventory_id_1}")
     assert response.status_code == 200
     data = response.json()
     assert data["quantity"] == 65
@@ -296,7 +314,7 @@ async def test_get_reserve_item_by_inventory_and_username_2(admin_client):
 async def test_reserve_item_leroy(elite_client):
     global new_id
     response = await elite_client.post(
-        f"/inventory/{inventory_id}/item", json={"quantity": 20}
+        f"/inventory/{inventory_id_1}/item", json={"quantity": 20}
     )
     assert response.status_code == 200
 
@@ -304,7 +322,7 @@ async def test_reserve_item_leroy(elite_client):
 @pytest.mark.asyncio
 async def test_get_reserve_item_by_inventory_and_username_3(elite_client):
     response = await elite_client.get(
-        f"/inventory/reserve/{inventory_id}"
+        f"/inventory/reserve/{inventory_id_1}"
     )
     assert response.status_code == 200
     data = response.json()
@@ -315,7 +333,7 @@ async def test_get_reserve_item_by_inventory_and_username_3(elite_client):
 async def test_reserve_item_erik(basic_client):
     global new_id
     response = await basic_client.post(
-        f"/inventory/{inventory_id}/item", json={"quantity": 20}
+        f"/inventory/{inventory_id_1}/item", json={"quantity": 20}
     )
     assert response.status_code == 403
     data = response.json()
@@ -325,13 +343,13 @@ async def test_reserve_item_erik(basic_client):
 @pytest.mark.asyncio
 async def test_get_reserve_item_by_inventory_and_username_4(basic_client):
     response = await basic_client.get(
-        f"/inventory/reserve/{inventory_id}"
+        f"/inventory/reserve/{inventory_id_1}"
     )
     assert response.status_code == 404
     data = response.json()
     assert (
-        data["detail"]
-        == "Keine Reservierung für den Kunden mit den Username: erik für das Inventar mit der ID: 80000000-0000-0000-0000-000000000001 gefunden!"
+        data["message"]
+        == "Keine Reservierung für den Kunden mit dem Username: erik für das Inventar mit der ID: 80000000-0000-0000-0000-000000000001 gefunden!"
     )
 
 
@@ -339,7 +357,7 @@ async def test_get_reserve_item_by_inventory_and_username_4(basic_client):
 async def test_reserve_item_Caleb(supreme_client):
     global new_id
     response = await supreme_client.post(
-        f"/inventory/{inventory_id}/item", json={"quantity": 20}
+        f"/inventory/{inventory_id_1}/item", json={"quantity": 20}
     )
     assert response.status_code == 400
     data = response.json()
@@ -353,7 +371,7 @@ async def test_reserve_item_Caleb(supreme_client):
 async def test_reserve_item_Caleb(supreme_client):
     global new_id
     response = await supreme_client.post(
-        f"/inventory/{inventory_id}/item", json={"quantity": 15}
+        f"/inventory/{inventory_id_1}/item", json={"quantity": 15}
     )
     assert response.status_code == 200
 
@@ -361,7 +379,7 @@ async def test_reserve_item_Caleb(supreme_client):
 @pytest.mark.asyncio
 async def test_get_reserve_item_by_inventory_and_username_5(supreme_client):
     response = await supreme_client.get(
-        f"/inventory/reserve/{inventory_id}"
+        f"/inventory/reserve/{inventory_id_1}"
     )
     assert response.status_code == 200
     data = response.json()

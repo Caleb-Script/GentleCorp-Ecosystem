@@ -1,13 +1,13 @@
 from typing import Optional
 import httpx
 from fastapi import HTTPException
-from pydantic import BaseModel
+from uuid import UUID
+
+from ..exceptions import NotFoundException
 from ..core import custom_logger
 from ..clients.product import ProductInfo
 
 logger = custom_logger(__name__)
-
-
 
 class ProductRepository:
     def __init__(self, base_url: str, token: str):
@@ -15,7 +15,7 @@ class ProductRepository:
         self.client = httpx.AsyncClient(base_url=base_url)
         self.token = token
 
-    async def get_by_id(self, id: str, version: Optional[str] = None) -> ProductInfo:
+    async def get_by_id(self, id: UUID, version: Optional[str] = None) -> ProductInfo:
         headers = {"Authorization": f"Bearer {self.token}"}
         if version:
             headers["If-None-Match"] = version
@@ -24,10 +24,10 @@ class ProductRepository:
             response.raise_for_status()
             product_data = response.json()
             logger.debug("get_by_id: product={}", product_data)
-            return ProductInfo(name=product_data['name'])
+            return ProductInfo.to_product_info(product_data)
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
-                raise HTTPException(status_code=404, detail=f"Product with id {id} not found")
+                raise NotFoundException(product_id=id)
             raise HTTPException(status_code=e.response.status_code, detail=str(e))
 
     async def close(self):
