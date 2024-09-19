@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "Movie"
+version = "0.1.0"
+description = "A FastAPI project with Keycloak integration"
+authors = ["Caleb Gyamfi <caleb_g@outlook.de>"]
+
+
+
+
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

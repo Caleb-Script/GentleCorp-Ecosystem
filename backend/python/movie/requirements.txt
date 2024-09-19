@@ -1,0 +1,18 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+# Keycloak
+fastapi-keycloak
+
+
+pytest
+pytest-asyncio
+# requests
+loguru
+
+# asynchrone MongoDB-Treiberbibliothek
+databases[postgresql]
+asyncpg
+
+httpx

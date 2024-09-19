@@ -101,6 +101,7 @@ TODO.adoc
 ### Python
 .venv_product/
 .venv_inventory/
+.venv_movie/
 __pycache__/
 *.pyc
 
