@@ -48,6 +48,7 @@ sealed interface SecurityConfig permits ApplicationConfig {
     return httpSecurity
       .authorizeHttpRequests(authorize -> {
         authorize
+          .requestMatchers(GET, CUSTOMER_PATH + "/hallo").permitAll()
           .requestMatchers(GET, CUSTOMER_PATH).hasAnyRole(USER.name(), ADMIN.name())
           .requestMatchers(GET, CUSTOMER_PATH + "/all/**").hasAnyRole(ADMIN.name(), USER.name())
           .requestMatchers(GET, CUSTOMER_PATH + "/**").hasAnyRole(ADMIN.name(), USER.name(),SUPREME.name(), ELITE.name(), BASIC.name())

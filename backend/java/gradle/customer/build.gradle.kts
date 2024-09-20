@@ -1,4 +1,12 @@
-val javaLanguageVersion = project.properties["javaLanguageVersion"] as String? ?: JavaVersion.VERSION_22.majorVersion
+
+/**
+ * bei gradle update:
+ * gehe zu: ./gradle/wrapper/gradle-wrapper.properties
+ * ändere distributionUrl=https\://services.gradle.org/distributions/gradle-{neue version}-bin.zip
+ * anschließend: ./gradlew wrapper --gradle-version {neue version}
+ */
+
+val javaLanguageVersion = project.properties["javaLanguageVersion"] as String? ?: JavaVersion.VERSION_23.majorVersion
 val javaVersion = project.properties["javaVersion"] ?: libs.versions.javaVersion.get()
 
 val enablePreview = if (project.properties["enablePreview"] == false) null else "--enable-preview"
@@ -18,7 +26,7 @@ val imageTag = project.properties["imageTag"] ?: project.version.toString()
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(22)
+    languageVersion = JavaLanguageVersion.of(23)
   }
 }
 

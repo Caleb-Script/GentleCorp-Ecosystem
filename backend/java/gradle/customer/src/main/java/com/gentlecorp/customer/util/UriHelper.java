@@ -29,8 +29,11 @@ public class UriHelper {
     // No forwarding from an API Gateway
     // URI from scheme, host, port, and path
     final var uriComponents = ServletUriComponentsBuilder.fromRequestUri(request).build();
-    final var baseUri =
-      STR."\{uriComponents.getScheme()}://\{uriComponents.getHost()}:\{uriComponents.getPort()}\{CUSTOMER_PATH}";
+    final var baseUri = String.format("%s://%s:%s%s",
+      uriComponents.getScheme(),
+      uriComponents.getHost(),
+      uriComponents.getPort(),
+      CUSTOMER_PATH);
     log.debug("getBaseUri (without forwarding): baseUri={}", baseUri);
     return URI.create(baseUri);
   }
@@ -41,7 +44,7 @@ public class UriHelper {
     // "https" or "http"
     final var forwardedProto = request.getHeader(X_FORWARDED_PROTO);
     if (forwardedProto == null) {
-      throw new IllegalStateException(STR."No \"\{X_FORWARDED_PROTO}\" header present");
+      throw new IllegalStateException(String.format("No \"%s\" header present", X_FORWARDED_PROTO));
     }
 
     var forwardedPrefix = request.getHeader(X_FORWARDED_PREFIX);
@@ -50,7 +53,8 @@ public class UriHelper {
       log.trace("getBaseUriForwarded: No \"{}\" header present", X_FORWARDED_PREFIX);
       forwardedPrefix = CUSTOMER_PREFIX;
     }
-    final var baseUri = STR."\{forwardedProto}://\{forwardedHost}\{forwardedPrefix}\{CUSTOMER_PATH}";
+
+    final var baseUri = String.format("%s://%s%s%s", forwardedProto, forwardedHost, forwardedPrefix, CUSTOMER_PATH);
     log.debug("getBaseUriForwarded: baseUri={}", baseUri);
     return URI.create(baseUri);
   }

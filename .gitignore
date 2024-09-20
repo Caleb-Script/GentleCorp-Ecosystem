@@ -3,6 +3,7 @@
 
 IDEEN.adoc
 TODO.adoc
+projekt-info.md
 
 #/backend/gentle-shop
 
@@ -109,3 +110,4 @@ __pycache__/
 .keys
 
 ###databank
+

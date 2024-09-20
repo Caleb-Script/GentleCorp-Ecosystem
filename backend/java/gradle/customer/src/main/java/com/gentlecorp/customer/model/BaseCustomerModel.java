@@ -1,6 +1,5 @@
 package com.gentlecorp.customer.model;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.gentlecorp.customer.model.entity.Customer;
 import com.gentlecorp.customer.model.enums.*;
 import lombok.EqualsAndHashCode;
@@ -27,7 +26,7 @@ public abstract class BaseCustomerModel<T extends BaseCustomerModel<T>> extends 
   private final GenderType gender;
   private final MaritalStatusType maritalStatus;
   private final AddressModel address;
-  private final List<ContactOptionsType> contactOptionsType;
+  private final List<ContactOptionsType> contactOptions;
   private final List<InterestType> interests;
 
   public BaseCustomerModel(Customer customer) {
@@ -41,9 +40,9 @@ public abstract class BaseCustomerModel<T extends BaseCustomerModel<T>> extends 
     this.birthDate = customer.getBirthDate();
     this.gender = customer.getGender();
     this.maritalStatus = customer.getMaritalStatus();
-    this.customerState = customer.getCustomer_state();
+    this.customerState = customer.getCustomerState();
     this.address = new AddressModel(customer.getAddress());
-    this.contactOptionsType = customer.getContactOptions();
+    this.contactOptions = customer.getContactOptions();
     this.interests = customer.getInterests();
   }
 }

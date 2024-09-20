@@ -173,7 +173,7 @@ public class SpecificationBuilder {
 
   private Specification<Customer> customerStatus(final String status) {
     return (root, query, builder) -> builder.equal(
-      root.get(Customer_.customer_state),
+      root.get(Customer_.customerState),
      StatusType.of(status)
     );
   }

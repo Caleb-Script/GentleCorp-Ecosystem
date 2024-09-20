@@ -16,6 +16,7 @@ import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 
 @Slf4j
 public class VersionUtils {
+
   public static int getVersion(final Optional<String> versionOpt, final HttpServletRequest request) {
     log.trace("getVersion: {}", versionOpt);
     return versionOpt.map(versionStr -> {
@@ -24,7 +25,7 @@ public class VersionUtils {
       } else {
         throw new VersionInvalidException(
           PRECONDITION_FAILED,
-          STR."Invalid ETag \{versionStr}",
+          String.format("Invalid ETag %s", versionStr), // Korrektur der String-Interpolation
           URI.create(request.getRequestURL().toString())
         );
       }

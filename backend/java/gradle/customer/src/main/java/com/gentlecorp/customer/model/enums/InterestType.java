@@ -1,6 +1,7 @@
 package com.gentlecorp.customer.model.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.RequiredArgsConstructor;
 
 import java.util.stream.Stream;
@@ -28,4 +29,10 @@ public enum InterestType {
                 .findFirst()
                 .orElse(null);
     }
+
+
+  @JsonValue
+  public String getInterest() {
+    return interest;
+  }
 }

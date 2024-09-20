@@ -2,19 +2,15 @@ package com.gentlecorp.customer.service;
 
 import com.gentlecorp.customer.MailProps;
 import com.gentlecorp.customer.exception.AccessForbiddenException;
-import com.gentlecorp.customer.exception.ContactExistsException;
 import com.gentlecorp.customer.exception.EmailExistsException;
 import com.gentlecorp.customer.exception.IllegalArgumentException;
 import com.gentlecorp.customer.exception.NotFoundException;
 import com.gentlecorp.customer.exception.PasswordInvalidException;
 import com.gentlecorp.customer.exception.UsernameExistsException;
-import com.gentlecorp.customer.exception.VersionInvalidException;
-import com.gentlecorp.customer.exception.VersionOutdatedException;
 import com.gentlecorp.customer.model.dto.AccountDTO;
 import com.gentlecorp.customer.model.dto.ShoppingCartDTO;
 import com.gentlecorp.customer.model.entity.Contact;
 import com.gentlecorp.customer.model.entity.Customer;
-import com.gentlecorp.customer.model.interfaces.VersionedEntity;
 import com.gentlecorp.customer.repository.ContactRepository;
 import com.gentlecorp.customer.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +50,7 @@ public class CustomerWriteService {
   private final KafkaTemplate<String, Object> kafkaTemplate;
 
   public Customer create(final Customer customer, final String password) {
-    customer.setCustomer_state(ACTIVE);
+    customer.setCustomerState(ACTIVE);
     log.debug("create: customer={}", customer);
     log.debug("create: address={}", customer.getAddress());
 
@@ -108,7 +104,7 @@ public class CustomerWriteService {
     log.debug("update: id={}, version={}", id, version);
     log.trace("update: No constraints violated");
 
-    customer.setCustomer_state(ACTIVE);
+    customer.setCustomerState(ACTIVE);
     final var customerDb = customerRepository.findById(id).orElseThrow(() -> new NotFoundException(id));
     final var userAndRole = customerReadService.validateJwtAndGetUsernameAndRole(jwt);
     final var validatedUsername = userAndRole.getLeft();

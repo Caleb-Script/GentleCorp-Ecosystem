@@ -23,7 +23,7 @@ public enum GenderType {
   }
 
   @JsonValue
-  public String getType() {
+  public String getGender() {
     return gender;
   }
 }

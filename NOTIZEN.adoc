@@ -142,3 +142,35 @@ Erstelle ein selbstsigniertes Zertifikat (certificate.crt) mit dem folgenden Bef
 |===
 
 
+== Java version austauschen für Java Projekte
+
+=== Schritt 1: Finde den richtigen Pfad zu deiner Java-Version
+
+ brew --prefix openjdk
+
+
+=== Schritt 2: Setze JAVA_HOME korrekt
+
+ zsh:  export JAVA_HOME=/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home
+ pwsh: $env:JAVA_HOME = "/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home"
+
+=== Schritt 3: Dauerhafte Änderung
+
+==== zsh:
+
+ - nano ~/.zshrc
+ - export JAVA_HOME=/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home
+ - source ~/.zshrc
+
+==== pwsh:
+
+
+ - Test-Path $profile
+ - bei False: New-Item -Path $profile -Type File -Force
+ - nano $profile
+ - $env:JAVA_HOME = "/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home"
+ - echo $env:JAVA_HOME
+
+
+
+

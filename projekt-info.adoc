@@ -1,0 +1,36 @@
+# Projenkt Infos
+
+## Docker Compose Pfade
+
+keycloak:
+cd /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/compose/keycloak
+
+mysql:
+cd /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/compose/mysql
+
+mongoDb:
+cd /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/compose/mongoDb
+
+kafka:
+cd /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/compose/kafka
+
+postgresql:
+cd /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/compose/postgres
+
+fakesmtp:
+cd /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/compose/fakesmtp
+
+## Server Pfade
+
+[cols="1,2,3", options="header"]
+
+|===
+|Server |Pfad |start befehl
+
+|customer:
+|cd /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/backend/java/gradle/customer
+|gradle bootRun
+
+
+
+|===

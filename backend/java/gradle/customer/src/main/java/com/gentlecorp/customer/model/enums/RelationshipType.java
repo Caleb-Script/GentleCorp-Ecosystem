@@ -1,6 +1,7 @@
 package com.gentlecorp.customer.model.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.RequiredArgsConstructor;
 
 import java.util.stream.Stream;
@@ -23,5 +24,10 @@ public enum RelationshipType {
       .filter(relationshipType -> relationshipType.relationship.equalsIgnoreCase(value))
       .findFirst()
       .orElse(null);
+  }
+
+  @JsonValue
+  public String getRelationship() {
+    return relationship;
   }
 }

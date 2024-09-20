@@ -67,7 +67,8 @@ public class Customer implements VersionedEntity {
   private MaritalStatusType maritalStatus;
 
   @Enumerated(EnumType.STRING)
-  private StatusType customer_state;
+  private StatusType customerState;
+
 
   @ToString.Exclude
   @OneToOne(fetch = LAZY, cascade = {PERSIST, REMOVE}, optional = false, orphanRemoval = true)
@@ -108,7 +109,7 @@ public class Customer implements VersionedEntity {
 
     gender = customer.getGender();
     maritalStatus = customer.getMaritalStatus();
-    customer_state = customer.getCustomer_state();
+    customerState = customer.getCustomerState();
   }
 
   public void setInterestsString(final List<InterestType> interests) {

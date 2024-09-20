@@ -1,4 +1,19 @@
 
+# -- (1) PowerShell:
+# --     cd .extras\compose\db\mysql
+# --     docker compose up
+# -- (1) 2. PowerShell:
+# --     cd .extras\compose\db\mysql
+# --     docker compose exec db bash
+# --         mysql --user=root --password=p < /sql/create-db-customer.sql
+# --         mysql --user=root --password=p < /sql/create-db-inventory.sql
+# --         mysql --user=root --password=p < /sql/create-db-shopping-cart.sql
+# --         exit
+# --     docker compose down
+
+
+
+
 services:
   db:
     image: mysql:latest

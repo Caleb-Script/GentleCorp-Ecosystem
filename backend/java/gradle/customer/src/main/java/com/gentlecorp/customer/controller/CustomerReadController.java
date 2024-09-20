@@ -132,4 +132,10 @@ public class CustomerReadController {
       Link.of(idUri).withRel("remove")
     );
   }
+
+  @GetMapping(path = "/hallo")
+  private ResponseEntity<String> Hallo() {
+    log.debug("Hallo");
+    return ResponseEntity.ok("Hallo");
+  }
 }
