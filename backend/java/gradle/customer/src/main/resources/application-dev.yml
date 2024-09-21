@@ -77,8 +77,8 @@ spring:
 #    client-secret: 6J3uzo8E8jbCUbiraQIAOKuPRA4xKO7S
 #    client-id: GentleBank
   #mail:
-  #  from: Theo Test <theo@test.de>
-  #  sales: Maxi Musterfrau <maxi.musterfrau@test.de>
+  #  from: Theo Test <theo@model.de>
+  #  sales: Maxi Musterfrau <maxi.musterfrau@model.de>
 
 
 logging:

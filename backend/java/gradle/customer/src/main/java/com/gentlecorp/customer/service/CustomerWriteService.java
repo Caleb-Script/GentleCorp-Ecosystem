@@ -92,8 +92,8 @@ public class CustomerWriteService {
       customer.getId()
     );
 
-    kafkaTemplate.send("newAccount", checkingAccount);
-    kafkaTemplate.send("create-shopping-cart",new ShoppingCartDTO(customer.getId()));
+    //kafkaTemplate.send("newAccount", checkingAccount);
+    //kafkaTemplate.send("create-shopping-cart",new ShoppingCartDTO(customer.getId()));
 
     log.debug("create: customerDb={}", customerDb);
     return customerDb;

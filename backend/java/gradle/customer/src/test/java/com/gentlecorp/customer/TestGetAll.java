@@ -1,10 +1,7 @@
 package com.gentlecorp.customer;
 
-import com.gentlecorp.customer.controller.CustomerReadController;
-import com.gentlecorp.customer.controller.CustomerWriteController;
-import com.gentlecorp.customer.model.entity.Customer;
-import com.gentlecorp.customer.model.test.CustomerResponse;
-import org.junit.jupiter.api.BeforeEach;
+import com.gentlecorp.customer.model.CustomerResponse;
+import com.gentlecorp.customer.model.TestCustomer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,16 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TestGetAll {
 
-
   private static final String SCHEMA_HOST = "http://localhost:";
-
-  private static final String ADMIN = "admin";
-  private static final String USER = "user";
-  private static final String SUPREME = "gentlecg99";
-  private static final String ELITE = "leroy135";
-  private static final String BASIC = "erik";
-
-  private static final String PASSWORD = "p";
 
   private static final String QUERY_PARAM_USERNAME = "username";
   private static final String QUERY_PARAM_PREFIX = "prefix";
@@ -132,23 +120,7 @@ public class TestGetAll {
   private TestRestTemplate restTemplate;
 
   @Autowired
-  private TestConfig testConfig;
-
-
-  private TestRestTemplate adminClient;
-  private TestRestTemplate userClient;
-  private TestRestTemplate basicClient;
-  private TestRestTemplate eliteClient;
-  private TestRestTemplate supremeClient;
-
-  @BeforeEach
-  void setUp() {
-    adminClient = testConfig.createAuthenticatedClient(ADMIN, PASSWORD);
-    userClient = testConfig.createAuthenticatedClient(USER, PASSWORD);
-    basicClient = testConfig.createAuthenticatedClient(BASIC, PASSWORD);
-    eliteClient = testConfig.createAuthenticatedClient(ELITE, PASSWORD);
-    supremeClient = testConfig.createAuthenticatedClient(SUPREME, PASSWORD);
-  }
+  private Clients clients;
 
   /*************************************************************************************************************************************************************************************************************************************************************************************
    *                                                                                                S U C H E   N A C H   A L L E N   K U N D E N
@@ -156,14 +128,14 @@ public class TestGetAll {
 
   @Test
   void testGetAllAsAdmin() {
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(SCHEMA_HOST + port + CUSTOMER_PATH, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(SCHEMA_HOST + port + CUSTOMER_PATH, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(27);  // Überprüft, ob die Liste genau 27 Einträge hat
@@ -171,14 +143,14 @@ public class TestGetAll {
 
   @Test
   void testGetAllAsUser() {
-    ResponseEntity<CustomerResponse> response = userClient.getForEntity(SCHEMA_HOST + port + CUSTOMER_PATH, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.userClient.getForEntity(SCHEMA_HOST + port + CUSTOMER_PATH, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(27);  // Überprüft, ob die Liste genau 27 Einträge hat
@@ -186,19 +158,19 @@ public class TestGetAll {
 
   @Test
   void testGetAllAsSupreme() {
-    ResponseEntity<CustomerResponse> response = supremeClient.getForEntity(SCHEMA_HOST + port + CUSTOMER_PATH, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.supremeClient.getForEntity(SCHEMA_HOST + port + CUSTOMER_PATH, CustomerResponse.class);
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
   }
 
   @Test
   void testGetAllAsElite() {
-    ResponseEntity<CustomerResponse> response = eliteClient.getForEntity(SCHEMA_HOST + port + CUSTOMER_PATH, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.eliteClient.getForEntity(SCHEMA_HOST + port + CUSTOMER_PATH, CustomerResponse.class);
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
   }
 
   @Test
   void testGetAllAsBasic() {
-    ResponseEntity<CustomerResponse> response = basicClient.getForEntity(SCHEMA_HOST + port + CUSTOMER_PATH, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.basicClient.getForEntity(SCHEMA_HOST + port + CUSTOMER_PATH, CustomerResponse.class);
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
   }
 
@@ -222,20 +194,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_USERNAME, USERNAME)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(1);  // Überprüft, ob die Liste genau 1 Eintrag hat
 
-    Customer customer = customerResponse.get_embedded().getCustomers().getFirst();
-    assertThat(customer.getUsername()).isEqualTo(USERNAME);
+    TestCustomer customer = customerResponse._embedded().customers().getFirst();
+    assertThat(customer.username()).isEqualTo(USERNAME);
   }
 
   @Test
@@ -244,25 +216,25 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_USERNAME, PARTIAL_USERNAME)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(3);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen den Teilstring enthalten
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getUsername().contains(PARTIAL_USERNAME));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.username().contains(PARTIAL_USERNAME));
 
     // Optional: Überprüfen Sie den ersten Benutzer genauer
-    Customer firstCustomer = customerResponse.get_embedded().getCustomers().getFirst();
-    assertThat(firstCustomer.getUsername()).contains(PARTIAL_USERNAME);
+    TestCustomer firstCustomer = customerResponse._embedded().customers().getFirst();
+    assertThat(firstCustomer.username()).contains(PARTIAL_USERNAME);
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -275,29 +247,29 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_PREFIX, PREFIX_IVA)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(2);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getLastName().toLowerCase().startsWith(PREFIX_IVA.toLowerCase()));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.lastName().toLowerCase().startsWith(PREFIX_IVA.toLowerCase()));
 
     // Optional: Überprüfen Sie den ersten Benutzer genauer
-    Customer firstCustomer = customerResponse.get_embedded().getCustomers().getFirst();
-    assertThat(firstCustomer.getLastName().toLowerCase()).startsWith(PREFIX_IVA.toLowerCase());
+    TestCustomer firstCustomer = customerResponse._embedded().customers().getFirst();
+    assertThat(firstCustomer.lastName().toLowerCase()).startsWith(PREFIX_IVA.toLowerCase());
 
     // Optional: Überprüfen Sie auch den zweiten Benutzer
-    Customer secondCustomer = customerResponse.get_embedded().getCustomers().get(1);
-    assertThat(secondCustomer.getLastName().toLowerCase()).startsWith(PREFIX_IVA.toLowerCase());
+    TestCustomer secondCustomer = customerResponse._embedded().customers().get(1);
+    assertThat(secondCustomer.lastName().toLowerCase()).startsWith(PREFIX_IVA.toLowerCase());
   }
 
   @Test
@@ -306,25 +278,25 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_PREFIX, PREFIX_G)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(4);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getLastName().toLowerCase().startsWith(PREFIX_G.toLowerCase()));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.lastName().toLowerCase().startsWith(PREFIX_G.toLowerCase()));
 
     // Optional: Überprüfen Sie den ersten Benutzer genauer
-    Customer firstCustomer = customerResponse.get_embedded().getCustomers().getFirst();
-    assertThat(firstCustomer.getLastName().toLowerCase()).startsWith(PREFIX_G.toLowerCase());
+    TestCustomer firstCustomer = customerResponse._embedded().customers().getFirst();
+    assertThat(firstCustomer.lastName().toLowerCase()).startsWith(PREFIX_G.toLowerCase());
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -337,26 +309,26 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_LAST_NAME, LAST_NAME_M)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(11);
 
     // Überprüfen Sie, ob alle zurückgegebenen Nachnamen "M" oder "m" enthalten
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getLastName().toLowerCase().contains(LAST_NAME_M.toLowerCase()));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.lastName().toLowerCase().contains(LAST_NAME_M.toLowerCase()));
 
     // Optional: Überprüfen Sie einige spezifische Nachnamen
     List<String> expectedLastNames = Arrays.asList("Meyer", "Müller", "Mustermann");
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .extracting(Customer::getLastName)
+    assertThat(customerResponse._embedded().customers())
+      .extracting(TestCustomer::lastName)
       .anyMatch(expectedLastNames::contains);
   }
 
@@ -366,21 +338,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_LAST_NAME, LAST_NAME_SON)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(4);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getLastName().toLowerCase().contains(LAST_NAME_SON.toLowerCase()));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.lastName().toLowerCase().contains(LAST_NAME_SON.toLowerCase()));
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -393,20 +365,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_EMAIL, EMAIL)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(1);
 
-    Customer firstCustomer = customerResponse.get_embedded().getCustomers().getFirst();
-    assertThat(firstCustomer.getEmail().toLowerCase()).isEqualTo(EMAIL.toLowerCase());
+    TestCustomer firstCustomer = customerResponse._embedded().customers().getFirst();
+    assertThat(firstCustomer.email().toLowerCase()).isEqualTo(EMAIL.toLowerCase());
   }
 
   @Test
@@ -415,21 +387,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_EMAIL, PARTIAL_EMAIL)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(2);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getEmail().toLowerCase().contains(PARTIAL_EMAIL.toLowerCase()));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.email().toLowerCase().contains(PARTIAL_EMAIL.toLowerCase()));
   }
 
   @Test
@@ -438,21 +410,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_EMAIL, EMAIL_HOST)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(2);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getEmail().toLowerCase().contains(EMAIL_HOST.toLowerCase()));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.email().toLowerCase().contains(EMAIL_HOST.toLowerCase()));
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -465,21 +437,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_SUBSCRIBED, IS_SUBSCRIBED)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(23);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(Customer::isSubscribed);
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(TestCustomer::subscribed);
   }
 
   @Test
@@ -488,21 +460,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_SUBSCRIBED, IS_NOT_SUBSCRIBED)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(4);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> !customer.isSubscribed());
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> !customer.subscribed());
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -515,26 +487,26 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_TIER, TIER_1)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(9);
 
     // Überprüfen Sie, ob alle zurückgegebenen Kunden Tier 1 sind
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getTierLevel() == Integer.parseInt(TIER_1));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.tierLevel() == Integer.parseInt(TIER_1));
 
     // Optional: Überprüfen Sie, ob bekannte Tier 1 Kunden in der Liste sind
     List<String> expectedTier1Customers = Arrays.asList("julia", "erik", "john.muller");
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .extracting(Customer::getUsername)
+    assertThat(customerResponse._embedded().customers())
+      .extracting(TestCustomer::username)
       .containsAnyElementsOf(expectedTier1Customers);
   }
 
@@ -544,21 +516,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_TIER, TIER_2)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(9);
 
     // Überprüfen Sie, ob alle zurückgegebenen Kunden Tier 1 sind
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getTierLevel() == Integer.parseInt(TIER_2));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.tierLevel() == Integer.parseInt(TIER_2));
   }
 
   @Test
@@ -567,21 +539,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_TIER, TIER_3)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(9);
 
     // Überprüfen Sie, ob alle zurückgegebenen Kunden Tier 1 sind
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getTierLevel() == Integer.parseInt(TIER_3));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.tierLevel() == Integer.parseInt(TIER_3));
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -595,26 +567,26 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_BIRTHDATE, BIRTH_DATE_BEFORE)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(18);
 
     // Überprüfen Sie, ob alle zurückgegebenen Kunden ein Geburtsdatum vor dem Stichtagsdatum haben
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getBirthDate().isBefore(cutoffDate));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.birthDate().isBefore(cutoffDate));
 
     // Optional: Überprüfen Sie einige spezifische Kunden
     List<String> expectedCustomers = Arrays.asList("mark.williams2", "anna.schmidt");
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .extracting(Customer::getUsername)
+    assertThat(customerResponse._embedded().customers())
+      .extracting(TestCustomer::username)
       .containsAnyElementsOf(expectedCustomers);
   }
 
@@ -625,20 +597,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_BIRTHDATE, BIRTH_DATE_AFTER)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(4);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getBirthDate().isAfter(cutoffDate));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.birthDate().isAfter(cutoffDate));
   }
 
   @Test
@@ -651,23 +623,23 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_BIRTHDATE, BIRTH_DATE_BETWEEN)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(5);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded().customers())
       .allMatch(customer ->
-        (customer.getBirthDate().isEqual(startDate) || customer.getBirthDate().isAfter(startDate))
+        (customer.birthDate().isEqual(startDate) || customer.birthDate().isAfter(startDate))
           &&
-          (customer.getBirthDate().isEqual(endDate) || customer.getBirthDate().isBefore(endDate))
+          (customer.birthDate().isEqual(endDate) || customer.birthDate().isBefore(endDate))
       );
   }
 
@@ -681,20 +653,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_GENDER, GENDER_MALE)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(13);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getGender().getGender().equals(GENDER_MALE));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.gender().getGender().equals(GENDER_MALE));
   }
 
   @Test
@@ -703,20 +675,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_GENDER, GENDER_FEMALE)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(11);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getGender().getGender().equals(GENDER_FEMALE));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.gender().getGender().equals(GENDER_FEMALE));
   }
 
   @Test
@@ -725,20 +697,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_GENDER, GENDER_DIVERSE)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(3);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getGender().getGender().equals(GENDER_DIVERSE));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.gender().getGender().equals(GENDER_DIVERSE));
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -751,20 +723,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_MARITAL_STATUS, MARITAL_STATUS_SINGLE)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(7);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getMaritalStatus().getStatus().equals(MARITAL_STATUS_SINGLE));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.maritalStatus().getStatus().equals(MARITAL_STATUS_SINGLE));
   }
 
   @Test
@@ -773,20 +745,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_MARITAL_STATUS, MARITAL_STATUS_MARRIED)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(15);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getMaritalStatus().getStatus().equals(MARITAL_STATUS_MARRIED));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.maritalStatus().getStatus().equals(MARITAL_STATUS_MARRIED));
   }
 
   @Test
@@ -795,20 +767,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_MARITAL_STATUS, MARITAL_STATUS_DIVORCED)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(3);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getMaritalStatus().getStatus().equals(MARITAL_STATUS_DIVORCED));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.maritalStatus().getStatus().equals(MARITAL_STATUS_DIVORCED));
   }
 
   @Test
@@ -817,20 +789,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_MARITAL_STATUS, MARITAL_STATUS_WIDOW)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(2);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getMaritalStatus().getStatus().equals(MARITAL_STATUS_WIDOW));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.maritalStatus().getStatus().equals(MARITAL_STATUS_WIDOW));
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -843,20 +815,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_CUSTOMER_STATUS, CUSTOMER_STATUS_ACTIVE)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(21);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getCustomerState().getState().equals(CUSTOMER_STATUS_ACTIVE));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.customerState().getState().equals(CUSTOMER_STATUS_ACTIVE));
   }
 
   @Test
@@ -865,20 +837,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_CUSTOMER_STATUS, CUSTOMER_STATUS_BLOCKED)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(2);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getCustomerState().getState().equals(CUSTOMER_STATUS_BLOCKED));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.customerState().getState().equals(CUSTOMER_STATUS_BLOCKED));
   }
 
   @Test
@@ -887,20 +859,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_CUSTOMER_STATUS, CUSTOMER_STATUS_INACTIVE)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(3);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getCustomerState().getState().equals(CUSTOMER_STATUS_INACTIVE));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.customerState().getState().equals(CUSTOMER_STATUS_INACTIVE));
   }
 
   @Test
@@ -909,20 +881,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_CUSTOMER_STATUS, CUSTOMER_STATUS_CLOSED)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(1);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getCustomerState().getState().equals(CUSTOMER_STATUS_CLOSED));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.customerState().getState().equals(CUSTOMER_STATUS_CLOSED));
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -935,21 +907,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_ZIP_CODE, ZIP_CODE_70374)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(3);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getAddress().getZipCode().equalsIgnoreCase(ZIP_CODE_70374));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.address().zipCode().equalsIgnoreCase(ZIP_CODE_70374));
   }
 
   @Test
@@ -958,21 +930,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_ZIP_CODE, ZIP_CODE_Y1000)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(1);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getAddress().getZipCode().toLowerCase().contains(ZIP_CODE_Y1000.toLowerCase()));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.address().zipCode().toLowerCase().contains(ZIP_CODE_Y1000.toLowerCase()));
   }
 
   @Test
@@ -981,21 +953,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_ZIP_CODE, ZIP_CODE_KA)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(2);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getAddress().getZipCode().toLowerCase().contains(ZIP_CODE_KA.toLowerCase()));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.address().zipCode().toLowerCase().contains(ZIP_CODE_KA.toLowerCase()));
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -1008,21 +980,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_CITY, CITY_STUTTGART)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(3);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getAddress().getCity().equalsIgnoreCase(CITY_STUTTGART));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.address().city().equalsIgnoreCase(CITY_STUTTGART));
   }
 
   @Test
@@ -1031,21 +1003,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_CITY, CITY_PARTIAL_TOK)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(1);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getAddress().getCity().toLowerCase().contains(CITY_PARTIAL_TOK.toLowerCase()));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.address().city().toLowerCase().contains(CITY_PARTIAL_TOK.toLowerCase()));
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -1059,21 +1031,21 @@ public class TestGetAll {
       .build(false) // Verhindert die automatische Kodierung
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(1);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getAddress().getState().equalsIgnoreCase(STATE_NEW_SOUTH_WALES));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.address().state().equalsIgnoreCase(STATE_NEW_SOUTH_WALES));
   }
 
   @Test
@@ -1082,21 +1054,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_STATE, STATE_PARTIAL_BA)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(5);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getAddress().getState().toLowerCase().contains(STATE_PARTIAL_BA.toLowerCase()));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.address().state().toLowerCase().contains(STATE_PARTIAL_BA.toLowerCase()));
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -1110,21 +1082,21 @@ public class TestGetAll {
       .build(false) // Verhindert die automatische Kodierung
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(3);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getAddress().getCountry().equalsIgnoreCase(COUNTRY_USA));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.address().country().equalsIgnoreCase(COUNTRY_USA));
   }
 
   @Test
@@ -1133,21 +1105,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_COUNTRY, COUNTRY_PARTIAL_LAND)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(11);
 
     // Überprüfen Sie, ob alle zurückgegebenen Benutzernamen mit dem Präfix beginnen
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getAddress().getCountry().toLowerCase().contains(COUNTRY_PARTIAL_LAND.toLowerCase()));
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.address().country().toLowerCase().contains(COUNTRY_PARTIAL_LAND.toLowerCase()));
   }
 
   /***********************************************************************************************************************************************************************************************************************************************************************
@@ -1160,26 +1132,26 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_CONTACT, CONTACT_PHONE)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(20);
 
 
     // Prüfen, ob alle Kunden Kontaktoptionen haben
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getContactOptions() != null && !customer.getContactOptions().isEmpty());
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.contactOptions() != null && !customer.contactOptions().isEmpty());
 
 // Prüfen, ob alle Kunden die Telefonoption haben
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getContactOptions().stream()
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.contactOptions().stream()
         .anyMatch(contactOption -> contactOption.getOption().equalsIgnoreCase(CONTACT_PHONE)));
   }
 
@@ -1189,21 +1161,21 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_CONTACT, CONTACT_EMAIL)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(22);
 
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getContactOptions().stream()
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.contactOptions().stream()
         .anyMatch(contactOption -> contactOption.getOption().equalsIgnoreCase(CONTACT_EMAIL)));
   }
 
@@ -1213,20 +1185,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_CONTACT, CONTACT_LETTER)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(14);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getContactOptions().stream()
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.contactOptions().stream()
         .anyMatch(contactOption -> contactOption.getOption().equalsIgnoreCase(CONTACT_LETTER)));
   }
 
@@ -1236,20 +1208,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_CONTACT, CONTACT_SMS)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(8);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getContactOptions().stream()
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.contactOptions().stream()
         .anyMatch(contactOption -> contactOption.getOption().equalsIgnoreCase(CONTACT_SMS)));
   }
 
@@ -1262,21 +1234,21 @@ public class TestGetAll {
 
     String url = builder.toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(5);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded().customers())
       .allMatch(customer ->
-        customer.getContactOptions().stream()
+        customer.contactOptions().stream()
           .anyMatch(contactOption ->
             allContactOptions.contains(contactOption.getOption().toUpperCase())
           )
@@ -1292,21 +1264,21 @@ public class TestGetAll {
 
     String url = builder.toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(17);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded().customers())
       .allMatch(customer ->
-        customer.getContactOptions().stream()
+        customer.contactOptions().stream()
           .anyMatch(contactOption ->
             allContactOptions.contains(contactOption.getOption().toUpperCase())
           )
@@ -1323,20 +1295,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_INTEREST, INTEREST_INVESTMENTS)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(6);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getInterests().stream()
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.interests().stream()
         .anyMatch(interest -> interest.getInterest().equalsIgnoreCase(INTEREST_INVESTMENTS)));
   }
 
@@ -1346,20 +1318,20 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_INTEREST, INTEREST_TECHNOLOGY_AND_INNOVATION)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(16);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
-      .allMatch(customer -> customer.getInterests().stream()
+    assertThat(customerResponse._embedded().customers())
+      .allMatch(customer -> customer.interests().stream()
         .anyMatch(interest -> interest.getInterest().equalsIgnoreCase(INTEREST_TECHNOLOGY_AND_INNOVATION)));
   }
 
@@ -1377,21 +1349,21 @@ public class TestGetAll {
 
     String url = builder.toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(1);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded().customers())
       .allMatch(customer ->
-        customer.getInterests().stream()
+        customer.interests().stream()
           .anyMatch(interest ->
             allInterests.contains(interest.getInterest().toUpperCase())
           )
@@ -1407,21 +1379,21 @@ public class TestGetAll {
 
     String url = builder.toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(4);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded().customers())
       .allMatch(customer ->
-        customer.getInterests().stream()
+        customer.interests().stream()
           .anyMatch(interest ->
             selectedInterests.contains(interest.getInterest().toUpperCase())
           )
@@ -1439,23 +1411,23 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_EMAIL, EMAIL_HOST)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(1);
 
 
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded().customers())
       .allMatch(customer ->
-        customer.getLastName().toLowerCase().contains(LAST_NAME_SON.toLowerCase())
-          && customer.getEmail().toLowerCase().endsWith(EMAIL_HOST.toLowerCase())
+        customer.lastName().toLowerCase().contains(LAST_NAME_SON.toLowerCase())
+          && customer.email().toLowerCase().endsWith(EMAIL_HOST.toLowerCase())
       );
   }
 
@@ -1468,25 +1440,25 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_CUSTOMER_STATUS, CUSTOMER_STATUS_ACTIVE)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(7);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded().customers())
       .isNotEmpty()
       .allMatch(customer ->
-        customer.isSubscribed()
-          && customer.getGender().getGender().equals(GENDER_FEMALE)
-          && customer.getMaritalStatus().getStatus().equals(MARITAL_STATUS_MARRIED)
-          && customer.getCustomerState().getState().equals(CUSTOMER_STATUS_ACTIVE)
+        customer.subscribed()
+          && customer.gender().getGender().equals(GENDER_FEMALE)
+          && customer.maritalStatus().getStatus().equals(MARITAL_STATUS_MARRIED)
+          && customer.customerState().getState().equals(CUSTOMER_STATUS_ACTIVE)
       );
   }
 
@@ -1498,23 +1470,23 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_STATE, STATE_PARTIAL_BA)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(2);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded().customers())
       .isNotEmpty()
       .allMatch(customer ->
-        customer.getBirthDate().isAfter(cutoffDate)
-          && customer.getAddress().getState().toLowerCase().contains(STATE_PARTIAL_BA.toLowerCase())
+        customer.birthDate().isAfter(cutoffDate)
+          && customer.address().state().toLowerCase().contains(STATE_PARTIAL_BA.toLowerCase())
       );
   }
 
@@ -1527,25 +1499,25 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_TIER, TIER_3)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
 
     CustomerResponse customerResponse = response.getBody();
-    assertThat(customerResponse.get_embedded()).isNotNull();
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded()).isNotNull();
+    assertThat(customerResponse._embedded().customers())
       .isNotNull()
       .isNotEmpty()
       .hasSize(2);
 
-    assertThat(customerResponse.get_embedded().getCustomers())
+    assertThat(customerResponse._embedded().customers())
       .isNotEmpty()
       .allMatch(customer ->
-        customer.getAddress().getCountry().toLowerCase().contains(COUNTRY_PARTIAL_LAND.toLowerCase())
-          && customer.getContactOptions().stream().anyMatch(contact -> contact.getOption().equals(CONTACT_EMAIL))
-          && customer.getInterests().stream().anyMatch(interest -> interest.getInterest().equals(INTEREST_TECHNOLOGY_AND_INNOVATION))
-          && customer.getTierLevel() == Integer.parseInt(TIER_3)
+        customer.address().country().toLowerCase().contains(COUNTRY_PARTIAL_LAND.toLowerCase())
+          && customer.contactOptions().stream().anyMatch(contact -> contact.getOption().equals(CONTACT_EMAIL))
+          && customer.interests().stream().anyMatch(interest -> interest.getInterest().equals(INTEREST_TECHNOLOGY_AND_INNOVATION))
+          && customer.tierLevel() == Integer.parseInt(TIER_3)
       );
   }
 
@@ -1561,7 +1533,7 @@ public class TestGetAll {
       .queryParam(QUERY_PARAM_INTEREST, INTEREST_INVESTMENTS)
       .toUriString();
 
-    ResponseEntity<CustomerResponse> response = adminClient.getForEntity(url, CustomerResponse.class);
+    ResponseEntity<CustomerResponse> response = clients.adminClient.getForEntity(url, CustomerResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     assertThat(response.getBody()).isNotNull();

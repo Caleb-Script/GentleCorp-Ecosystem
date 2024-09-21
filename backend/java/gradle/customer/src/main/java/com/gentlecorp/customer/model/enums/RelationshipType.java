@@ -14,7 +14,8 @@ public enum RelationshipType {
   COLLEAGUE("C"),
   PARENT("P"),
   SIBLING("S"),
-  CHILD("CH");
+  CHILD("CH"),
+  COUSIN("CO");
 
   private final String relationship;
 

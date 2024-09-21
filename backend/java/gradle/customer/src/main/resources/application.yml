@@ -37,8 +37,8 @@ app:
     port: ${KEYCLOAK_PORT}
     client-id: gentlecorp-client
   #mail:
-  #  from: Theo Test <theo@test.de>
-  #  sales: Maxi Musterfrau <maxi.musterfrau@test.de>
+  #  from: Theo Test <theo@model.de>
+  #  sales: Maxi Musterfrau <maxi.musterfrau@model.de>
   #logfile: ./build/log/application.log
   password: p
   #password-falsch: FALSCH

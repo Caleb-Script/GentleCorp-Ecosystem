@@ -70,10 +70,9 @@ dependencies {
   /**------------------------------------------------------------------------------------------------------------------------
    * TEST
    * --------------------------------------------------------------------------------------------------------------------*/
-  testImplementation("io.projectreactor:reactor-test")
-  testImplementation("org.springframework.graphql:spring-graphql-test")
-  testImplementation("org.springframework.security:spring-security-test")
-  testImplementation("org.springframework.boot:spring-boot-starter-test")
+//  testImplementation("io.projectreactor:reactor-model")
+//  testImplementation("org.springframework.security:spring-security-model")
+  testImplementation("org.springframework.boot:spring-boot-starter-test:${libs.versions.springBootTest.get()}")
 
   /**----------------------------------------------------------------
    * SPRING BOOT STARTER
