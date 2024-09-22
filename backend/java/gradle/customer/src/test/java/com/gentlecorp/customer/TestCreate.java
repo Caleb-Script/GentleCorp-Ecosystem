@@ -88,9 +88,6 @@ public class TestCreate {
   private static final String INVALID_GENDER = "INVALID";
   private static final String INVALID_MARITAL_STATUS = "INVALID";
 
-  private static final String ETAG_VALUE_0 = "\"0\"";
-  private static final String HEADER_IF_MATCH = "If-Match";
-
   @Autowired
   private Clients clients;
 
@@ -100,7 +97,6 @@ public class TestCreate {
   @LocalServerPort
   private int port;
 
-private String newId;
 
   private String extractIdFromLocationHeader(URI locationUri) {
     String path = locationUri.getPath();
@@ -145,7 +141,7 @@ private String newId;
     return new HttpEntity<>(requestBody, headers);
   }
 
-  private String createCustomer( String username, int tierLevel) {
+  private String createCustomer(String username, int tierLevel) {
     var request = createRequestBody(username, tierLevel);
 
     ResponseEntity<Void> response = clients.visitorClient.postForEntity(

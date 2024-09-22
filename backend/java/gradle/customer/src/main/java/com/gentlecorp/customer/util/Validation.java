@@ -62,13 +62,19 @@ public class Validation {
       .stream()
       .filter(contactDb -> contactDb.getLastName().equals(contact.getLastName()) && contactDb.getFirstName().equals(contact.getFirstName()))
       .findFirst()
-      .orElseThrow();
+      .orElse(null);
+
+    if (existingContact == null) {
+      return;
+    }
 
     if (existingContact.getId().equals(contactId)) {
+      log.error("Contact with id {} already exists", contactId);
       return;
     }
 
     if (existingContact.getFirstName().equals(contact.getFirstName()) && existingContact.getLastName().equals(contact.getLastName())) {
+      log.error("Contact with name {} already exists", contact.getFirstName());
       throw new ContactExistsException(contact.getLastName(), contact.getFirstName());
     }
   }

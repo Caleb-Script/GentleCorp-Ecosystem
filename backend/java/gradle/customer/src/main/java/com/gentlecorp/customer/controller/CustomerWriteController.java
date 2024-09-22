@@ -135,7 +135,7 @@ public class CustomerWriteController {
     return noContent().build();
   }
 
-  @PatchMapping(path = "{customerId:" + ID_PATTERN + "}")
+  @PostMapping(path = "/contact/{customerId:" + ID_PATTERN + "}")
   public ResponseEntity<Void> createContact(
     @PathVariable final UUID customerId,
     @RequestBody final ContactDTO contactDTO,

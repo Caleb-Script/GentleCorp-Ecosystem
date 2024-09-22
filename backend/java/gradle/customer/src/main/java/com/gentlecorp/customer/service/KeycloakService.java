@@ -156,12 +156,21 @@ public class KeycloakService {
     return role.id();
   }
 
-  public void update(final Customer customer, final Jwt jwt) {
-    log.debug("update: customer={}", customer);
+  public void update(final Customer customer, final Jwt jwt, final boolean isAdmin, final String oldUsername) {
+    log.debug("update: customer={} isAdmin={}", customer, isAdmin);
 
     // Retrieve user ID based on access token
-    final var userId = jwtService.getUserID(jwt);
-
+    String userId;
+    if (isAdmin)  {
+      final var token = "Bearer " + jwt.getTokenValue();
+      final var userList = keycloakRepository.getUserByUsername(token, oldUsername);
+      userId = userList.stream()
+        .map(UserRepresentation::id)
+        .findFirst().orElseThrow(() -> new NotFoundException(customer.getUsername()));
+    } else {
+       userId = jwtService.getUserID(jwt);
+    }
+    log.debug("update: userId={}", userId);
     // JSON data for user update
     final var userData = """
           {
@@ -179,11 +188,14 @@ public class KeycloakService {
     );
     log.debug("update: userData={}", userData);
 
+    final var adminToken = isAdmin
+      ? jwt.getTokenValue()
+      : getAdminToken();
     try {
       // Call repository to update user in Keycloak
       keycloakRepository.updateUser(
         userData,
-        "Bearer " + getAdminToken(),
+        "Bearer " + adminToken,
         APPLICATION_JSON_VALUE,
         userId
       );

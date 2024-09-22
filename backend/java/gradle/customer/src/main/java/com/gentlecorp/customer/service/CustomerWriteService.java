@@ -106,14 +106,20 @@ public class CustomerWriteService {
 
     customer.setCustomerState(ACTIVE);
     final var customerDb = customerRepository.findById(id).orElseThrow(() -> new NotFoundException(id));
+    validateVersion(version, customerDb);
     final var userAndRole = customerReadService.validateJwtAndGetUsernameAndRole(jwt);
     final var validatedUsername = userAndRole.getLeft();
     final var validatedRole = userAndRole.getRight();
+    final var isAdmin = Objects.equals(validatedRole, "ADMIN");
+    final var oldUsername = isAdmin ? customerDb.getUsername() : "";
+    log.debug("update: validatedUsername={}", validatedUsername);
+    log.debug("update: updatedCustomerDB.username={}", customerDb.getUsername());
+
 
     if (!Objects.equals(customerDb.getUsername(), validatedUsername) && !Objects.equals(validatedRole, "ADMIN")) {
       throw new AccessForbiddenException(validatedRole);
     }
-    validateVersion(version, customerDb);
+
     final var email = customer.getEmail();
     if (!Objects.equals(email, customerDb.getEmail()) && customerRepository.existsByEmail(email)) {
       log.error("update: email {} already exists", email);
@@ -123,7 +129,7 @@ public class CustomerWriteService {
     final var username = customer.getUsername();
     customer.setUsername(username.toLowerCase(GERMAN));
     final var isUsernameExisting = customerRepository.existsByUsername(username);
-    if (isUsernameExisting && !username.equals(validatedUsername)) {
+    if (isUsernameExisting && !username.equals(validatedUsername) && !isAdmin) {
       log.error("update: username {} already exists", email);
       throw new UsernameExistsException(username);
     }
@@ -134,8 +140,8 @@ public class CustomerWriteService {
     log.debug("NEW contactOptionsString: {}", customerDb.getContactOptionsString());
     final var updatedCustomerDb = customerRepository.save(customerDb);
     log.debug("update: updatedCustomerDB={}", customerDb);
-    log.debug("update: updatedCustomer={}", customerDb);
-    keycloakService.update(updatedCustomerDb, jwt);
+
+    keycloakService.update(updatedCustomerDb, jwt, isAdmin, oldUsername);
     return updatedCustomerDb;
   }
 

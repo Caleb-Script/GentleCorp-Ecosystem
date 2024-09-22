@@ -11,8 +11,6 @@ import java.util.Objects;
 @Component
 public class TestConfig {
 
-
-
   private final TestRestTemplate restTemplate;
 
   public TestConfig(TestRestTemplate restTemplate) {
