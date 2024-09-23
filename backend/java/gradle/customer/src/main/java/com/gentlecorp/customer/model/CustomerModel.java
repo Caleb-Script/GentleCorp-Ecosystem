@@ -18,7 +18,7 @@ import java.util.List;
 
 @JsonPropertyOrder({
   "username", "lastName", "firstName", "email","phoneNumber", "subscribed", "tierLevel",
-  "birthDate","customerState", "gender", "maritalStatus", "address", "contactOptionsType", "interests",
+  "birthdate","customerState", "gender", "maritalStatus", "address", "contactOptionsType", "interests",
   "contacts"
 })
 @Relation(collectionRelation = "customers", itemRelation = "customer")

@@ -33,7 +33,7 @@ package com.gentle.bank.customer.model {
         readonly email : String
         readonly username : String
         readonly isElite : boolean
-        readonly birthDate : LocalDate
+        readonly birthdate : LocalDate
         readonly gender : GenderType
         readonly maritalStatus : MaritalStatusType
         readonly address : Address

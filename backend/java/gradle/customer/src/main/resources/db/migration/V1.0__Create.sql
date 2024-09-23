@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS customer
     phone_number         VARCHAR(20),
     tier_level           INTEGER      NOT NULL DEFAULT 1,
     is_Subscribed        BIT(1)       NOT NULL DEFAULT FALSE,
-    birth_date           date         NOT NULL,
+    birthdate           date         NOT NULL,
     gender               VARCHAR(7)   NOT NULL CHECK ( gender = 'MALE' OR gender = 'FEMALE' OR gender = 'DIVERSE' ),
     marital_status       VARCHAR(12)  NOT NULL,
     customer_state      VARCHAR(12)  NOT NULL,

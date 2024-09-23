@@ -35,7 +35,7 @@ VALUES
 
 -- Insert customers with updated and additional data
 INSERT INTO customer
-(id, version, last_name, first_name, email, phone_number, tier_level, is_subscribed, birth_date, gender, marital_status, customer_state, address_id, created, updated, username, contact_options, interests)
+(id, version, last_name, first_name, email, phone_number, tier_level, is_subscribed, birthdate, gender, marital_status, customer_state, address_id, created, updated, username, contact_options, interests)
 VALUES
     (UUID_TO_BIN('00000000-0000-0000-0000-000000000000'), 0, 'Admin', 'Caleb', 'admin@gentlecorp.com', '0000/0000000', 3, 1, '1999-05-03', 'MALE', 'MARRIED', 'ACTIVE', UUID_TO_BIN('10000000-0000-0000-0000-000000000000'), NOW(), NOW(), 'admin', 'EMAIL,PHONE,LETTER,SMS', NULL),
     (UUID_TO_BIN('00000000-0000-0000-0000-000000000001'), 0, 'Gyamfi', 'Rachel', 'racheldwomoh@icloud.com', '0000/0000002', 3, 1, '1998-12-21', 'FEMALE', 'MARRIED', 'ACTIVE', UUID_TO_BIN('10000000-0000-0000-0000-000000000001'), NOW(), NOW(), 'rae', 'LETTER', NULL),

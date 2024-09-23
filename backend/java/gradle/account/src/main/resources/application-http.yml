@@ -1,0 +1,7 @@
+
+spring:
+  config.activate.on-profile: http
+
+server:
+  http2.enabled: false
+  ssl.enabled: false

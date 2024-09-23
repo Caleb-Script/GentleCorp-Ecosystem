@@ -76,11 +76,11 @@ public class SpecificationBuilder {
     log.trace("toSpec: entry={}", entry);
     final var key = entry.getKey();
     final var values = entry.getValue();
-    if ("contact".contentEquals(key)) {
+    if ("contactOptions".contentEquals(key)) {
       return toSpecificationContactOptions(values);
     }
 
-    if ("interest".contentEquals(key)) {
+    if ("interests".contentEquals(key)) {
       return toSpecificationInterest(values);
     }
 
@@ -93,8 +93,8 @@ public class SpecificationBuilder {
       case "lastName" -> lastName(value);
       case "prefix" -> prefix(value);
       case "email" -> email(value);
-      case "subscribed" -> isSubscribed(value);
-      case "tier" -> tierLevel(value);
+      case "isSubscribed" -> isSubscribed(value);
+      case "tierLevel" -> tierLevel(value);
       case "birthdate" -> birthdate(value);
       case "gender" -> gender(value);
       case "maritalStatus" -> maritalStatus(value);
@@ -115,7 +115,7 @@ public class SpecificationBuilder {
   }
 
   private Specification<Customer> toSpecificationInterest(final Collection<String> interests) {
-    log.trace("build: interest={}", interests);
+    log.trace("build: interests={}", interests);
     return getCustomerSpecification(interests, interests.stream()
       .map(this::interests));
   }
@@ -219,20 +219,20 @@ public class SpecificationBuilder {
   private Specification<Customer> birthdate(final String value) {
     log.trace("birthdate: birthdate={}", value);
     LocalDate date;
-    String[] parts = value.split(",");
+    String[] parts = value.split(";");
 
     try {
       if (parts.length == 3) {
         // Fall für "between"
         LocalDate startDate = LocalDate.parse(parts[1].trim(), DATE_FORMATTER);
         LocalDate endDate = LocalDate.parse(parts[2].trim(), DATE_FORMATTER);
-        return (root, query, builder) -> builder.between(root.get(Customer_.birthDate), startDate, endDate);
+        return (root, query, builder) -> builder.between(root.get(Customer_.birthdate), startDate, endDate);
       } else if (parts.length == 2) {
         date = LocalDate.parse(parts[1].trim(), DATE_FORMATTER);
         if (value.startsWith("before")) {
-          return (root, query, builder) -> builder.lessThanOrEqualTo(root.get(Customer_.birthDate), date);
+          return (root, query, builder) -> builder.lessThanOrEqualTo(root.get(Customer_.birthdate), date);
         } else if (value.startsWith("after")) {
-          return (root, query, builder) -> builder.greaterThanOrEqualTo(root.get(Customer_.birthDate), date);
+          return (root, query, builder) -> builder.greaterThanOrEqualTo(root.get(Customer_.birthdate), date);
         }
       }
     } catch (Exception ex) {

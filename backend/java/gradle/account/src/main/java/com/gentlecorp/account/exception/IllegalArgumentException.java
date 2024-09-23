@@ -28,7 +28,7 @@ public final class IllegalArgumentException extends RuntimeException {
    * @param key The key that could not be found.
    */
     public IllegalArgumentException(final String key) {
-        super(STR."Ungueltiger Schluessel: \{key}");
+        super(String.format("Ungueltiger Schluessel: %s", key));
         this.key = key;
     }
 }

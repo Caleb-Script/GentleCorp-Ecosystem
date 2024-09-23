@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CustomerApplicationTests {
 
-  private static final String SCHEMA_HOST = "http://localhost:";
+  private static final String SCHEMA_HOST = "https://localhost:";
 
   @Autowired
   private CustomerReadController customerReadController;
@@ -35,7 +35,7 @@ class CustomerApplicationTests {
   private TestRestTemplate restTemplate;
 
 //  @Autowired
-//  private TestConfig testConfig;
+//  private TestClientFactory testConfig;
 
   @Test
   void greetingShouldReturnDefaultMessage() throws Exception {

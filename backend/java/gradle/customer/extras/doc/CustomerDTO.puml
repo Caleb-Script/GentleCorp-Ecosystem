@@ -49,7 +49,7 @@ package entity  {
             readonly firstName : String
             readonly email: String
             readonly isElite: Boolean
-            readonly birthDate: LocalDate
+            readonly birthdate: LocalDate
             readonly gender: GenderType
             readonly maritalStatus: MaritalStatusType
             readonly contactOptions: List<ContactOptionsType>

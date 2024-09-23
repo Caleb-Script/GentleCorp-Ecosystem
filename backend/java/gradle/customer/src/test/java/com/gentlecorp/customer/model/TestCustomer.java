@@ -23,7 +23,7 @@ public record TestCustomer(
   String username,
   int tierLevel,
   boolean subscribed,
-  LocalDate birthDate,
+  LocalDate birthdate,
   GenderType gender,
   MaritalStatusType maritalStatus,
   StatusType customerState,

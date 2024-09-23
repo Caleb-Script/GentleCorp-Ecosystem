@@ -31,6 +31,9 @@ cd /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/compose/fakesmtp
 |cd /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/backend/java/gradle/customer
 |gradle bootRun
 
+|account
+|cd /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/backend/java/gradle/account
+|gradle bootRun
 
 
 |===

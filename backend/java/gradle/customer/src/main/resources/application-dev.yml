@@ -22,6 +22,9 @@ ACTIVE_PROFILE: dev
 KEYCLOAK_HOST: localhost
 KEYCLOAK_PORT: 8880
 
+#TLS
+KEYS_PATH: /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/.keys
+
 spring:
   config:
     activate:

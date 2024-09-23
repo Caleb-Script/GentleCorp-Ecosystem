@@ -58,7 +58,7 @@ public class Customer implements VersionedEntity {
 
   private boolean isSubscribed;
 
-  private LocalDate birthDate;
+  private LocalDate birthdate;
 
   @Enumerated(STRING)
   private GenderType gender;
@@ -105,7 +105,7 @@ public class Customer implements VersionedEntity {
     tierLevel = customer.getTierLevel();
     isSubscribed = customer.isSubscribed();
 
-    birthDate = customer.getBirthDate();
+    birthdate = customer.getBirthdate();
 
     gender = customer.getGender();
     maritalStatus = customer.getMaritalStatus();

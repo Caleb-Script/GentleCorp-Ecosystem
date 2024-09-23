@@ -172,5 +172,12 @@ Erstelle ein selbstsigniertes Zertifikat (certificate.crt) mit dem folgenden Bef
  - echo $env:JAVA_HOME
 
 
+== gradle austauschen
 
+/**
+ - bei gradle update:
+ - gehe zu: ./gradle/wrapper/gradle-wrapper.properties
+ - ändere distributionUrl=https\://services.gradle.org/distributions/gradle-{neue version}-bin.zip
+ - anschließend: ./gradlew wrapper --gradle-version {neue version}
+ -
 

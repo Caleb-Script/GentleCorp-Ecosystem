@@ -21,7 +21,7 @@ public abstract class BaseCustomerModel<T extends BaseCustomerModel<T>> extends 
   private final String username;
   private final int tierLevel;
   private final boolean isSubscribed;
-  private final LocalDate birthDate;
+  private final LocalDate birthdate;
   private final StatusType customerState;
   private final GenderType gender;
   private final MaritalStatusType maritalStatus;
@@ -37,7 +37,7 @@ public abstract class BaseCustomerModel<T extends BaseCustomerModel<T>> extends 
     this.username = customer.getUsername();
     this.tierLevel = customer.getTierLevel();
     this.isSubscribed = customer.isSubscribed();
-    this.birthDate = customer.getBirthDate();
+    this.birthdate = customer.getBirthdate();
     this.gender = customer.getGender();
     this.maritalStatus = customer.getMaritalStatus();
     this.customerState = customer.getCustomerState();

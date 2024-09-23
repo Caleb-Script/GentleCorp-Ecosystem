@@ -311,7 +311,7 @@ Die `Customer`-Entität repräsentiert die Kunden im System. Sie enthält folgen
 - **email**: E-Mail-Adresse des Kunden (eindeutig).
 - **username**: Benutzername des Kunden (eindeutig).
 - **isElite**: Gibt an, ob der Kunde ein Elite-Kunde ist.
-- **birthDate**: Geburtsdatum des Kunden.
+- **birthdate**: Geburtsdatum des Kunden.
 - **gender**: Geschlecht des Kunden (Enum `GenderType`).
 - **maritalStatus**: Familienstand des Kunden (Enum `MaritalStatusType`).
 - **contactOptions**: Kontaktmöglichkeiten des Kunden (Enum `ContactOptionsType` als String).
@@ -366,7 +366,7 @@ Die Datenbankstruktur für den Customer-Service umfasst zwei Haupttabellen: `Cus
 | isElite
 | Boolean, Status, ob der Kunde "Elite" ist
 
-| birthDate
+| birthdate
 | LocalDate, Geburtsdatum des Kunden
 
 | gender
@@ -569,7 +569,7 @@ Der `CustomerReadController` ermöglicht das Abrufen von Kundeninformationen dur
         "Mail",
         "SMS"
     ],
-    "birthDate": "1990-05-03",
+    "birthdate": "1990-05-03",
     "gender": "M",
     "maritalStatus": "M",
     "address": {
@@ -665,7 +665,7 @@ Der `CustomerWriteController` ermöglicht das Erstellen, Aktualisieren und Lösc
     "firstName": "Caleb",
     "email": "asd@ok.de",
     "isElite": true,
-    "birthDate": "1999-05-03",
+    "birthdate": "1999-05-03",
     "gender": "M",
     "maritalStatus": "S",
     "contactOptions": ["SMS"],
@@ -705,7 +705,7 @@ Der `CustomerWriteController` ermöglicht das Erstellen, Aktualisieren und Lösc
     "firstName": "Max",
     "email": "max@ok.de",
     "isElite": false,
-    "birthDate": "1999-05-03",
+    "birthdate": "1999-05-03",
     "gender": "M",
     "maritalStatus": "S",
     "contactOptions": ["SMS"],

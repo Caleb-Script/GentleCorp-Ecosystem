@@ -12,6 +12,8 @@
 - bei update 304 wenn es keinen unterschied macht
 - admins sollen auch passwörter ändern können
 - kontakt liste anzeigen
+- nach spezifischen geburtstag suchen
+- exception werfen bei nicht existierender query bei enum werten
 
 ## IDEEN
 

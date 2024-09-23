@@ -90,8 +90,8 @@ public class CustomerReadService {
       .orElseThrow(() -> new NotFoundException(searchCriteria));
     final var customers = customerRepository.findAll(specification);
 
-    if (customers.isEmpty())
-      throw new NotFoundException(searchCriteria);
+//    if (customers.isEmpty())
+//      throw new NotFoundException(searchCriteria);
 
     log.debug("find: customers={}", customers);
     return customers;

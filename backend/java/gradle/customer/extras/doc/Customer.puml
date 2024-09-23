@@ -88,7 +88,7 @@ package com.gentle.bank.customer.entity {
         email : String
         username : String
         isElite : boolean
-        birthDate : LocalDate
+        birthdate : LocalDate
         @Enumerated(STRING)
         gender : enums.GenderType
         @Enumerated(EnumType.STRING)

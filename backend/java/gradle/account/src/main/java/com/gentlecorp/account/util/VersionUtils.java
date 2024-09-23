@@ -24,7 +24,7 @@ public class VersionUtils {
       } else {
         throw new VersionInvalidException(
           PRECONDITION_FAILED,
-          STR."Invalid ETag \{versionStr}",
+          String.format("Invalid ETag %s", versionStr),
           URI.create(request.getRequestURL().toString())
         );
       }

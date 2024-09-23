@@ -50,7 +50,7 @@ public record CustomerDTO(
   boolean isSubscribed,
 
   @Past(message = "Birthdate must be a past date.")
-  LocalDate birthDate,
+  LocalDate birthdate,
 
   @NotNull(message = "Please specify your gender.")
   GenderType gender,

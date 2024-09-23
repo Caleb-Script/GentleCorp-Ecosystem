@@ -7,7 +7,7 @@ spring:
     active: ${ACTIVE_PROFILE:dev}
 
   datasource:
-    url: jdbc:${MYSQL_URL:}://${DATABASE_HOST:}:${MYSQL_PORT}/${DATABASE_DB}
+    url: jdbc:${MYSQL_URL:}://${DATABASE_HOST:}:${MYSQL_PORT}/${DATABASE_DB}?allowPublicKeyRetrieval=true&useSSL=false
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     driver-class-name: ${DRIVER_CLASS_NAME}
@@ -17,6 +17,17 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://${KEYCLOAK_HOST}:${KEYCLOAK_PORT}/realms/GentleCorp-Ecosystem
+
+  ssl:
+    bundle:
+      pem:
+        microservice:
+          reload-on-update: true
+          keystore:
+            private-key: "classpath:private-key.pem"
+            certificate: "classpath:certificate.crt"
+          truststore:
+            certificate: "classpath:certificate.crt"
 
 com:
   c4-soft:

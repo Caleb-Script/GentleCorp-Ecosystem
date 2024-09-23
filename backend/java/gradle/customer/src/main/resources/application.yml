@@ -1,4 +1,30 @@
 
+server:
+  port: ${SERVER_PORT}
+  compression:
+    enabled: true
+    mime-types: application/hal+json
+    min-response-size: 2KB
+  error.whitelabel.enabled: false
+  http2.enabled: true
+  #ssl.bundle: microservice
+  shutdown: graceful
+
+app:
+  keycloak:
+    client-secret: FiAT2ma40CGVmctDNOOG9h1XtlAqA7Vb
+    #schema: http
+    host: ${KEYCLOAK_HOST}
+    port: ${KEYCLOAK_PORT}
+    client-id: gentlecorp-client
+  #mail:
+  #  from: Theo Test <theo@model.de>
+  #  sales: Maxi Musterfrau <maxi.musterfrau@model.de>
+  #logfile: ./build/log/application.log
+  password: p
+  #password-falsch: FALSCH
+
+
 spring:
   application:
     name: customer
@@ -18,6 +44,20 @@ spring:
         jwt:
           issuer-uri: http://${KEYCLOAK_HOST}:${KEYCLOAK_PORT}/realms/GentleCorp-Ecosystem
 
+  ssl:
+    bundle:
+      pem:
+        microservice:
+          reload-on-update: true
+          keystore:
+            private-key-password: "gentlecorp11.09.24"
+            private-key: "${KEYS_PATH}/key.pem"
+            certificate: "${KEYS_PATH}/certificate.crt"
+          truststore:
+            certificate: "${KEYS_PATH}/certificate.crt"
+
+ #  "../../../../../../../.keys/certificate.crt"
+
 com:
   c4-soft:
     springaddons:
@@ -29,20 +69,5 @@ com:
             - path: $.realm_access.roles
               prefix: ROLE_
 
-app:
-  keycloak:
-    client-secret: FiAT2ma40CGVmctDNOOG9h1XtlAqA7Vb
-    #schema: http
-    host: ${KEYCLOAK_HOST}
-    port: ${KEYCLOAK_PORT}
-    client-id: gentlecorp-client
-  #mail:
-  #  from: Theo Test <theo@model.de>
-  #  sales: Maxi Musterfrau <maxi.musterfrau@model.de>
-  #logfile: ./build/log/application.log
-  password: p
-  #password-falsch: FALSCH
 
 
-server:
-  port: ${SERVER_PORT}

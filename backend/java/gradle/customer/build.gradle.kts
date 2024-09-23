@@ -73,6 +73,7 @@ dependencies {
 //  testImplementation("io.projectreactor:reactor-model")
 //  testImplementation("org.springframework.security:spring-security-model")
   testImplementation("org.springframework.boot:spring-boot-starter-test:${libs.versions.springBootTest.get()}")
+  testImplementation("org.apache.httpcomponents.client5:httpclient5:5.2.1")
 
   /**----------------------------------------------------------------
    * SPRING BOOT STARTER
