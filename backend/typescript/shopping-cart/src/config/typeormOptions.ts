@@ -1,13 +1,13 @@
-import { loggerDefaultValue } from './logger.js';
-import { nodeConfig } from './node.js';
-// import { nodeConfig } from './node.js';
+import { loggerDefaultValue } from './logger';
+import { nodeConfig } from './node';
+// import { nodeConfig } from './node';
 import { resolve } from 'node:path';
 import { type DataSourceOptions } from 'typeorm';
 import { SnakeNamingStrategy } from './typeormNamingStrategy';
 import { dbType } from './db';
-import { BASEDIR, config } from './shopping-cart.js';
+import { BASEDIR, config } from './shopping-cart';
 import { entities } from '../shopping-cart/model/entity/entities';
-import { ShoppingCart } from '../shopping-cart/model/entity/shopping-cart.entity.js';
+import { ShoppingCart } from '../shopping-cart/model/entity/shopping-cart.entity';
 
 const { db } = config;
 
@@ -131,7 +131,7 @@ if (dbType === 'postgres') {
     host,
     port: 3306,
     username: 'root',
-    password: '',
+    password: 'p',
     database,
     namingStrategy,
     logging,

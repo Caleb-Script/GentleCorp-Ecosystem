@@ -1,16 +1,18 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { entities } from './model/entity/entities.js';
-import { ShoppingCartReadService } from './service/shopping-cart-read.service.js';
-import { ShoppingCartGetController } from './controller/shopping-cart-get.controller.js';
-import { KeycloakModule } from '../keycloak/keycloak.module.js';
-import { ShoppingCartQueryBuilder } from './service/query-builder.js';
-import { ShoppingCartWriteController } from './controller/shopping-cart-write.controller.js';
-import { ShoppingCartWriteService } from './service/shopping-cart-write.service.js';
-import { KafkaModule } from '../kafka/kafka.module.js';
+import { entities } from './model/entity/entities';
+import { ShoppingCartReadService } from './service/shopping-cart-read.service';
+import { ShoppingCartGetController } from './controller/shopping-cart-get.controller';
+import { KeycloakModule } from '../keycloak/keycloak.module';
+import { ShoppingCartQueryBuilder } from './service/query-builder';
+import { ShoppingCartWriteController } from './controller/shopping-cart-write.controller';
+import { ShoppingCartWriteService } from './service/shopping-cart-write.service';
+import { KafkaModule } from '../kafka/kafka.module';
+import { CustomerModule } from './clients/customer/customer.module';
+import { ClientModule } from './clients/client.module';
 
 @Module({
-  imports: [KafkaModule, KeycloakModule, TypeOrmModule.forFeature(entities)],
+    imports: [KafkaModule, KeycloakModule, TypeOrmModule.forFeature(entities), ClientModule],
     controllers: [
         ShoppingCartGetController,
         ShoppingCartWriteController

@@ -30,3 +30,8 @@ fastapi-keycloak
 
 # für skuCode generator:  um Sonderzeichen und Akzente zu entfernen und den Namen in ASCII zu konvertieren.
 unidecode
+
+python-dotenv
+
+# Importieren von aiofiles für asynchrone Dateioperationen
+aiofiles

@@ -1,16 +1,17 @@
-import { getLogger } from '../../logger/logger.js';
-import { dbType } from '../db.js';
+import { getLogger } from '../../logger/logger';
+import { dbType } from '../db';
 import {
   adminDataSourceOptions,
   dbPopulate,
   dbResourcesDir,
   typeOrmModuleOptions,
-} from '../typeormOptions.js';
+} from '../typeormOptions';
 import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { DataSource } from 'typeorm';
+import { existsSync } from 'node:fs';
 
 /**
  * Die Test-DB wird im Development-Modus neu geladen, nachdem die Module
@@ -52,11 +53,11 @@ export class DbPopulateService implements OnApplicationBootstrap {
       case 'postgres': {
         await this.#populatePostgres();
         break;
-        }
-            case 'mysql': {
-                await this.#populateMySQL();
-                break;
-            }
+      }
+      case 'mysql': {
+        await this.#populateMySQL();
+        break;
+      }
       case 'sqlite': {
         await this.#populateSQLite();
         break;
@@ -116,14 +117,29 @@ export class DbPopulateService implements OnApplicationBootstrap {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       `USE ${adminDataSourceOptions.database};`,
     );
-      const copyStmt =
-        "LOAD DATA INFILE '/Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/backend/typescript/shopping-cart/.extras/db/mysql/csv/%TABELLE%.csv' " +
-    //   "LOAD DATA INFILE '/var/lib/mysql-files/%TABELLE%.csv' " +
+
+    const csvDir = '/var/lib/mysql-files/shopping-cart';
+    this.#logger.debug(`CSV-Dateien werden aus dem Verzeichnis ${csvDir} geladen`);
+
+    const copyStmt =
+      `LOAD DATA INFILE '${csvDir}/%TABELLE%.csv' ` +
       "INTO TABLE %TABELLE% FIELDS TERMINATED BY ';' " +
       "ENCLOSED BY '\"' LINES TERMINATED BY '\\n' IGNORE 1 ROWS;";
+
     for (const tabelle of this.#tabellen) {
-      await dataSource.query(copyStmt.replaceAll('%TABELLE%', tabelle));
+      try {
+        const query = copyStmt.replaceAll('%TABELLE%', tabelle);
+        this.#logger.debug(`Ausführung der Query: ${query}`);
+        await dataSource.query(query);
+        this.#logger.debug(`Daten für Tabelle ${tabelle} erfolgreich geladen`);
+      } catch (error) {
+        this.#logger.error(`Fehler beim Laden der Daten für Tabelle ${tabelle}: ${error.message}`);
+        if (error instanceof Error) {
+          this.#logger.error(`Stacktrace: ${error.stack}`);
+        }
+      }
     }
+
     await dataSource.destroy();
   }
 

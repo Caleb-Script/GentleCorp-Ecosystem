@@ -1,4 +1,4 @@
-import { getLogger } from './logger.js';
+import { getLogger } from './logger';
 import { Injectable, type NestMiddleware } from '@nestjs/common';
 import { type NextFunction, type Request, type Response } from 'express';
 

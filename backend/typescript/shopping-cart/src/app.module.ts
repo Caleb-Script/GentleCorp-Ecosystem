@@ -9,10 +9,12 @@ import { typeOrmModuleOptions } from './config/typeormOptions';
 import { AdminModule } from './admin/admin.module';
 import { ShoppingCartModule } from './shopping-cart/shopping-cart.module';
 import { KafkaModule } from './kafka/kafka.module';
+import { ClientModule } from './shopping-cart/clients/client.module';
 
 @Module({
   imports: [
     AdminModule,
+    ClientModule,
     KafkaModule,
     ShoppingCartModule,
     DevModule,
@@ -23,4 +25,4 @@ import { KafkaModule } from './kafka/kafka.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

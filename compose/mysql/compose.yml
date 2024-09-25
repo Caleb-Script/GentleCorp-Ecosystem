@@ -48,7 +48,7 @@ services:
         target: /var/lib/mysql-tls/certificate.crt
         read_only: true
       - type: bind
-        source: ../../volumes/mysql/csv/inventory
+        source: ../../volumes/mysql/csv
         target: /var/lib/mysql-files
       - type: bind
         source: config.phpmyadmin.inc.phpx

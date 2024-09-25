@@ -1,5 +1,5 @@
-import { ResponseTimeInterceptor } from '../../logger/response-time.interceptor.js';
-import { DbPopulateService } from './db-populate.service.js';
+import { ResponseTimeInterceptor } from '../../logger/response-time.interceptor';
+import { DbPopulateService } from './db-populate.service';
 import {
   Controller,
   HttpStatus,

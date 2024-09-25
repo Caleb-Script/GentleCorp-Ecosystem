@@ -26,7 +26,7 @@ export class Item {
     quantity: number;
 
     @Column()
-    productId: string | undefined;
+    inventoryId: string | undefined;
 
     // @Column('decimal', {
     //     precision: 8,
@@ -51,5 +51,21 @@ export class Item {
 
     @ManyToOne(() => ShoppingCart, (shoppingCart) => shoppingCart.cartItems)
     @JoinColumn({ name: 'shopping_cart_id' })
-    ShoppingCart: ShoppingCart | undefined;
+    shoppingCart: ShoppingCart | undefined;
+
+    // toString Methode anpassen
+    public toString = (): string => {
+        return JSON.stringify({
+            id: this.id,
+            version: this.version,
+            skuCode: this.skuCode,
+            quantity: this.quantity,
+            inventoryId: this.inventoryId,
+            price: this.price,
+            name: this.name,
+            created: this.created,
+            updated: this.updated,
+            shoppingCartId: this.shoppingCart?.id,
+        });
+    }
 }

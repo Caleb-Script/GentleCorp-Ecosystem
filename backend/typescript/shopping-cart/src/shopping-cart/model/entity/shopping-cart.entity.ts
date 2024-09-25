@@ -14,7 +14,7 @@ import { Exclude } from 'class-transformer';
 @Entity()
 export class ShoppingCart {
     @PrimaryGeneratedColumn(`uuid`)
-    shoppingCartId: string | undefined;
+    id: string | undefined;
 
     @VersionColumn()
     version: number | undefined;
@@ -31,7 +31,7 @@ export class ShoppingCart {
     @Exclude()
     isComplete: boolean | undefined;
 
-    @OneToMany(() => Item, (item) => item.ShoppingCart, {
+    @OneToMany(() => Item, (item) => item.shoppingCart, {
         cascade: [`insert`, `remove`],
     })
     cartItems: Item[] | undefined;
@@ -45,4 +45,19 @@ export class ShoppingCart {
         type: dbType === `sqlite` ? `datetime` : `timestamp`,
     })
     updated: Date | undefined;
+
+    // toString Methode hinzufügen
+    public toString = (): string => {
+        return JSON.stringify({
+            id: this.id,
+            version: this.version,
+            totalAmount: this.totalAmount,
+            customerId: this.customerId,
+            customerUsername: this.customerUsername,
+            isComplete: this.isComplete,
+            cartItems: this.cartItems,
+            created: this.created,
+            updated: this.updated,
+        });
+    }
 }

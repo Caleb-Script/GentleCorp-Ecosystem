@@ -1,7 +1,7 @@
-import { KeycloakModule } from '../../keycloak/keycloak.module.js';
-import { ShoppingCart } from '../../shopping-cart/model/entity/shopping-cart.entity.js';
-import { DbPopulateService } from './db-populate.service.js';
-import { DevController } from './dev.controller.js';
+import { KeycloakModule } from '../../keycloak/keycloak.module';
+import { ShoppingCart } from '../../shopping-cart/model/entity/shopping-cart.entity';
+import { DbPopulateService } from './db-populate.service';
+import { DevController } from './dev.controller';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 

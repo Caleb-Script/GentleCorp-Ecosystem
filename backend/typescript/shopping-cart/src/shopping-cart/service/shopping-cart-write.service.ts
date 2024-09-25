@@ -1,19 +1,19 @@
 import { type DeleteResult, Repository } from 'typeorm';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { getLogger } from '../../logger/logger.js';
+import { getLogger } from '../../logger/logger';
 import { ShoppingCart } from '../model/entity/shopping-cart.entity';
-import { ShoppingCartReadService } from './shopping-cart-read.service.js';
-import { Item } from '../model/entity/item.entity.js';
+import { ShoppingCartReadService } from './shopping-cart-read.service';
+import { Item } from '../model/entity/item.entity';
 import {
     VersionInvalidException,
     VersionOutdatedException,
 } from './exceptions';
-import { ConsumerService } from '../../kafka/Consumer.service.js';
+import { ConsumerService } from '../../kafka/Consumer.service';
 
 
 export interface UpdateParams {
-    readonly shoppingCartId: string | undefined;
+    readonly id: string | undefined;
     readonly shoppingCart: ShoppingCart;
     readonly version: string;
 }
@@ -39,22 +39,22 @@ export class ShoppingCartWriteService {
         this.#logger.debug('create: shoppingCart=%o', shoppingCart);
         const shoppingCartDb = await this.#repo.save(shoppingCart);
         this.#logger.debug('create: shoppingCartDb=%o', shoppingCartDb);
-        return shoppingCartDb.shoppingCartId!;
+        return shoppingCartDb.id!;
     }
 
-    async update({ shoppingCartId, shoppingCart, version }: UpdateParams): Promise<number> {
+    async update({ id, shoppingCart, version }: UpdateParams): Promise<number> {
         this.#logger.debug(
             'update: id=%d, shoppingCart=%o, version=%s',
-            shoppingCartId,
+            id,
             shoppingCart,
             version,
         );
-        if (shoppingCartId === undefined) {
+        if (id === undefined) {
             this.#logger.debug('update: Keine gueltige ID');
-            throw new NotFoundException(`Es gibt kein ShoppingCart mit der ID ${shoppingCartId}.`);
+            throw new NotFoundException(`Es gibt kein ShoppingCart mit der ID ${id}.`);
         }
 
-        const validateResult = await this.#validateUpdate(shoppingCart, shoppingCartId, version);
+        const validateResult = await this.#validateUpdate(shoppingCart, id, version);
         this.#logger.debug('update: validateResult=%o', validateResult);
         if (!(validateResult instanceof ShoppingCart)) {
             return validateResult;
@@ -69,9 +69,9 @@ export class ShoppingCartWriteService {
         return updated.version!;
     }
 
-    async delete(shoppingCartId: string) {
-        this.#logger.debug('delete: id=%d', shoppingCartId);
-        const shoppingCart = await this.#readService.findById({ shoppingCartId, withItems: true });
+    async delete(id: string) {
+        this.#logger.debug('delete: id=%d', id);
+        const shoppingCart = await this.#readService.findById({ id, withItems: true, authorization: "" });
 
         let deleteResult: DeleteResult | undefined;
         await this.#repo.manager.transaction(async (transactionalMgr) => {
@@ -83,7 +83,7 @@ export class ShoppingCartWriteService {
                 await transactionalMgr.delete(Item, abbildung.id);
             }
 
-            deleteResult = await transactionalMgr.delete(ShoppingCart, shoppingCartId);
+            deleteResult = await transactionalMgr.delete(ShoppingCart, id);
             this.#logger.debug('delete: deleteResult=%o', deleteResult);
         });
 
@@ -96,13 +96,13 @@ export class ShoppingCartWriteService {
 
     async #validateUpdate(
         shoppingCart: ShoppingCart,
-        shoppingCartId: string,
+        id: string,
         versionStr: string,
     ): Promise<ShoppingCart> {
         this.#logger.debug(
             '#validateUpdate: shoppingCart=%o, id=%s, versionStr=%s',
             shoppingCart,
-            shoppingCartId,
+            id,
             versionStr,
         );
         if (!ShoppingCartWriteService.VERSION_PATTERN.test(versionStr)) {
@@ -116,7 +116,7 @@ export class ShoppingCartWriteService {
             version,
         );
 
-        const shoppingCartDb = await this.#readService.findById({ shoppingCartId, withItems:false });
+        const shoppingCartDb = await this.#readService.findById({ id, withItems:false, authorization: ""});
 
         // nullish coalescing
         const versionDb = shoppingCartDb.version!;

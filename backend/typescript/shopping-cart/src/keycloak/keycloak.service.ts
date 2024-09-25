@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common';
 import axios, {
   type AxiosInstance,
@@ -26,10 +25,7 @@ export class KeycloakService implements KeycloakConnectOptionsFactory {
   readonly #logger = getLogger(KeycloakService.name);
 
   constructor() {
-    // https://www.keycloak.org/docs-api/23.0.4/rest-api/index.html
-    const authorization = Buffer.from(`${clientId}:${secret}`, 'utf8').toString(
-      'base64',
-    );
+    const authorization = Buffer.from(`${clientId}:${secret}`, 'utf8').toString('base64');
     this.#loginHeaders = {
       Authorization: `Basic ${authorization}`,
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -37,7 +33,6 @@ export class KeycloakService implements KeycloakConnectOptionsFactory {
 
     this.#keycloakClient = axios.create({
       baseURL: authServerUrl,
-      // ggf. httpsAgent fuer HTTPS bei selbst-signiertem Zertifikat
     });
     this.#logger.debug('keycloakClient=%o', this.#keycloakClient.defaults);
   }
@@ -47,12 +42,12 @@ export class KeycloakService implements KeycloakConnectOptionsFactory {
   }
 
   async login({ username, password }: Login) {
-    this.#logger.debug('login: username=%s', username);
+    this.#logger.debug('login: username=%s, password=%s', username, password);
     if (username === undefined || password === undefined) {
       return;
     }
 
-    const loginBody = `grant_type=password&username=${username}&password=${password}`;
+    const loginBody = `grant_type=password&username=${username}&password=${password}&scope=openid`;
     let response: AxiosResponse<Record<string, number | string>>;
     try {
       response = await this.#keycloakClient.post(paths.accessToken, loginBody, {
@@ -64,7 +59,6 @@ export class KeycloakService implements KeycloakConnectOptionsFactory {
     }
 
     this.#logPayload(response);
-    this.#logger.debug('login: response.data=%o', response.data);
     return response.data;
   }
 
@@ -94,30 +88,58 @@ export class KeycloakService implements KeycloakConnectOptionsFactory {
     return response.data;
   }
 
-  // Extraktion der Rollen: wird auf Client-Seite benoetigt
-  // { ..., "azp": "buch-client", "exp": ..., "resource_access": { "buch-client": { "roles": ["admin"] } ...}
-  // azp = authorized party
   #logPayload(response: AxiosResponse<Record<string, string | number>>) {
-    // https://www.keycloak.org/docs-api/23.0.6/rest-api/index.html#ClientInitialAccessCreatePresentation
     const { access_token } = response.data;
-    // Payload ist der mittlere Teil zwischen 2 Punkten und mit Base64 codiert
     const [, payloadStr] = (access_token as string).split('.');
 
-    // Base64 decodieren
     if (payloadStr === undefined) {
       return;
     }
     const payloadDecoded = atob(payloadStr);
 
-    // JSON-Objekt fuer Payload aus dem decodierten String herstellen
+    let payload;
+    try {
+      payload = JSON.parse(payloadDecoded);
+    } catch (error) {
+      this.#logger.warn('Failed to parse JWT payload: %s', error);
+      return;
+    }
 
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-    const payload = JSON.parse(payloadDecoded);
     const { azp, exp, resource_access } = payload;
     this.#logger.debug('#logPayload: exp=%s', exp);
     const { roles } = resource_access[azp];
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-
     this.#logger.debug('#logPayload: roles=%o', roles);
+  }
+
+  extractRolesAndUsernameFromToken(token: string): { roles: string[]; username?: string } {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      this.#logger.warn('Invalid JWT token format');
+      return { roles: [] }; // Nur Rollen zurückgeben
+    }
+
+    const payloadStr = parts[1];
+    const payloadDecoded = atob(payloadStr);
+
+    let payload;
+    try {
+      payload = JSON.parse(payloadDecoded);
+    } catch (error) {
+      this.#logger.warn('Failed to parse JWT payload: %s', error);
+      return { roles: [] }; // Nur Rollen zurückgeben
+    }
+
+    const { resource_access, preferred_username } = payload; // preferred_username extrahieren
+    const roles: string[] = [];
+
+    if (resource_access) {
+      for (const key in resource_access) {
+        if (resource_access[key].roles) {
+          roles.push(...resource_access[key].roles);
+        }
+      }
+    }
+
+    return { roles, username: preferred_username }; // Rollen und Benutzernamen zurückgeben
   }
 }

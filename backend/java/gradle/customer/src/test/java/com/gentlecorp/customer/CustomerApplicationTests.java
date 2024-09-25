@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CustomerApplicationTests {
 
-  private static final String SCHEMA_HOST = "https://localhost:";
+  private static final String SCHEMA_HOST = "http://localhost:";
 
   @Autowired
   private CustomerReadController customerReadController;

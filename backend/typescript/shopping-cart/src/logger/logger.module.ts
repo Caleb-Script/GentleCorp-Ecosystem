@@ -1,5 +1,5 @@
-import { BannerService } from './banner.service.js';
-import { ResponseTimeInterceptor } from './response-time.interceptor.js';
+import { BannerService } from './banner.service';
+import { ResponseTimeInterceptor } from './response-time.interceptor';
 import { Global, Module } from '@nestjs/common';
 
 /**

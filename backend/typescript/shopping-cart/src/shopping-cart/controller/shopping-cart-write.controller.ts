@@ -16,14 +16,14 @@ import {
 } from '@nestjs/common';
 
 import { Request, Response } from 'express';
-import { ResponseTimeInterceptor } from '../../logger/response-time.interceptor.js';
-import { getBaseUri } from './getBaseUri.js';
-import { getLogger } from '../../logger/logger.js';
-import { paths } from '../../config/paths.js';
-import { ShoppingCartDTO, ShoppingCartDTOOhneRef } from '../model/dto/shopping-cart.dto.js';
-import { ShoppingCart } from '../model/entity/shopping-cart.entity.js';
-import { ShoppingCartWriteService } from '../service/shopping-cart-write.service.js';
-import { ConsumerService } from '../../kafka/Consumer.service.js';
+import { ResponseTimeInterceptor } from '../../logger/response-time.interceptor';
+import { getBaseUri } from './getBaseUri';
+import { getLogger } from '../../logger/logger';
+import { paths } from '../../config/paths';
+import { ShoppingCartDTO, ShoppingCartDTOOhneRef } from '../model/dto/shopping-cart.dto';
+import { ShoppingCart } from '../model/entity/shopping-cart.entity';
+import { ShoppingCartWriteService } from '../service/shopping-cart-write.service';
+import { ConsumerService } from '../../kafka/Consumer.service';
 
 
 
@@ -47,32 +47,32 @@ export class ShoppingCartWriteController {
     this.#service = service;
   }
 
-  async onModuleInit() {
-    await this.consumerService.consume(
-      {
-        topics: ['create-shopping-cart'],
-      },
-      {
-        eachMessage: async ({ topic, partition, message }) => {
-          try {
-            const messageValue = message.value.toString();
-            console.log({
-              topic,
-              partition,
-              value: messageValue,
-            });
-            let parsedMessage;
-            parsedMessage = JSON.parse(messageValue);
-            const shoppingCartDTO: ShoppingCartDTO = parsedMessage;
-            const shoppingCart = this.#shoppingCartDTOToShoppingCart(shoppingCartDTO);
-            await this.#service.create(shoppingCart);
-          } catch (err) {
-            console.error(err);
-          }
-        },
-      }
-  );
-  }
+  // async onModuleInit() {
+  //   await this.consumerService.consume(
+  //     {
+  //       topics: ['create-shopping-cart'],
+  //     },
+  //     {
+  //       eachMessage: async ({ topic, partition, message }) => {
+  //         try {
+  //           const messageValue = message.value.toString();
+  //           console.log({
+  //             topic,
+  //             partition,
+  //             value: messageValue,
+  //           });
+  //           let parsedMessage;
+  //           parsedMessage = JSON.parse(messageValue);
+  //           const shoppingCartDTO: ShoppingCartDTO = parsedMessage;
+  //           const shoppingCart = this.#shoppingCartDTOToShoppingCart(shoppingCartDTO);
+  //           await this.#service.create(shoppingCart);
+  //         } catch (err) {
+  //           console.error(err);
+  //         }
+  //       },
+  //     }
+  // );
+  // }
 
   @Post()
   // @Roles({ roles: ['admin', 'user'] })
@@ -98,13 +98,13 @@ export class ShoppingCartWriteController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async put(
     @Body() shoppingCartDTO: ShoppingCartDTOOhneRef,
-    @Param('id') shoppingCartId: string,
+    @Param('id') id: string,
     @Headers('If-Match') version: string | undefined,
     @Res() res: Response,
   ): Promise<Response> {
     this.#logger.debug(
       'put: id=%s, shoppingCartDTO=%o, version=%s',
-      shoppingCartId,
+      id,
       shoppingCartDTO,
       version,
     );
@@ -119,7 +119,7 @@ export class ShoppingCartWriteController {
     }
 
     const shoppingCart = this.#shoppingCartDTOOhneRefToShoppingCart(shoppingCartDTO);
-    const neueVersion = await this.#service.update({ shoppingCartId, shoppingCart, version });
+    const neueVersion = await this.#service.update({ id, shoppingCart, version });
     this.#logger.debug('put: version=%d', neueVersion);
     return res.header('ETag', `"${neueVersion}"`).send();
   }
@@ -135,7 +135,7 @@ export class ShoppingCartWriteController {
 
   #shoppingCartDTOToShoppingCart(shoppingCartDTO: ShoppingCartDTO): ShoppingCart {
     const shoppingCart = {
-      shoppingCartId: undefined,
+      id: undefined,
       version: undefined,
       totalAmount: undefined,
       isComplete: undefined,
@@ -151,7 +151,7 @@ export class ShoppingCartWriteController {
 
   #shoppingCartDTOOhneRefToShoppingCart(shoppingCartDTO: ShoppingCartDTOOhneRef): ShoppingCart {
     return {
-      shoppingCartId: undefined,
+      id: undefined,
       version: undefined,
       customerId: shoppingCartDTO.customerId,
       cartItems: undefined,

@@ -1,4 +1,4 @@
-import { env } from './env.js';
+import { env } from './env';
 import { httpsOptions } from './https';
 import {
   type KeycloakConnectConfig,
@@ -6,13 +6,13 @@ import {
   TokenValidation,
 } from 'nest-keycloak-connect';
 import { Agent } from 'node:https';
-import { config } from './shopping-cart.js';
+import { config } from './shopping-cart';
 
 const { keycloak } = config;
 const authServerUrl =
   (keycloak?.authServerUrl as string | undefined) ?? 'http://localhost:8080';
 // Keycloak ist in Sicherheits-Bereich (= realms) unterteilt
-const realm = (keycloak?.realm as string | undefined) ?? 'gentleBank';
+const realm = (keycloak?.realm as string | undefined) ?? 'GentleCorp-Ecosystem';
 const clientId = keycloak?.clientId as string | undefined;
 const tokenValidation =
   (keycloak?.tokenValidation as TokenValidation | undefined) ??

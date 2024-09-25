@@ -1,5 +1,5 @@
 
-import { type HttpsOptions } from '@nestjs/common/interfaces/external/https-options.interface.js';
+import { type HttpsOptions } from '@nestjs/common/interfaces/external/https-options.interface';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { RESOURCES_DIR } from './shopping-cart';

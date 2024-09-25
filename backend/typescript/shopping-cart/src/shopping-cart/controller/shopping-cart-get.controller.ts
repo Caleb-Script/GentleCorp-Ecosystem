@@ -10,79 +10,86 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { Public } from 'nest-keycloak-connect';
-import { ResponseTimeInterceptor } from '../../logger/response-time.interceptor.js';;
-import { getLogger } from '../../logger/logger.js';
-import { paths } from '../../config/paths.js';
-import { type ShoppingCart } from '../model/entity/shopping-cart.entity.js';
-import { type SearchCriteria } from '../model/searchCriteria.js';
-import { ShoppingCartReadService } from '../service/shopping-cart-read.service.js';
-import { getBaseUri } from './getBaseUri.js';
+import { Public, Roles } from 'nest-keycloak-connect';
+import { ResponseTimeInterceptor } from '../../logger/response-time.interceptor';
+import { getLogger } from '../../logger/logger';
+import { paths } from '../../config/paths';
+import { type ShoppingCart } from '../model/entity/shopping-cart.entity';
+import { type SearchCriteria } from '../model/searchCriteria';
+import { FindParams, ShoppingCartReadService } from '../service/shopping-cart-read.service';
+import { getBaseUri } from './getBaseUri';
+import { Item } from '../model/entity/item.entity';
+
 
 /** href-Link für HATEOAS */
 export interface Link {
-    /** href-Link für HATEOAS-Links */
     readonly href: string;
 }
 
 /** Links für HATEOAS */
 export interface Links {
-    /** self-Link */
     readonly self: Link;
-    /** Optionaler Linke für list */
     readonly list?: Link;
-    /** Optionaler Linke für add */
     readonly add?: Link;
-    /** Optionaler Linke für update */
     readonly update?: Link;
-    /** Optionaler Linke für remove */
     readonly remove?: Link;
 }
 
-
 /** ShoppingCart-Objekt mit HATEOAS-Links */
-export type ShoppingCartModel = Omit<ShoppingCart, 'shoppingCartId' | 'version' | 'created' | 'updated' | 'cartItems'> & {_links: Links;};
+export type ShoppingCartModel = Omit<ShoppingCart, 'id' | 'version' | 'created' | 'updated' | 'cartItems'> & ItemModels & { _links: Links; };
 
 /** ShoppingCart-Objekte mit HATEOAS-Links in einem JSON-Array. */
-export interface ShoppingCartsModel {
+export interface ShoppingCartModels {
     _embedded: {
         shoppingCarts: ShoppingCartModel[];
     };
 }
 
-export class ShopppingCartQuery implements SearchCriteria {
+export type ItemModel = Omit<Item, 'id' | 'version' | 'created' | 'updated' | 'shoppingCart'>
 
+export interface ItemModels {
+    cartItems: ItemModel[];
+}
+
+export class ShopppingCartQuery {
+    isComplete: string;
+    totalAmount: number;
 }
 
 const APPLICATION_HAL_JSON = 'application/hal+json';
 
 @Controller(paths.shoppinCart)
 @UseInterceptors(ResponseTimeInterceptor)
-// @ApiBearerAuth()
 export class ShoppingCartGetController {
     readonly #service: ShoppingCartReadService;
-
     readonly #logger = getLogger(ShoppingCartGetController.name);
+
     constructor(service: ShoppingCartReadService) {
         this.#service = service;
     }
 
-    @Get(':shoppingCartId')
-    @Public()
+    @Get(':id')
+    @Roles({ roles: ['gentlecorp-admin', 'gentlecorp-user', 'gentlecorp-customer'] })
     async getById(
-        @Param('shoppingCartId') shoppingCartId: string,
+        @Param('id') id: string,
         @Req() req: Request,
         @Headers('If-None-Match') version: string | undefined,
+        @Headers('Authorization') authorization: string | undefined,
         @Res() res: Response,
     ): Promise<Response<ShoppingCartModel | undefined>> {
-        this.#logger.debug('getById: idStr=%s, version=%s', shoppingCartId, version);
+        this.#logger.debug('getById: idStr=%s, version=%s', id, version);
 
         if (req.accepts([APPLICATION_HAL_JSON, 'json', 'html']) === false) {
             this.#logger.debug('getById: accepted=%o', req.accepted);
             return res.sendStatus(HttpStatus.NOT_ACCEPTABLE);
         }
 
-        const shoppingCart = await this.#service.findById({ shoppingCartId, withItems: false });
+        if (version == undefined) {
+            this.#logger.error('getById: version is undefined');
+            return res.sendStatus(HttpStatus.PRECONDITION_REQUIRED)
+        }
+
+        const shoppingCart = await this.#service.findById({ id, withItems: true, authorization });
         if (this.#logger.isLevelEnabled('debug')) {
             this.#logger.debug('getById(): shoppingCart=%s', shoppingCart.toString());
         }
@@ -96,64 +103,77 @@ export class ShoppingCartGetController {
         this.#logger.debug('getById: versionDb=%s', versionDb);
         res.header('ETag', `"${versionDb}"`);
 
-        // HATEOAS mit Atom Links und HAL (= Hypertext Application Language)
-        const buchModel = this.#toModel(shoppingCart, req);
-        this.#logger.debug('getById: buchModel=%o', buchModel);
-        return res.contentType(APPLICATION_HAL_JSON).json(buchModel);
+        // HATEOAS mit Atom Links und HAL
+        const shoppingCartModel = this.#toModel(shoppingCart, req);
+        this.#logger.debug('getById: shoppingCartModel=%o', shoppingCartModel);
+        return res.contentType(APPLICATION_HAL_JSON).json(shoppingCartModel);
     }
 
     @Get()
-    @Public()
+    @Roles({ roles: ['gentlecorp-admin', 'gentlecorp-user'] })
     async get(
         @Query() query: ShopppingCartQuery,
         @Req() req: Request,
         @Res() res: Response,
-    ): Promise<Response<ShoppingCartsModel | undefined>> {
+    ): Promise<Response<ShoppingCartModels | undefined>> {
         this.#logger.debug('get: query=%o', query);
 
-        if (req.accepts([APPLICATION_HAL_JSON, 'json', 'html']) === false) {
-            this.#logger.debug('get: accepted=%o', req.accepted);
-            return res.sendStatus(HttpStatus.NOT_ACCEPTABLE);
-        }
+        // Manuelle Umwandlung in FindParams
+        const findParams: FindParams = {
+            searchCriteria: {
+                totalAmount: query.totalAmount ? Number(query.totalAmount) : undefined,
+                isComplete: query.isComplete === 'true' ? true : false
+            }
+        };
 
-        const shoppingCarts = await this.#service.find(query);
+        const shoppingCarts = await this.#service.find(findParams); // Verwenden Sie findParams hier
         this.#logger.debug('get: %o', shoppingCarts);
 
-        // HATEOAS: Atom Links je ShoppingCart
-        const buecherModel = shoppingCarts.map((shoppingCart) =>
-            this.#toModel(shoppingCart, req, false),
+        const shoppingCartsModel = shoppingCarts.map((shoppingCart, index) =>
+            this.#toModel(shoppingCart, req, false)
         );
-        this.#logger.debug('get: buecherModel=%o', buecherModel);
+        this.#logger.debug('get: shoppingCartsModel=%o', shoppingCartsModel);
 
-        const result: ShoppingCartsModel = { _embedded: { shoppingCarts: buecherModel } };
+        const result: ShoppingCartModels = { _embedded: { shoppingCarts: shoppingCartsModel } };
         return res.contentType(APPLICATION_HAL_JSON).json(result).send();
     }
 
     #toModel(shoppingCart: ShoppingCart, req: Request, all = true) {
         const baseUri = getBaseUri(req);
-        this.#logger.debug('#toModel: baseUri=%s', baseUri);
-        const { shoppingCartId } = shoppingCart;
+        const { id } = shoppingCart;
         const links = all
             ? {
-                  self: { href: `${baseUri}/${shoppingCartId}` },
+                  self: { href: `${baseUri}/${id}` },
                   list: { href: `${baseUri}` },
                   add: { href: `${baseUri}` },
-                  update: { href: `${baseUri}/${shoppingCartId}` },
-                  remove: { href: `${baseUri}/${shoppingCartId}` },
+                  update: { href: `${baseUri}/${id}` },
+                  remove: { href: `${baseUri}/${id}` },
               }
-            : { self: { href: `${baseUri}/${shoppingCartId}` } };
-
-        this.#logger.debug('#toModel: shoppingCart=%o, links=%o', shoppingCart, links);
+            : { self: { href: `${baseUri}/${id}` } };
 
         const shoppingCartModel: ShoppingCartModel = {
             totalAmount: shoppingCart.totalAmount,
             customerId: shoppingCart.customerId,
             customerUsername: shoppingCart.customerUsername,
             isComplete: shoppingCart.isComplete,
-            // items: shoppingCart.items?.map((item) => this.#toItemModel(item, req)),
+            cartItems: shoppingCart.cartItems?.map((item, index) => ({
+                ...this.#toItemModel(item)
+            })),
             _links: links,
         };
 
         return shoppingCartModel;
+    }
+
+    #toItemModel(item: Item) {
+        // Implementieren Sie die Logik zur Umwandlung des Item-Objekts in das gewünschte Format
+        return {
+            id: item.id,
+            quantity: item.quantity,
+            name: item.name,
+            price: item.price,
+            skuCode: item.skuCode,
+            inventoryId: item.inventoryId
+        };
     }
 }

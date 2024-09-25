@@ -1,6 +1,6 @@
 import { type Request } from 'express';
-import { nodeConfig } from '../../config/node.js';
-import { ShoppingCartReadService } from '../service/shopping-cart-read.service.js';
+import { nodeConfig } from '../../config/node';
+import { ShoppingCartReadService } from '../service/shopping-cart-read.service';
 
 const port = `:${nodeConfig.port}`;
 

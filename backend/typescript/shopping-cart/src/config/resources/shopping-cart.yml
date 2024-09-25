@@ -16,8 +16,8 @@
 # ==============================================================================
 # N o d e
 # ==============================================================================
-#node:
-#  port: 3000
+node:
+  port: 8084
 
 # ==============================================================================
 # D a t e n b a n k
@@ -36,15 +36,15 @@ db:
 
   username: shopping_cart_db_user
   password: GentleCorp21.08.2024
-  #passwordAdmin: p
-  #name: buch
   populate: true
 
   host: localhost
   #schema: shopping_cart_db
-  database: "shopping_cart_db"
-  #passwordAdmin: GentleCorp21.08.2024
-  name: shopping_cart_db_user
+  database: shopping_cart_db
+
+  adminUsername: root
+  passwordAdmin: p
+  # name: shopping_cart_db_user
 
 # ==============================================================================
 # K A F K A
@@ -58,7 +58,6 @@ kafka:
 keycloak:
   authServerUrl: http://localhost:8880
   realm: GentleCorp-Ecosystem
-  # siehe Keycloak Menuepunkt "Clients" > Tab "Clients list" > Spalte "Client ID"
   clientId: gentlecorp-client
   tokenValidation: online
 

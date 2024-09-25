@@ -15,12 +15,12 @@ import {
     Res,
     UseInterceptors,
 } from '@nestjs/common';
-import { KeycloakService } from './keycloak.service.js';
+import { KeycloakService } from './keycloak.service';
 import { Public } from 'nest-keycloak-connect';
 import { Response } from 'express';
-import { paths } from '../config/paths.js';
-import { ResponseTimeInterceptor } from '../logger/response-time.interceptor.js';
-import { getLogger } from '../logger/logger.js';
+import { paths } from '../config/paths';
+import { ResponseTimeInterceptor } from '../logger/response-time.interceptor';
+import { getLogger } from '../logger/logger';
 
 
 

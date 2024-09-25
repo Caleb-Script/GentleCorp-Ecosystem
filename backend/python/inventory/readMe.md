@@ -112,7 +112,5 @@ inventory-service/
     ```
 
 
-├── alembic/
-│   ├── versions/                # Hier werden die Migrationen gespeichert
-│   ├── env.py                   # Alembic-Umgebungskonfiguration
-│   └── script.py.mako           # Vorlage für Migrationsskripte
+$Env:PRODUCT_SERVICE_PORT = "8085"
+Remove-Item Env:PRODUCT_SERVICE_PORT  

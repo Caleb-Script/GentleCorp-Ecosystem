@@ -13,8 +13,7 @@ export class ShoppingCartQueryBuilder {
     readonly #logger = getLogger(ShoppingCartQueryBuilder.name);
 
     readonly #shoppingCartAlias = `${ShoppingCart.name
-
-    .charAt(0)
+        .charAt(0)
         .toLowerCase()}${ShoppingCart.name.slice(1)}`;
 
     readonly #itemAlias = `${Item.name
@@ -25,35 +24,27 @@ export class ShoppingCartQueryBuilder {
         this.#shoppingCartRepository = repo;
     }
 
-    buildId({ shoppingCartId, withItems }: FindByIdParams) {
+    buildId({ id, withItems }: FindByIdParams) {
         const queryBuilder = this.#shoppingCartRepository.createQueryBuilder(
             this.#shoppingCartAlias,
         );
 
         if (withItems) {
             queryBuilder.leftJoinAndSelect(
-                `${this.#shoppingCartAlias}.items`,
+                `${this.#shoppingCartAlias}.cartItems`, // Korrektur hier
                 this.#itemAlias,
             );
         }
 
-        queryBuilder.where(`${this.#shoppingCartAlias}.shoppingCartId = :shoppingCartId`, {
-            shoppingCartId,
+        queryBuilder.where(`${this.#shoppingCartAlias}.id = :id`, {
+            id,
         });
         return queryBuilder;
     }
 
-    build(
-        {
-            ...props
-        }: SearchCriteria,
-        withItems: boolean | false,
-    ) {
+    build(withItems: boolean | false) {
         this.#logger.debug(
-            'build: props=%o , withItems=%s',
-            props,
-            withItems,
-        );
+            'build: withItems=%s', withItems);
 
         let queryBuilder = this.#shoppingCartRepository.createQueryBuilder(
             this.#shoppingCartAlias,
@@ -61,7 +52,7 @@ export class ShoppingCartQueryBuilder {
 
         if (withItems) {
             queryBuilder.leftJoinAndSelect(
-                `${this.#shoppingCartAlias}.contacts`,
+                `${this.#shoppingCartAlias}.cartItems`, // Korrektur hier
                 this.#itemAlias,
             );
         }
@@ -69,19 +60,15 @@ export class ShoppingCartQueryBuilder {
         let useWhere = true;
 
 
-        Object.keys(props).forEach((key) => {
-            const param: Record<string, any> = {};
-            param[key] = (props as Record<string, any>)[key];
-            queryBuilder = useWhere
-                ? queryBuilder.where(`${this.#shoppingCartAlias}.${key} = :${key}`, param)
-                : queryBuilder.andWhere(
-                    `${this.#shoppingCartAlias}.${key} = :${key}`,
-                    param,
-                );
-            useWhere = false;
-        });
-
         this.#logger.debug('build: sql=%s', queryBuilder.getSql());
         return queryBuilder;
+    }
+
+    // toString Methode hinzufügen
+    toString(): string {
+        return `ShoppingCartQueryBuilder {
+            shoppingCartAlias: ${this.#shoppingCartAlias},
+            itemAlias: ${this.#itemAlias}
+        }`;
     }
 }

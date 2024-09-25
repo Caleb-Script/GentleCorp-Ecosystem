@@ -1,6 +1,6 @@
-import { dbType } from '../config/db.js';
+import { dbType } from '../config/db';
 import { nodeConfig } from '../config/node';
-import { getLogger } from './logger.js';
+import { getLogger } from './logger';
 import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import figlet from 'figlet';
 import { release, type, userInfo } from 'node:os';

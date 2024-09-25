@@ -1,8 +1,8 @@
 
-import { env } from './env.js';
-import { nodeConfig } from './node.js';
+import { env } from './env';
+import { nodeConfig } from './node';
 import { resolve } from 'node:path';
-import { config } from './shopping-cart.js';
+import { config } from './shopping-cart';
 import pino from 'pino';
 import { PrettyOptions } from 'pino-pretty';
 

@@ -5,8 +5,8 @@ import {
     RoleGuard,
 } from 'nest-keycloak-connect';
 import { APP_GUARD } from '@nestjs/core';
-import { KeycloakService } from './keycloak.service.js';
-import { LoginController } from './login.controller.js';
+import { KeycloakService } from './keycloak.service';
+import { LoginController } from './login.controller';
 import { Module } from '@nestjs/common';
 
 @Module({
@@ -36,6 +36,6 @@ class ConfigModule {}
             useClass: RoleGuard,
         },
     ],
-    exports: [KeycloakConnectModule],
+    exports: [KeycloakConnectModule, KeycloakService],
 })
 export class KeycloakModule {}
