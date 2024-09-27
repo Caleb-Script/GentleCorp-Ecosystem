@@ -60,7 +60,7 @@ spring:
             type:
               mapping:
                account:com.gentlecorp.customer.model.dto.AccountDTO,
-               shoppingCart:com.gentlecorp.customer.model.dto.ShoppingCartDTO
+               shoppingCart:com.gentlecorp.customer.model.dto.ShoppingCartDTO2
 
   mail:
     host: localhost

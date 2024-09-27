@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common';
 import { getLogger } from '../../logger/logger';
 import { ShoppingCart } from '../model/entity/shopping-cart.entity';
 import { ShoppingCartQueryBuilder } from './query-builder';
@@ -66,7 +66,7 @@ export class ShoppingCartReadService {
         }
        
 
-        token = isAdmin ? token : 'Bearer ' + await this.#getAdminToken();
+        token = isAdmin ? token : 'Bearer ' + await this.getAdminToken();
         this.#logger.debug('findById: token=%s', token);
 
         cart.customerUsername = isAdmin ? await this.getCustomer({ customerId: cart.customerId, token }) : username;
@@ -84,13 +84,13 @@ export class ShoppingCartReadService {
         return cart;
     }
 
-    async find({ searchCriteria }: FindParams) {
-        const withItems = true;
+    async find( searchCriteria?: SearchCriteria) {
+        const withItems = false;
         this.#logger.debug('find: searchCriteria=%s, withItems=%s', searchCriteria, withItems);
 
         if (searchCriteria === undefined) {
             const carts: ShoppingCart[] = await this.#queryBuilder
-                .build(withItems)
+                .build(withItems, {})
                 .getMany();
 
             this.#logger.debug('find: carts=%o', carts);
@@ -99,24 +99,24 @@ export class ShoppingCartReadService {
 
         const keys: string[] = Object.keys(searchCriteria);
         if (keys.length === 0) {
-            return this.#queryBuilder.build(withItems).getMany();
+            return this.#queryBuilder.build(withItems, searchCriteria).getMany();
         }
 
         const carts: ShoppingCart[] = await this.#queryBuilder
-            .build(withItems)
+            .build(withItems, searchCriteria)
             .getMany();
 
-        if (searchCriteria.isComplete !== undefined || searchCriteria.totalAmount !== undefined) {
-            this.#logger.debug('find: searchCriteria isComplete=%s, totalAmount=%s', searchCriteria.isComplete, searchCriteria.totalAmount);
-            return carts.filter(cart => {
-                cart.isComplete = cart.cartItems.length > 0 ? false : true;
-                const isCompleteMatch = searchCriteria.isComplete === undefined || cart.isComplete === searchCriteria.isComplete;
-                const totalAmountMatch = searchCriteria.totalAmount === undefined ||
-                    (cart.totalAmount >= searchCriteria.totalAmount);
+        // if (searchCriteria.isComplete !== undefined || searchCriteria.totalAmount !== undefined) {
+        //     this.#logger.debug('find: searchCriteria isComplete=%s, totalAmount=%s', searchCriteria.isComplete, searchCriteria.totalAmount);
+        //     return carts.filter(cart => {
+        //         cart.isComplete = cart.cartItems.length > 0 ? false : true;
+        //         const isCompleteMatch = searchCriteria.isComplete === undefined || cart.isComplete === searchCriteria.isComplete;
+        //         const totalAmountMatch = searchCriteria.totalAmount === undefined ||
+        //             (cart.totalAmount >= searchCriteria.totalAmount);
 
-                return isCompleteMatch && totalAmountMatch;
-            });
-        }
+        //         return isCompleteMatch && totalAmountMatch;
+        //     });
+        // }
 
         this.#logger.debug('find: carts=%o', carts);
         return carts;
@@ -145,7 +145,7 @@ export class ShoppingCartReadService {
                 throw new ForbiddenException('Access denied to customer data.');
             }
             if (error.response && error.response.status === 404) {
-                throw new NotFoundException('Access denied to customer data.');
+                throw new NotFoundException(`Customer with ID ${customerId} not found.`);
             }
             if (error.response && error.response.status === 401) {
                 throw new UnauthorizedException('Access denied to customer data.');
@@ -178,7 +178,30 @@ export class ShoppingCartReadService {
         return inventoryDetails;
     }
 
-    async #getAdminToken() {
+    async existInventory(item: string, token: string ) {
+        this.#logger.debug('getInventory: item=%s, token=%s', item, token);
+
+        try {
+            await this.#inventoryRepository.getById(item, "-1", token);
+        } catch (error) {
+            if (error.response && error.response.status === 403) {
+                throw new ForbiddenException('Access denied to customer data.');
+            }
+            if (error.response && error.response.status === 404) {
+                throw new NotFoundException(`Inventory with ID ${item} not found.`);
+            }
+            if (error.response && error.response.status === 401) {
+                throw new UnauthorizedException('Access denied to customer data.');
+            }
+            if (error.response && error.response.status === 422) {
+                throw new UnprocessableEntityException(`${item} is not a valid ID.`);
+            }
+            this.#logger.error('getCustomer: error=%s', error.message);
+            throw new NotFoundException(`Inventory with ID ${item} not found.`);
+        }
+    }
+
+    async getAdminToken() {
         const token = await this.#keycloakService.login({ username: 'admin', password: 'p' });
         this.#logger.debug('getAdminToken: token=%o', token);
         return token.access_token as string;

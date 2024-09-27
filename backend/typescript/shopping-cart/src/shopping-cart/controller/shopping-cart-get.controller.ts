@@ -51,9 +51,8 @@ export interface ItemModels {
     cartItems: ItemModel[];
 }
 
-export class ShopppingCartQuery {
-    isComplete: string;
-    totalAmount: number;
+export class ShopppingCartQuery implements SearchCriteria {
+    declare readonly customerId: string;
 }
 
 const APPLICATION_HAL_JSON = 'application/hal+json';
@@ -119,14 +118,7 @@ export class ShoppingCartGetController {
         this.#logger.debug('get: query=%o', query);
 
         // Manuelle Umwandlung in FindParams
-        const findParams: FindParams = {
-            searchCriteria: {
-                totalAmount: query.totalAmount ? Number(query.totalAmount) : undefined,
-                isComplete: query.isComplete === 'true' ? true : false
-            }
-        };
-
-        const shoppingCarts = await this.#service.find(findParams); // Verwenden Sie findParams hier
+        const shoppingCarts = await this.#service.find(query); // Verwenden Sie findParams hier
         this.#logger.debug('get: %o', shoppingCarts);
 
         const shoppingCartsModel = shoppingCarts.map((shoppingCart, index) =>

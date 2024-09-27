@@ -21,9 +21,9 @@ import { AuthGuard, Roles } from 'nest-keycloak-connect';
 /**
  * Die Controller-Klasse für die Entwicklung, z.B. Neuladen der DB.
  */
-@Controller('dev')
+@Controller('admin')
 @UseGuards(AuthGuard)
-@Roles({ roles: ['admin'] })
+  @Roles({ roles: ['gentlecorp-admin'] })
 @UseInterceptors(ResponseTimeInterceptor)
 @ApiTags('Dev')
 export class DevController {

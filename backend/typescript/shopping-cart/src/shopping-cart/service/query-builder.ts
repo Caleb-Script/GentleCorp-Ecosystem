@@ -1,7 +1,7 @@
 import { getLogger } from '../../logger/logger';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { SearchCriteria } from '../model/searchCriteria';
 import { ShoppingCart } from '../model/entity/shopping-cart.entity';
 import { Item } from '../model/entity/item.entity';
@@ -42,23 +42,31 @@ export class ShoppingCartQueryBuilder {
         return queryBuilder;
     }
 
-    build(withItems: boolean | false) {
-        this.#logger.debug(
-            'build: withItems=%s', withItems);
+    // Verbesserte build-Methode
+    build(withItems: boolean = false, ...props: SearchCriteria[]): SelectQueryBuilder<ShoppingCart> {
+        this.#logger.debug('build: withItems=%s', withItems);
 
-        let queryBuilder = this.#shoppingCartRepository.createQueryBuilder(
-            this.#shoppingCartAlias,
-        );
+        let queryBuilder = this.#shoppingCartRepository.createQueryBuilder(this.#shoppingCartAlias);
 
         if (withItems) {
             queryBuilder.leftJoinAndSelect(
-                `${this.#shoppingCartAlias}.cartItems`, // Korrektur hier
-                this.#itemAlias,
+                `${this.#shoppingCartAlias}.cartItems`,
+                this.#itemAlias
             );
         }
 
-        let useWhere = true;
-
+        // Verwenden Sie Array.reduce für eine klarere Implementierung
+        props.reduce((qb, criteria, index) => {
+            return Object.entries(criteria).reduce((acc, [key, value]) => {
+                if (value !== undefined && value !== null) {
+                    const param = { [key]: value };
+                    return index === 0 && acc === qb
+                        ? acc.where(`${this.#shoppingCartAlias}.${key} = :${key}`, param)
+                        : acc.andWhere(`${this.#shoppingCartAlias}.${key} = :${key}`, param);
+                }
+                return acc;
+            }, qb);
+        }, queryBuilder);
 
         this.#logger.debug('build: sql=%s', queryBuilder.getSql());
         return queryBuilder;

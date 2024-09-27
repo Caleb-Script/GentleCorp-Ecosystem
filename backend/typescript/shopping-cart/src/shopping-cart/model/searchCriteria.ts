@@ -1,5 +1,6 @@
 export interface SearchCriteria {
-    isComplete?: boolean,
-    totalAmount?: number
+    // isComplete?: boolean,
+    // totalAmount?: number,
+    readonly customerId?: string,
     
 }

@@ -1,6 +1,7 @@
 import { AuthGuard, Public, Roles } from 'nest-keycloak-connect';
 import {
   Body,
+  ConflictException,
   Controller,
   Delete,
   Headers,
@@ -24,6 +25,9 @@ import { ShoppingCartDTO, ShoppingCartDTOOhneRef } from '../model/dto/shopping-c
 import { ShoppingCart } from '../model/entity/shopping-cart.entity';
 import { ShoppingCartWriteService } from '../service/shopping-cart-write.service';
 import { ConsumerService } from '../../kafka/Consumer.service';
+import { ItemDTO } from '../model/dto/item.dto';
+import { Item } from '../model/entity/item.entity';
+import { ShoppingCartReadService } from '../service/shopping-cart-read.service';
 
 
 
@@ -35,119 +39,134 @@ const MSG_FORBIDDEN = 'Kein Token mit ausreichender Berechtigung vorhanden';
 @UseGuards(AuthGuard)
 @UseInterceptors(ResponseTimeInterceptor)
 export class ShoppingCartWriteController {
-  readonly #service: ShoppingCartWriteService;
+  readonly #writeService: ShoppingCartWriteService;
+  readonly #readService: ShoppingCartReadService;
 
   readonly #logger = getLogger(ShoppingCartWriteController.name);
 
   constructor(
-    service: ShoppingCartWriteService,
+    writeService: ShoppingCartWriteService,
+    readService: ShoppingCartReadService,
     private readonly consumerService: ConsumerService,
   ) {
 
-    this.#service = service;
+    this.#writeService = writeService;
+    this.#readService = readService;
   }
 
-  // async onModuleInit() {
-  //   await this.consumerService.consume(
-  //     {
-  //       topics: ['create-shopping-cart'],
-  //     },
-  //     {
-  //       eachMessage: async ({ topic, partition, message }) => {
-  //         try {
-  //           const messageValue = message.value.toString();
-  //           console.log({
-  //             topic,
-  //             partition,
-  //             value: messageValue,
-  //           });
-  //           let parsedMessage;
-  //           parsedMessage = JSON.parse(messageValue);
-  //           const shoppingCartDTO: ShoppingCartDTO = parsedMessage;
-  //           const shoppingCart = this.#shoppingCartDTOToShoppingCart(shoppingCartDTO);
-  //           await this.#service.create(shoppingCart);
-  //         } catch (err) {
-  //           console.error(err);
-  //         }
-  //       },
-  //     }
-  // );
-  // }
-
   @Post()
-  // @Roles({ roles: ['admin', 'user'] })
-  @Public()
+  @Roles({ roles: ['gentlecorp-admin'] })
   async post(
     @Body() shoppingCartDTO: ShoppingCartDTO,
     @Req() req: Request,
+    @Headers('Authorization') authorization: string | undefined,
     @Res() res: Response,
   ): Promise<Response> {
     this.#logger.debug('post: shoppingCartDTO=%o', shoppingCartDTO);
-
-    const shoppingCart = this.#shoppingCartDTOToShoppingCart(shoppingCartDTO);
-    const id = await this.#service.create(shoppingCart);
+    await this.#readService.getCustomer({ customerId: shoppingCartDTO.customerId, token: authorization });
+    const id = await this.#writeService.create(shoppingCartDTO);
 
     const location = `${getBaseUri(req)}/${id}`;
     this.#logger.debug('post: location=%s', location);
     return res.location(location).send();
   }
 
-  @Put(':id')
-  // @Roles({ roles: ['admin', 'user'] })
-  @Public()
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async put(
-    @Body() shoppingCartDTO: ShoppingCartDTOOhneRef,
-    @Param('id') id: string,
-    @Headers('If-Match') version: string | undefined,
+  @Put(':id/add')
+  @Roles({ roles: ['gentlecorp-admin', 'gentlecorp-user', 'gentlecorp-customer'] })
+  async addItem(
+    @Param('id') cartId: string,
+    @Req() req: Request,
+    @Headers('If-Match') cartVersionStr: string | undefined,
+    @Body() itemDTO: ItemDTO,
+    @Headers('Authorization') token: string | undefined,
     @Res() res: Response,
   ): Promise<Response> {
-    this.#logger.debug(
-      'put: id=%s, shoppingCartDTO=%o, version=%s',
-      id,
-      shoppingCartDTO,
-      version,
-    );
-
-    if (version === undefined) {
+  
+    if (!cartVersionStr) {
       const msg = 'Header "If-Match" fehlt';
-      this.#logger.debug('put: msg=%s', msg);
-      return res
-        .status(HttpStatus.PRECONDITION_REQUIRED)
-        .set('Content-Type', 'application/json')
-        .send(msg);
+      this.#logger.debug('addItem: %s', msg);
+      return res.status(HttpStatus.PRECONDITION_REQUIRED).json({
+        statusCode: HttpStatus.PRECONDITION_REQUIRED,
+        message: 'Header "If-Match" fehlt'
+      });
     }
 
-    const shoppingCart = this.#shoppingCartDTOOhneRefToShoppingCart(shoppingCartDTO);
-    const neueVersion = await this.#service.update({ id, shoppingCart, version });
-    this.#logger.debug('put: version=%d', neueVersion);
-    return res.header('ETag', `"${neueVersion}"`).send();
+    const cartVersion: number = Number.parseInt(cartVersionStr.slice(1, -1), 10);
+    this.#logger.debug('addItem: shoppingCartId=%s, body=%o', cartId, itemDTO);
+    const { id, version } = await this.#writeService.addItemToCart({cartId, itemDTO, cartVersion, token});
+    const location = `${getBaseUri(req)}/${id}`;
+    this.#logger.debug('addItem: location=%s', location);
+    this.#logger.debug('addItem: version=%d', version);
+    
+    return res.
+      header('ETag', `"${version}"`)
+      .location(location)
+      .status(HttpStatus.CREATED)
+      .send();
+  }
+
+  @Put(':id/remove')
+  @Roles({ roles: ['gentlecorp-admin', 'gentlecorp-user', 'gentlecorp-customer'] })
+  async removeItem(
+    @Param('id') cartId: string,
+    @Body() itemDTO: ItemDTO,
+    @Headers('If-Match') shoppingCartVersion: string | undefined,
+    @Headers('Authorization') token: string | undefined,
+    @Res() res: Response,
+  ): Promise<Response> {
+
+    if (!shoppingCartVersion) {
+      const msg = 'Header "If-Match" fehlt';
+      this.#logger.debug('removeItem: %s', msg);
+      return res.status(HttpStatus.PRECONDITION_REQUIRED).json({
+        statusCode: HttpStatus.PRECONDITION_REQUIRED,
+        message: 'Header "If-Match" fehlt'
+      });
+    }
+
+    const cartVersion: number = Number.parseInt(shoppingCartVersion.slice(1, -1), 10);
+    this.#logger.debug('removeItem: shoppingCartId=%s, body=%o', cartId, itemDTO);
+    const { version } = await this.#writeService.removeItemFromCart({cartId, cartVersion, itemDTO, token});
+    this.#logger.debug('removeItem: version=%d', version);
+    
+    return res
+      .status(HttpStatus.NO_CONTENT)
+      .header('ETag', `"${version}"`)
+      .send();
   }
 
   @Delete(':id')
-  // @Roles({ roles: ['admin'] })
-  @Public()
+  @Roles({ roles: ['gentlecorp-admin'] })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string) {
+  async delete(
+    @Param('id') id: string,
+    @Headers('Authorization') authorization: string | undefined,
+    @Headers('If-Match') cartVersionStr: string | undefined,
+    @Res() res: Response,
+  ) {
+    if (!cartVersionStr) {
+      const msg = 'Header "If-Match" fehlt';
+      this.#logger.debug('removeItem: %s', msg);
+      return res.status(HttpStatus.PRECONDITION_REQUIRED).json({
+        statusCode: HttpStatus.PRECONDITION_REQUIRED,
+        message: 'Header "If-Match" fehlt'
+      });
+    }
+    const cartVersion: number = Number.parseInt(cartVersionStr.slice(1, -1), 10);
+    const shoppingCart = await this.#readService.findById({id, withItems: true, authorization})
+    if (shoppingCart.version !== cartVersion) {
+      throw new ConflictException('Shopping cart version mismatch.');
+    }
+
     this.#logger.debug('delete: id=%s', id);
-    await this.#service.delete(id);
+    await this.#writeService.delete(id, authorization);
+    
+    return res
+      .status(HttpStatus.NO_CONTENT)
+      .send();
   }
 
-  #shoppingCartDTOToShoppingCart(shoppingCartDTO: ShoppingCartDTO): ShoppingCart {
-    const shoppingCart = {
-      id: undefined,
-      version: undefined,
-      totalAmount: undefined,
-      isComplete: undefined,
-      customerUsername: undefined,
-      customerId: shoppingCartDTO.customerId,
-      cartItems: undefined,
-      created: new Date(),
-      updated: new Date(),
-    };
-
-    return shoppingCart;
-  }
+  
 
   #shoppingCartDTOOhneRefToShoppingCart(shoppingCartDTO: ShoppingCartDTOOhneRef): ShoppingCart {
     return {
@@ -162,4 +181,5 @@ export class ShoppingCartWriteController {
       customerUsername: undefined,
     };
   }
+
 }

@@ -9,6 +9,7 @@ import com.gentlecorp.customer.exception.PasswordInvalidException;
 import com.gentlecorp.customer.exception.UsernameExistsException;
 import com.gentlecorp.customer.model.dto.AccountDTO;
 import com.gentlecorp.customer.model.dto.ShoppingCartDTO;
+import com.gentlecorp.customer.model.dto.ShoppingCartDTO2;
 import com.gentlecorp.customer.model.entity.Contact;
 import com.gentlecorp.customer.model.entity.Customer;
 import com.gentlecorp.customer.repository.ContactRepository;
@@ -93,7 +94,7 @@ public class CustomerWriteService {
     );
 
     //kafkaTemplate.send("newAccount", checkingAccount);
-    //kafkaTemplate.send("create-shopping-cart",new ShoppingCartDTO(customer.getId()));
+    kafkaTemplate.send("create-shopping-cart",new ShoppingCartDTO(customer.getId()));
 
     log.debug("create: customerDb={}", customerDb);
     return customerDb;
@@ -184,6 +185,7 @@ public class CustomerWriteService {
     validateVersion(version, customerDb);
     keycloakService.delete(token, customerDb.getUsername());
     customerRepository.delete(customerDb);
+    kafkaTemplate.send("delete-shopping-cart",new ShoppingCartDTO2(id,token));
   }
 
   public void removeContact(final UUID customerId, final UUID contactId, final int version, final Jwt jwt) {
