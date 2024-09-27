@@ -1,5 +1,5 @@
 import { type DeleteResult, Repository } from 'typeorm';
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getLogger } from '../../logger/logger';
 import { ShoppingCart } from '../model/entity/shopping-cart.entity';
@@ -21,7 +21,8 @@ export interface UpdateParams {
 }
 
 @Injectable()
-export class ShoppingCartWriteService {
+export class ShoppingCartWriteService implements OnModuleInit {
+    private kafkaInitialized = false;
     private static readonly VERSION_PATTERN = /^"\d{1,3}"/u;
     readonly #shoppingCartRepository: Repository<ShoppingCart>;
     readonly #itemRepository: Repository<Item>;
@@ -45,41 +46,67 @@ export class ShoppingCartWriteService {
     }
 
     async onModuleInit() {
-        await this.consumerService.consume(
-            {
-                topics: ['create-shopping-cart', 'delete-shopping-cart'],
-            },
-            {
-                eachMessage: async ({ topic, partition, message }) => {
-                    try {
-                        const messageValue = message.value.toString();
-                        this.#logger.debug('Kafka message received', { topic, partition, value: messageValue });
-                        const parsedMessage = JSON.parse(messageValue);
+        // Starten Sie die Kafka-Initialisierung asynchron
+        this.initializeKafka().catch(err => {
+            this.#logger.error('Failed to initialize Kafka consumer', err);
+        });
+        // Hier können Sie andere Initialisierungen durchführen, die den Serverstart nicht blockieren sollten
+    }
 
-                        switch (topic) {
-                            case 'create-shopping-cart':
-                                const shoppingCartDTO: ShoppingCartDTO = parsedMessage;
-                                await this.create(shoppingCartDTO);
-                                break;
-                            case 'delete-shopping-cart':
-                                const { id, token } = parsedMessage;
-                                const shoppingCartList = await this.#readService.find({ customerId: id });
-                                const shoppingCartId = shoppingCartList[0]?.id;
-                                if (shoppingCartId) {
-                                    await this.delete(shoppingCartId, token);
-                                } else {
-                                    this.#logger.warn('No shopping cart found for deletion', { customerId: id });
-                                }
-                                break;
-                            default:
-                                this.#logger.error('Unknown topic:', topic);
-                        }
-                    } catch (err) {
-                        this.#logger.error('Error processing Kafka message', err);
-                    }
-                },
+    private async initializeKafka() {
+        const maxRetries = 1;
+        let retries = 0;
+
+        while (retries < maxRetries) {
+            try {
+                await this.consumerService.consume(
+                    { topics: ['create-shopping-cart', 'delete-shopping-cart'] },
+                    { eachMessage: this.handleKafkaMessage.bind(this) }
+                );
+                this.kafkaInitialized = true;
+                this.#logger.log('Kafka consumer initialized successfully');
+                return;
+            } catch (err) {
+                retries++;
+                this.#logger.error(`Error initializing Kafka consumer (attempt ${retries}/${maxRetries})`, err);
+                if (retries === maxRetries) {
+                    this.#logger.error('Failed to initialize Kafka consumer after multiple attempts');
+                    // Hier könnten Sie einen Event-Emitter verwenden, um andere Teile der Anwendung zu informieren
+                    // oder eine Benachrichtigung an ein Monitoring-System senden
+                } else {
+                    await new Promise(resolve => setTimeout(resolve, 5000 * retries)); // Erhöhen Sie die Wartezeit mit jedem Versuch
+                }
             }
-        );
+        }
+    }
+
+    private async handleKafkaMessage({ topic, partition, message }) {
+        try {
+            const messageValue = message.value.toString();
+            this.#logger.debug('Kafka message received', { topic, partition, value: messageValue });
+            const parsedMessage = JSON.parse(messageValue);
+
+            switch (topic) {
+                case 'create-shopping-cart':
+                    const shoppingCartDTO: ShoppingCartDTO = parsedMessage;
+                    await this.create(shoppingCartDTO);
+                    break;
+                case 'delete-shopping-cart':
+                    const { id, token } = parsedMessage;
+                    const shoppingCartList = await this.#readService.find({ customerId: id });
+                    const shoppingCartId = shoppingCartList[0]?.id;
+                    if (shoppingCartId) {
+                        await this.delete(shoppingCartId, token);
+                    } else {
+                        this.#logger.warn('No shopping cart found for deletion', { customerId: id });
+                    }
+                    break;
+                default:
+                    this.#logger.error('Unknown topic:', topic);
+            }
+        } catch (err) {
+            this.#logger.error('Error processing Kafka message', err);
+        }
     }
 
     async create(shoppingCartDTO: ShoppingCartDTO): Promise<string> {

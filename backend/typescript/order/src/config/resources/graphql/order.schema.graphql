@@ -1,0 +1,39 @@
+# Hauptschema
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+# Query-Typ
+type Query {
+  order(id: ID!): Order
+  orders(searchCriteriaInput: SearchCriteriaInput): [Order!]
+}
+
+
+type Order {
+  id: ID!
+  version: Int!
+  orderNumber: String!
+  status: StatusType!
+  amount: Float!
+  orderdItems: [Item!]!
+  created: String!
+  updated: String!
+  customerId: ID!
+}
+
+type Item {
+  id: ID!
+  skuCode: String!
+  price: Float
+  quantity: Int
+}
+
+enum StatusType {
+  PAID
+  NOT_PAID
+  VERSANDT
+  GELIEFERT
+}
+

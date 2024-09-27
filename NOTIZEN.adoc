@@ -181,3 +181,5 @@ Erstelle ein selbstsigniertes Zertifikat (certificate.crt) mit dem folgenden Bef
  - anschließend: ./gradlew wrapper --gradle-version {neue version}
  -
 
+ == server zum git hinzufügen
+
