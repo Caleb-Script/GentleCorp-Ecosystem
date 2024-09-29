@@ -14,12 +14,15 @@ MYSQL_PORT: 3306
 DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
 
 #Server
-SERVER_PORT: 8081
+SERVER_PORT: 8070
 ACTIVE_PROFILE: dev
 
 #keycloak
 KEYCLOAK_HOST: localhost
 KEYCLOAK_PORT: 8880
+
+#TLS
+KEYS_PATH: /Users/gentlebookpro/Projekte/GentleCorp-Ecosystem/.keys
 
 spring:
   config:

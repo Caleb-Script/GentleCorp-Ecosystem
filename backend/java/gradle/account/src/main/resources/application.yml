@@ -24,10 +24,12 @@ spring:
         microservice:
           reload-on-update: true
           keystore:
-            private-key: "classpath:private-key.pem"
-            certificate: "classpath:certificate.crt"
+            private-key-password: "gentlecorp11.09.24"
+            private-key: "${KEYS_PATH}/key.pem"
+            certificate: "${KEYS_PATH}/certificate.crt"
           truststore:
-            certificate: "classpath:certificate.crt"
+            certificate: "${KEYS_PATH}/certificate.crt"
+
 
 com:
   c4-soft:

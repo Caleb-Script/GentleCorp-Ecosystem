@@ -17,14 +17,14 @@ const { httpsOptions, port } = nodeConfig;
 
 const setupSwagger = (app: INestApplication) => {
   const config = new DocumentBuilder()
-    .setTitle('Buch')
-    .setDescription('Beispiel für Software Engineering')
-    .setVersion('2024.04.0')
+    .setTitle('Order')
+    .setDescription('Order-Microservice')
+    .setVersion('2024.09.27')
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   const options: SwaggerCustomOptions = {
-    customSiteTitle: 'SWE 23/24',
+    customSiteTitle: 'Order-service',
   };
   SwaggerModule.setup(paths.swagger, app, document, options);
 };

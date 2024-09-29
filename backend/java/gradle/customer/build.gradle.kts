@@ -16,7 +16,7 @@ val alternativeBuildpack = project.properties["buildpack"]
 
 plugins {
   java
-  id("org.springframework.boot") version "3.3.3"
+  id("org.springframework.boot") version libs.versions.springBootPlugin.get()
   id("io.spring.dependency-management") version "1.1.6"
 }
 
@@ -26,7 +26,7 @@ val imageTag = project.properties["imageTag"] ?: project.version.toString()
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(23)
+    languageVersion = JavaLanguageVersion.of(libs.versions.javaVersion.get())
   }
 }
 
@@ -73,11 +73,12 @@ dependencies {
 //  testImplementation("io.projectreactor:reactor-model")
 //  testImplementation("org.springframework.security:spring-security-model")
   testImplementation("org.springframework.boot:spring-boot-starter-test:${libs.versions.springBootTest.get()}")
-  testImplementation("org.apache.httpcomponents.client5:httpclient5:5.2.1")
+  testImplementation("org.apache.httpcomponents.client5:httpclient5:${libs.versions.httpclient5.get()}")
 
   /**----------------------------------------------------------------
    * SPRING BOOT STARTER
    **-------------------------------------------------------------*/
+  implementation(platform("org.springframework.boot:spring-boot-starter-parent:${libs.versions.springBoot.get()}"))
   implementation("org.springframework.boot:spring-boot-starter-actuator")//bei SecurityConfig
   implementation("org.springframework.boot:spring-boot-starter-hateoas")
   implementation("org.springframework.boot:spring-boot-starter-mail")
@@ -111,7 +112,7 @@ dependencies {
    * WEITERE EXTRAS
    * --------------------------------------------------------------------------------------------------------------------*/
   implementation("com.google.guava:guava:30.1-jre") //für Splitt-operation in FlightRepository
-  developmentOnly("org.springframework.boot:spring-boot-devtools")
+  developmentOnly("org.springframework.boot:spring-boot-devtools:${libs.versions.springBoot.get()}")
 //  implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
 //  implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
 

@@ -7,33 +7,53 @@ schema {
 # Query-Typ
 type Query {
   order(id: ID!): Order
-  orders(searchCriteriaInput: SearchCriteriaInput): [Order!]
+  orders: [Order!]!
+  item(id: ID!): Item
+  items: [Item!]!
 }
-
 
 type Order {
   id: ID!
   version: Int!
   orderNumber: String!
-  status: StatusType!
-  amount: Float!
-  orderdItems: [Item!]!
-  created: String!
-  updated: String!
+  isComplete: Boolean!
+  status: OrderStatus!
   customerId: ID!
+  totalAmount: Float!
+  items: [Item!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type Item {
   id: ID!
   skuCode: String!
-  price: Float
-  quantity: Int
+  price: Float!
+  quantity: Int!
+  order: Order!
 }
 
-enum StatusType {
+enum OrderStatus {
   PAID
-  NOT_PAID
-  VERSANDT
-  GELIEFERT
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  UNPAID
+}
+
+scalar DateTime
+
+type Mutation {
+  createOrder(input: CreateOrderInput!): Order!
+  updateOrder(id: ID!, version: Int!, input: UpdateOrderInput!): Order!
+}
+
+input CreateOrderInput {
+  customerId: ID!
+  items: [CreateItemInput!]!
+}
+
+input UpdateOrderInput {
+  status: OrderStatus
 }
 

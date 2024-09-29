@@ -8,7 +8,7 @@ val alternativeBuildpack = project.properties["buildpack"]
 
 plugins {
   java
-  id("org.springframework.boot") version "3.3.3"
+  id("org.springframework.boot") version libs.versions.springBootPlugin.get()
   id("io.spring.dependency-management") version "1.1.6"
 }
 
@@ -18,7 +18,7 @@ val imageTag = project.properties["imageTag"] ?: project.version.toString()
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(23)
+    languageVersion = JavaLanguageVersion.of(libs.versions.javaVersion.get())
   }
 }
 

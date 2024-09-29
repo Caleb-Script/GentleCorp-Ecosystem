@@ -1,4 +1,4 @@
-package com.gentlecorp.transaction.util;
+package com.gentlecorp.customer.util;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -6,8 +6,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.UUID;
 
-import static com.gentlecorp.transaction.util.Constants.TRANSACTION_PATH;
+import static com.gentlecorp.customer.util.Constants.CUSTOMER_PATH;
 
 @Component
 @Slf4j
@@ -27,8 +29,11 @@ public class UriHelper {
     // No forwarding from an API Gateway
     // URI from scheme, host, port, and path
     final var uriComponents = ServletUriComponentsBuilder.fromRequestUri(request).build();
-    final var baseUri =
-      STR."\{uriComponents.getScheme()}://\{uriComponents.getHost()}:\{uriComponents.getPort()}\{TRANSACTION_PATH}";
+    final var baseUri = String.format("%s://%s:%s%s",
+      uriComponents.getScheme(),
+      uriComponents.getHost(),
+      uriComponents.getPort(),
+      CUSTOMER_PATH);
     log.debug("getBaseUri (without forwarding): baseUri={}", baseUri);
     return URI.create(baseUri);
   }
@@ -39,7 +44,7 @@ public class UriHelper {
     // "https" or "http"
     final var forwardedProto = request.getHeader(X_FORWARDED_PROTO);
     if (forwardedProto == null) {
-      throw new IllegalStateException(STR."No \"\{X_FORWARDED_PROTO}\" header present");
+      throw new IllegalStateException(String.format("No \"%s\" header present", X_FORWARDED_PROTO));
     }
 
     var forwardedPrefix = request.getHeader(X_FORWARDED_PREFIX);
@@ -48,8 +53,14 @@ public class UriHelper {
       log.trace("getBaseUriForwarded: No \"{}\" header present", X_FORWARDED_PREFIX);
       forwardedPrefix = CUSTOMER_PREFIX;
     }
-    final var baseUri = STR."\{forwardedProto}://\{forwardedHost}\{forwardedPrefix}\{TRANSACTION_PATH}";
+
+    final var baseUri = String.format("%s://%s%s%s", forwardedProto, forwardedHost, forwardedPrefix, CUSTOMER_PATH);
     log.debug("getBaseUriForwarded: baseUri={}", baseUri);
     return URI.create(baseUri);
+  }
+
+  public URI createUri(HttpServletRequest request, UUID id) throws URISyntaxException {
+    final var baseUri = getBaseUri(request);
+    return new URI(String.format("%s/%s", baseUri.toString(), id));
   }
 }

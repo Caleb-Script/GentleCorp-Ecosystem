@@ -1,4 +1,4 @@
-val javaLanguageVersion = project.properties["javaLanguageVersion"] as String? ?: JavaVersion.VERSION_22.majorVersion
+val javaLanguageVersion = project.properties["javaLanguageVersion"] as String? ?: JavaVersion.VERSION_23.majorVersion
 val javaVersion = project.properties["javaVersion"] ?: libs.versions.javaVersion.get()
 
 val enablePreview = if (project.properties["enablePreview"] == false) null else "--enable-preview"
@@ -8,7 +8,7 @@ val alternativeBuildpack = project.properties["buildpack"]
 
 plugins {
   java
-  id("org.springframework.boot") version "3.3.3"
+  id("org.springframework.boot") version libs.versions.springBootPlugin.get()
   id("io.spring.dependency-management") version "1.1.6"
 }
 
@@ -18,7 +18,7 @@ val imageTag = project.properties["imageTag"] ?: project.version.toString()
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(22)
+    languageVersion = JavaLanguageVersion.of(libs.versions.javaVersion.get())
   }
 }
 
